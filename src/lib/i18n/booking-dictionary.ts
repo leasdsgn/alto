@@ -1,0 +1,76 @@
+import { type InquiryLocale } from '@/types/inquiry'
+
+export const bookingDictionary = {
+  fr: {
+    stepStay: 'Votre séjour',
+    stepGuest: 'Vos informations',
+    stepPayment: 'Paiement',
+    nights: 'nuit',
+    nightsPlural: 'nuits',
+    guests: 'voyageur',
+    guestsPlural: 'voyageurs',
+    checkIn: 'Arrivée',
+    checkOut: 'Départ',
+    total: 'Total',
+    priceDetails: 'Détails du prix',
+    continue: 'Continuer',
+    back: 'Retour',
+    firstName: 'Prénom',
+    lastName: 'Nom',
+    email: 'Email',
+    phone: 'Téléphone',
+    cardLabel: 'Carte bancaire',
+    cardHelp: 'Saisie sécurisée via Stripe',
+    policyPrivacy: 'J\'accepte la politique de confidentialité',
+    policyTerms: 'J\'accepte les conditions de réservation',
+    submitInstant: 'Réserver et payer',
+    submitInquiry: 'Envoyer ma demande',
+    bookingSuccess: 'Réservation confirmée',
+    inquirySuccess: 'Demande envoyée',
+    noCharge: 'Votre carte sera uniquement débitée si votre demande est validée.',
+    loading: 'Chargement',
+    error: 'Une erreur est survenue',
+    retry: 'Réessayer',
+    switchLang: 'EN',
+  },
+  en: {
+    stepStay: 'Your stay',
+    stepGuest: 'Your information',
+    stepPayment: 'Payment',
+    nights: 'night',
+    nightsPlural: 'nights',
+    guests: 'guest',
+    guestsPlural: 'guests',
+    checkIn: 'Check-in',
+    checkOut: 'Check-out',
+    total: 'Total',
+    priceDetails: 'Price breakdown',
+    continue: 'Continue',
+    back: 'Back',
+    firstName: 'First name',
+    lastName: 'Last name',
+    email: 'Email',
+    phone: 'Phone',
+    cardLabel: 'Card details',
+    cardHelp: 'Secure input via Stripe',
+    policyPrivacy: 'I accept the privacy policy',
+    policyTerms: 'I accept the booking terms',
+    submitInstant: 'Book and pay',
+    submitInquiry: 'Send my request',
+    bookingSuccess: 'Booking confirmed',
+    inquirySuccess: 'Request sent',
+    noCharge: 'Your card will only be charged if your request is approved.',
+    loading: 'Loading',
+    error: 'An error occurred',
+    retry: 'Try again',
+    switchLang: 'FR',
+  },
+} as const
+
+type Dictionary = typeof bookingDictionary.fr
+
+export type BookingKey = keyof Dictionary
+
+export function t(locale: InquiryLocale, key: BookingKey): string {
+  return bookingDictionary[locale][key]
+}

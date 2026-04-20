@@ -1,0 +1,38 @@
+{
+  "nav": {
+    "apartments": "Apartments",
+    "lyon": "Lyon",
+    "story": "Our story",
+    "blog": "Journal",
+    "contact": "Contact",
+    "book": "Book"
+  },
+  "footer": {
+    "tagline": "Premium short-stay apartments in Paris and Lyon.",
+    "sections": {
+      "explore": "Explore",
+      "company": "Omen Studio x Alto",
+      "legal": "Legal"
+    },
+    "links": {
+      "apartments": "Apartments",
+      "lyon": "Lyon",
+      "blog": "Journal",
+      "story": "Our story",
+      "contact": "Contact",
+      "privacy": "Privacy policy",
+      "terms": "Terms of service"
+    },
+    "copy": "© {year} Alto. All rights reserved."
+  },
+  "common": {
+    "switchLocale": "FR",
+    "currency": "€",
+    "book": "Book",
+    "discover": "Discover"
+  },
+  "homepage": {
+    "heroTitle": "Paris, Lyon,",
+    "heroSub": "a home away from home."
+  }
+}
