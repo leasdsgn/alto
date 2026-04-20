@@ -138,7 +138,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
                 <SelectField label="Voyageurs" placeholder="Sélectionner" />
               </div>
 
-              <Button href="/reserver" className="mt-5 h-10 w-full">
+              <Button href={`/reserver/${a.slug}`} className="mt-5 h-10 w-full">
                 Réserver
               </Button>
 
@@ -292,7 +292,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
             <span className="text-coffee text-lg font-bold">{a.price}€</span>
             <span className="text-taupe text-sm"> /nuit</span>
           </div>
-          <Button href="/reserver">Réserver</Button>
+          <Button href={`/reserver/${a.slug}`}>Réserver</Button>
         </div>
       </div>
     </>

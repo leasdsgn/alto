@@ -11,6 +11,7 @@
         "@internationalized/date": "^3.12.0",
         "@react-email/components": "^1.0.12",
         "@storyblok/react": "^6.1.0",
+        "@stripe/react-stripe-js": "^6.2.0",
         "@stripe/stripe-js": "^9.0.1",
         "@supabase/supabase-js": "^2.104.0",
         "agentation": "^3.0.2",
@@ -646,6 +647,8 @@
     "@storyblok/react": ["@storyblok/react@6.1.0", "", { "dependencies": { "@storyblok/js": "5.1.0" }, "peerDependencies": { "next": "^13 || ^14 || ^15 || ^16", "react": "^17 || ^18 || ^19", "react-dom": "^17 || ^18 || ^19" }, "optionalPeers": ["next"] }, "sha512-FyTh7ZzNwktSAQ4oZV7+LrCTnpm0rksE0fh0vNUJ/2hpL1f6npbEFp34tyxrVZR0zc/POLpH5xja1AUOkX8gCw=="],
 
     "@storyblok/richtext": ["@storyblok/richtext@4.1.0", "", { "dependencies": { "@tiptap/core": "^3.10.2", "@tiptap/extension-blockquote": "^3.10.2", "@tiptap/extension-bold": "^3.10.2", "@tiptap/extension-code": "^3.10.2", "@tiptap/extension-code-block": "^3.10.2", "@tiptap/extension-details": "^3.10.2", "@tiptap/extension-document": "^3.10.2", "@tiptap/extension-emoji": "^3.10.2", "@tiptap/extension-hard-break": "^3.10.2", "@tiptap/extension-heading": "^3.10.2", "@tiptap/extension-highlight": "^3.10.2", "@tiptap/extension-horizontal-rule": "^3.10.2", "@tiptap/extension-image": "^3.10.2", "@tiptap/extension-italic": "^3.10.2", "@tiptap/extension-link": "^3.10.2", "@tiptap/extension-list": "^3.10.2", "@tiptap/extension-paragraph": "^3.10.2", "@tiptap/extension-strike": "^3.10.2", "@tiptap/extension-subscript": "^3.10.2", "@tiptap/extension-superscript": "^3.10.2", "@tiptap/extension-table": "^3.10.2", "@tiptap/extension-text": "^3.10.2", "@tiptap/extension-text-style": "^3.10.2", "@tiptap/extension-underline": "^3.10.2", "@tiptap/html": "^3.10.2", "markdown-it": "^14.1.0", "storyblok-js-client": "7.3.0" } }, "sha512-rqe+KEFbOnHyZgTLzJ643y7W3BJE8ZfXWqF8bEAtboBV1YFhTmL0CmaHnSkmxdo3h8czZcwSbWxa3izWzzD4HQ=="],
+
+    "@stripe/react-stripe-js": ["@stripe/react-stripe-js@6.2.0", "", { "dependencies": { "prop-types": "^15.7.2" }, "peerDependencies": { "@stripe/stripe-js": ">=9.2.0 <10.0.0", "react": ">=16.8.0 <20.0.0", "react-dom": ">=16.8.0 <20.0.0" } }, "sha512-GSCErjljZEQv9LaxP30xGOwstcMyyUzb5JyihXwvjOU95yrfhbiPG4K2KkwxYxn+WY0/AyHsRhPPoGRw7urBzg=="],
 
     "@stripe/stripe-js": ["@stripe/stripe-js@9.0.1", "", {}, "sha512-un0URSosrW7wNr7xZ5iI2mC9mdeXZ3KERoVlA2RdmeLXYxHUPXq0yHzir2n/MtyXXEdSaELtz4WXGS6dzPEeKA=="],
 

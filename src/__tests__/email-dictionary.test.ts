@@ -23,7 +23,7 @@ describe('translate', () => {
   })
 
   it('remplace par chaîne vide quand variable manquante', () => {
-    const result = translate('fr', 'confirmation.greeting')
+    const result = translate('fr', 'confirmation.greeting', {})
     expect(result).toBe('Bonjour ,')
   })
 
