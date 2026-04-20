@@ -6,23 +6,49 @@ import {
   type GuestyPaymentProvider,
   type GuestyReservation,
 } from '@/types/guesty'
+import { readOAuthCache, writeOAuthCache, writeRateLimit } from './guesty-oauth-cache'
 
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
 const TOKEN_URL = `${BEAPI_BASE_URL}/oauth2/token`
+const RATE_LIMIT_COOLDOWN_MS = 2 * 60 * 1000
+const TOKEN_SAFETY_MARGIN_MS = 60 * 1000
 
-const tokenCache = globalThis as unknown as {
+const memoryCache = globalThis as unknown as {
   __guestyToken?: string
   __guestyTokenExpiresAt?: number
   __guestyRateLimitedUntil?: number
 }
 
 async function getAccessToken(): Promise<string> {
-  if (tokenCache.__guestyToken && Date.now() < (tokenCache.__guestyTokenExpiresAt ?? 0)) {
-    return tokenCache.__guestyToken
+  const now = Date.now()
+
+  if (memoryCache.__guestyToken && now < (memoryCache.__guestyTokenExpiresAt ?? 0)) {
+    return memoryCache.__guestyToken
   }
 
-  if (tokenCache.__guestyRateLimitedUntil && Date.now() < tokenCache.__guestyRateLimitedUntil) {
-    throw new Error('Guesty rate limited, retry apres ' + new Date(tokenCache.__guestyRateLimitedUntil).toLocaleTimeString('fr-FR'))
+  const shared = await readOAuthCache()
+
+  if (shared) {
+    if (shared.rateLimitedUntil && now < shared.rateLimitedUntil) {
+      memoryCache.__guestyRateLimitedUntil = shared.rateLimitedUntil
+      throw new Error(
+        'Guesty rate limited, retry apres ' +
+          new Date(shared.rateLimitedUntil).toLocaleTimeString('fr-FR'),
+      )
+    }
+
+    if (shared.accessToken && now < shared.expiresAt) {
+      memoryCache.__guestyToken = shared.accessToken
+      memoryCache.__guestyTokenExpiresAt = shared.expiresAt
+      return shared.accessToken
+    }
+  }
+
+  if (memoryCache.__guestyRateLimitedUntil && now < memoryCache.__guestyRateLimitedUntil) {
+    throw new Error(
+      'Guesty rate limited, retry apres ' +
+        new Date(memoryCache.__guestyRateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
   }
 
   const clientId = process.env.GUESTY_BEAPI_CLIENT_ID
@@ -43,7 +69,9 @@ async function getAccessToken(): Promise<string> {
   })
 
   if (response.status === 429) {
-    tokenCache.__guestyRateLimitedUntil = Date.now() + 2 * 60 * 1000
+    const rateLimitedUntil = now + RATE_LIMIT_COOLDOWN_MS
+    memoryCache.__guestyRateLimitedUntil = rateLimitedUntil
+    await writeRateLimit(rateLimitedUntil)
     throw new Error('Guesty rate limited, pause 2 min')
   }
 
@@ -53,11 +81,13 @@ async function getAccessToken(): Promise<string> {
   }
 
   const data: GuestyTokenResponse = await response.json()
+  const expiresAt = now + data.expires_in * 1000 - TOKEN_SAFETY_MARGIN_MS
 
-  tokenCache.__guestyToken = data.access_token
-  tokenCache.__guestyTokenExpiresAt = Date.now() + (data.expires_in - 60) * 1000
+  memoryCache.__guestyToken = data.access_token
+  memoryCache.__guestyTokenExpiresAt = expiresAt
+  await writeOAuthCache({ accessToken: data.access_token, expiresAt })
 
-  return tokenCache.__guestyToken
+  return data.access_token
 }
 
 async function guestyFetch<T>(
