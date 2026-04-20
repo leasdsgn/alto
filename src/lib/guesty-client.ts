@@ -104,8 +104,8 @@ export const guestyClient = {
 
   getAvailableListings(checkIn: string, checkOut: string, guests?: number) {
     const params = new URLSearchParams({ checkIn, checkOut })
-    if (guests) params.set('guests', String(guests))
-    return guestyFetch<{ results: GuestyListing[] }>(`/listings/available?${params}`)
+    if (guests) params.set('minOccupancy', String(guests))
+    return guestyFetch<{ results: GuestyListing[] }>(`/listings?${params}`, { revalidate: 60 })
   },
 
   createQuote(listingId: string, checkIn: string, checkOut: string, guestsCount: number) {
