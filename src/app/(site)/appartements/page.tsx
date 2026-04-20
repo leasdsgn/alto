@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentCard } from '@/components/ui/apartment-card'
 import { getApartmentsForSearch } from '@/components/sections/apartments-section'
+import { SearchParamsSync } from '@/components/booking/search-params-sync'
 
 interface PageProps {
   searchParams: Promise<{
@@ -29,6 +31,9 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <SearchParamsSync />
+      </Suspense>
       <div className="relative h-[422px] overflow-hidden">
         <Image
           src="/images/alto-salon.jpg"

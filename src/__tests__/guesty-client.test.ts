@@ -56,9 +56,9 @@ describe('guesty-client', () => {
     await guestyClient.getAvailableListings('2026-05-01', '2026-05-05', 2)
 
     const apiCall = mockFetch.mock.calls[1]
-    expect(apiCall[0]).toContain('/listings/available')
+    expect(apiCall[0]).toContain('/listings?')
     expect(apiCall[0]).toContain('checkIn=2026-05-01')
     expect(apiCall[0]).toContain('checkOut=2026-05-05')
-    expect(apiCall[0]).toContain('guests=2')
+    expect(apiCall[0]).toContain('minOccupancy=2')
   })
 })

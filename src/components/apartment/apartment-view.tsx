@@ -52,8 +52,6 @@ export function ApartmentView({ apartment, recommendations }: Props) {
   }, [])
 
   const quartierName = a.address?.split(' - ')[0] ?? 'Le Marais'
-  const nights = 7
-  const total = a.price * nights
 
   return (
     <>
@@ -121,29 +119,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
 
           {/* Booking sidebar - desktop */}
           <div className="hidden lg:block">
-            <div className="sticky top-8 rounded-xl border border-silver/50 p-5">
-              <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-coffee text-2xl font-bold">{a.price}€</span>
-                  <span className="text-coffee text-xs font-medium">pour une nuit</span>
-                </div>
-                <p className="text-silver mt-0.5 text-xs font-medium">
-                  {total}€ pour {nights} nuits
-                </p>
-              </div>
-
-              <div className="mt-5 flex flex-col gap-3">
-                <DateField label="Arrivée" placeholder="23/01/2026" />
-                <DateField label="Départ" placeholder="23/01/2026" />
-                <SelectField label="Voyageurs" placeholder="Sélectionner" />
-              </div>
-
-              <Button href={`/reserver/${a.slug}`} className="mt-5 h-10 w-full">
-                Réserver
-              </Button>
-
-              <p className="text-silver mt-3 text-center text-xs">Pas de frais Airbnb</p>
-            </div>
+            <ApartmentBooking price={a.price} slug={a.slug} />
           </div>
         </section>
 
@@ -299,28 +275,6 @@ export function ApartmentView({ apartment, recommendations }: Props) {
   )
 }
 
-function DateField({ label, placeholder }: { label: string; placeholder: string }) {
-  return (
-    <div className="rounded-xl border border-silver/50 px-3 py-2.5">
-      <p className="text-coffee text-xs font-normal">{label}</p>
-      <p className="text-silver mt-0.5 text-xs">{placeholder}</p>
-    </div>
-  )
-}
-
-function SelectField({ label, placeholder }: { label: string; placeholder: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-silver/50 px-3 py-2.5">
-      <div>
-        <p className="text-coffee text-xs font-normal">{label}</p>
-        <p className="text-silver mt-0.5 text-xs">{placeholder}</p>
-      </div>
-      <svg width="9" height="5" viewBox="0 0 9 5" fill="none" className="text-silver">
-        <path d="M1 1l3.5 3L8 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  )
-}
 
 function Stat({ icon, value }: { icon: React.ReactNode; value: string }) {
   return (

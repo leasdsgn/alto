@@ -14,7 +14,6 @@ import { today, getLocalTimeZone } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
 import { useSearchStore } from '@/lib/stores/search'
-import { formatDateShort } from '@/lib/format-date'
 import { Button } from '@/components/ui/button'
 
 const CITIES = ['Paris', 'Lyon']

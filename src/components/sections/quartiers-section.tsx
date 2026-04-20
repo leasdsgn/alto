@@ -66,7 +66,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const [active, setActive] = useState<string | null>(null)
   const [page, setPage] = useState(0)
-  const activeQuartier = QUARTIERS.find((q) => q.id === active)
+  const _activeQuartier = QUARTIERS.find((q) => q.id === active)
 
   const filteredApartments = useMemo(() => {
     if (!active) return apartments
@@ -203,7 +203,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
         el.querySelector('.alto-apt-pin-inner')?.classList.remove('alto-apt-pin-active')
       })
 
-      const marker = new mapboxgl.Marker({ element: el })
+      const _marker = new mapboxgl.Marker({ element: el })
         .setLngLat([apt.lng, apt.lat])
         .setPopup(popup)
         .addTo(map)
