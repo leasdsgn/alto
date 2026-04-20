@@ -31,7 +31,7 @@ const fonts = {
   sans: "'Manrope', 'Helvetica Neue', Helvetica, Arial, sans-serif",
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-home.fr'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
 const LOGO_URL = `${SITE_URL}/images/logo-alto-light.png`
 
 export function EmailLayout({ locale, preview, children }: EmailLayoutProps) {
