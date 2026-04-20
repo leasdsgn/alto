@@ -31,8 +31,15 @@ export function BookingFlow(props: BookingFlowProps) {
     clientSecret: string | null
     customerId: string | null
     connectedAccountId: string | null
+    ready: boolean
     error: string | null
-  }>({ clientSecret: null, customerId: null, connectedAccountId: null, error: null })
+  }>({
+    clientSecret: null,
+    customerId: null,
+    connectedAccountId: null,
+    ready: false,
+    error: null,
+  })
 
   const [guest, setGuest] = useState<GuestFormValues>({
     firstName: '',
@@ -59,6 +66,7 @@ export function BookingFlow(props: BookingFlowProps) {
               clientSecret: data.clientSecret,
               customerId: data.customerId,
               connectedAccountId: data.connectedAccountId,
+              ready: true,
               error: null,
             })
           }
@@ -72,7 +80,8 @@ export function BookingFlow(props: BookingFlowProps) {
             setSetupState({
               clientSecret: null,
               customerId: null,
-              connectedAccountId: data.providerAccountId,
+              connectedAccountId: data.providerAccountId ?? null,
+              ready: true,
               error: null,
             })
           }
@@ -93,7 +102,7 @@ export function BookingFlow(props: BookingFlowProps) {
     }
   }, [props.listingId, props.mode, guest.email])
 
-  const stripePromise = setupState.connectedAccountId
+  const stripePromise = setupState.ready
     ? getStripeInstance(setupState.connectedAccountId)
     : null
 
