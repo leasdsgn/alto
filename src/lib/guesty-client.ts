@@ -111,7 +111,12 @@ export const guestyClient = {
   createQuote(listingId: string, checkIn: string, checkOut: string, guestsCount: number) {
     return guestyFetch<GuestyQuote>('/reservations/quotes', {
       method: 'POST',
-      body: JSON.stringify({ listingId, checkIn, checkOut, guestsCount }),
+      body: JSON.stringify({
+        listingId,
+        checkInDateLocalized: checkIn,
+        checkOutDateLocalized: checkOut,
+        guestsCount,
+      }),
     })
   },
 
