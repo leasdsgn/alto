@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { LocaleToggle } from '@/components/ui/locale-toggle'
 
 interface HeaderProps {
   variant?: 'light' | 'dark'
@@ -58,6 +60,7 @@ export function Header({ variant = 'light' }: HeaderProps) {
 }
 
 function NavLinks({ textClass, mobile, onClick }: { textClass: string; mobile?: boolean; onClick?: () => void }) {
+  const t = useTranslations('nav')
   const className = mobile
     ? 'text-cream text-lg font-bold tracking-[0.24px]'
     : `${textClass} text-xs font-bold leading-[155%] tracking-[0.24px]`
@@ -65,21 +68,23 @@ function NavLinks({ textClass, mobile, onClick }: { textClass: string; mobile?: 
   return (
     <>
       <Link href="/blog" className={className} onClick={onClick}>
-        Conseils voyage
+        {t('blog')}
       </Link>
       <Link href="/notre-histoire" className={className} onClick={onClick}>
-        Notre histoire
+        {t('story')}
       </Link>
     </>
   )
 }
 
 function NavActions({ textClass, dividerClass }: { textClass: string; dividerClass: string }) {
+  const t = useTranslations('nav')
   return (
     <div className="flex items-center gap-6">
-      <Button href="/reserver" className="uppercase">
-        Réserver
+      <Button href="/appartements" className="uppercase">
+        {t('book')}
       </Button>
+      <LocaleToggle className={`${textClass} text-xs font-semibold uppercase tracking-[0.12em] transition-opacity hover:opacity-70`} />
       <div className={`${dividerClass} h-[23px] w-px`} />
       <button
         type="button"

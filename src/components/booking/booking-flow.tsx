@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { Elements, useElements, useStripe } from '@stripe/react-stripe-js'
+import { useLocale } from 'next-intl'
 import { getStripeInstance } from '@/lib/stripe-client'
 import { nightsBetween } from '@/lib/formatters'
 import { t } from '@/lib/i18n/booking-dictionary'
-import { useLocaleStore } from '@/lib/stores/locale'
 import { QuoteSummary } from './quote-summary'
 import { GuestForm, type GuestFormValues } from './guest-form'
 import { PolicyCheckboxes, type PolicyValues } from './policy-checkboxes'
@@ -26,7 +26,7 @@ interface BookingFlowProps {
 }
 
 export function BookingFlow(props: BookingFlowProps) {
-  const locale = useLocaleStore((s) => s.locale)
+  const locale = useLocale() as InquiryLocale
   const [setupState, setSetupState] = useState<{
     clientSecret: string | null
     customerId: string | null

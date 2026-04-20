@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Manrope } from 'next/font/google'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 import { Agentation } from 'agentation'
 import { I18nProvider } from '@/components/providers/i18n-provider'
 import { CustomCursor } from '@/components/ui/custom-cursor'
@@ -18,19 +20,27 @@ export const metadata: Metadata = {
   description: 'Appartements de luxe en location courte durée à Paris et Lyon.',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
-    <html lang="fr" className={`${manrope.className} h-full antialiased`}>
-      <body className="bg-cream text-coffee mx-auto flex min-h-full max-w-site flex-col" suppressHydrationWarning>
-        <LenisProvider>
-          <I18nProvider>
-            <StoryblokProvider>{children}</StoryblokProvider>
-          </I18nProvider>
-        </LenisProvider>
+    <html lang={locale} className={`${manrope.className} h-full antialiased`}>
+      <body
+        className="bg-cream text-coffee mx-auto flex min-h-full max-w-site flex-col"
+        suppressHydrationWarning
+      >
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <LenisProvider>
+            <I18nProvider>
+              <StoryblokProvider>{children}</StoryblokProvider>
+            </I18nProvider>
+          </LenisProvider>
+        </NextIntlClientProvider>
         <CustomCursor />
         {process.env.NODE_ENV === 'development' && <Agentation />}
       </body>
