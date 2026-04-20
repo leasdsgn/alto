@@ -203,6 +203,13 @@ function PaymentSection(props: PaymentSectionProps) {
         },
         redirect: 'if_required',
       })
+
+      // SetupIntent déjà succeeded (user a déjà submit avec succès, puis corrigé
+      // un autre champ et resubmit). On récupère le payment_method directement.
+      if (error?.setup_intent?.status === 'succeeded' && error.setup_intent.payment_method) {
+        return String(error.setup_intent.payment_method)
+      }
+
       if (error) throw new Error(error.message ?? 'setup_failed')
       if (!setupIntent?.payment_method) throw new Error('no_payment_method')
       return String(setupIntent.payment_method)
