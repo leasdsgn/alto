@@ -21,10 +21,14 @@ export async function POST(request: NextRequest) {
     const stripe = getStripeServer()
     const provider = await guestyClient.getPaymentProvider(listingId)
 
-    const customer = await stripe.customers.create(
-      { email },
-      { stripeAccount: provider.providerAccountId },
-    )
+    // En mode mock, aucun Connect account valide : on crée customer + SetupIntent
+    // sur le compte Stripe principal (pas Connect), ce qui permet de tester le
+    // flow de paiement bout-en-bout avec la test mode.
+    const stripeAccountOption = provider.providerAccountId
+      ? { stripeAccount: provider.providerAccountId }
+      : undefined
+
+    const customer = await stripe.customers.create({ email }, stripeAccountOption)
 
     const setupIntent = await stripe.setupIntents.create(
       {
@@ -32,13 +36,13 @@ export async function POST(request: NextRequest) {
         payment_method_types: ['card'],
         usage: 'off_session',
       },
-      { stripeAccount: provider.providerAccountId },
+      stripeAccountOption,
     )
 
     return NextResponse.json({
       clientSecret: setupIntent.client_secret,
       customerId: customer.id,
-      connectedAccountId: provider.providerAccountId,
+      connectedAccountId: provider.providerAccountId || null,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue'

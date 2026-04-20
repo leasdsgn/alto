@@ -46,7 +46,7 @@ export function BookingFlow(props: BookingFlowProps) {
     async function loadProvider() {
       try {
         if (props.mode === 'inquiry') {
-          if (!guest.email) return
+          if (!isValidEmail(guest.email)) return
           const response = await fetch('/api/stripe/setup-intent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -287,4 +287,8 @@ const altoAppearance = {
     fontFamily: 'Manrope, system-ui, sans-serif',
     borderRadius: '8px',
   },
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
