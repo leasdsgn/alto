@@ -19,7 +19,7 @@ export function GuestySearchWidget({
     initialized.current = true
 
     const loadWidget = () => {
-      const config = { siteUrl, color }
+      const config: { siteUrl: string; color: string } = { siteUrl, color }
 
       // Charger le CSS
       const link = document.createElement('link')
@@ -40,7 +40,7 @@ export function GuestySearchWidget({
         try {
           const w = window as typeof window & {
             GuestySearchBarWidget?: {
-              create: (config: typeof config) => Promise<void>
+              create: (cfg: { siteUrl: string; color: string }) => Promise<void>
             }
           }
           if (w.GuestySearchBarWidget) {
