@@ -188,10 +188,19 @@ function PaymentSection(props: PaymentSectionProps) {
     if (!stripe || !elements) throw new Error('stripe_not_ready')
     await elements.submit()
 
+    const billingDetails = {
+      name: `${props.guest.firstName} ${props.guest.lastName}`.trim(),
+      email: props.guest.email,
+      phone: props.guest.phone,
+    }
+
     if (mode === 'inquiry') {
       const { error, setupIntent } = await stripe.confirmSetup({
         elements,
-        confirmParams: { return_url: window.location.href },
+        confirmParams: {
+          return_url: window.location.href,
+          payment_method_data: { billing_details: billingDetails },
+        },
         redirect: 'if_required',
       })
       if (error) throw new Error(error.message ?? 'setup_failed')
@@ -201,6 +210,7 @@ function PaymentSection(props: PaymentSectionProps) {
 
     const { error, paymentMethod } = await stripe.createPaymentMethod({
       elements,
+      params: { billing_details: billingDetails },
     })
     if (error) throw new Error(error.message ?? 'pm_failed')
     return paymentMethod.id
