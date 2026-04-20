@@ -79,7 +79,14 @@ export function EmailLayout({ locale, preview, children }: EmailLayoutProps) {
           },
         }}
       >
-        <Body className="bg-coffee font-sans m-0 px-4 py-12">
+        <Body
+          className="bg-coffee font-sans m-0 px-4 py-12"
+          style={{
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale',
+            textRendering: 'optimizeLegibility',
+          }}
+        >
           <Container className="mx-auto max-w-[600px]">
             <Section className="text-center pb-10">
               <Img
