@@ -1,11 +1,31 @@
+import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentCard } from '@/components/ui/apartment-card'
-import { getApartments } from '@/components/sections/apartments-section'
-import Image from 'next/image'
+import { getApartmentsForSearch } from '@/components/sections/apartments-section'
 
-export default async function AppartementsPage() {
-  const apartments = await getApartments()
+interface PageProps {
+  searchParams: Promise<{
+    city?: string
+    checkIn?: string
+    checkOut?: string
+    guests?: string
+  }>
+}
+
+export default async function AppartementsPage({ searchParams }: PageProps) {
+  const sp = await searchParams
+  const guestsCount = sp.guests ? Number(sp.guests) : undefined
+
+  const apartments = await getApartmentsForSearch({
+    city: sp.city,
+    checkIn: sp.checkIn,
+    checkOut: sp.checkOut,
+    guests: guestsCount,
+  })
+
+  const hasFilters = Boolean(sp.city || sp.checkIn || sp.checkOut)
+  const cityLabel = sp.city ? formatCityLabel(sp.city) : null
 
   return (
     <>
@@ -25,7 +45,9 @@ export default async function AppartementsPage() {
 
         <div className="absolute inset-0 flex items-end">
           <div className="mx-auto w-full max-w-content px-gutter pb-10 md:px-gutter-md">
-            <h1 className="text-cream text-base font-bold leading-[24px]">Nos appartements</h1>
+            <h1 className="text-cream text-base font-bold leading-[24px]">
+              {cityLabel ? `Nos appartements à ${cityLabel}` : 'Nos appartements'}
+            </h1>
             <p className="text-cream/80 mt-2 max-w-[505px] text-xs font-medium leading-[20px]">
               Une collection d'adresses ou chaque detail compte. Paris, Lyon, bientot ailleurs.
             </p>
@@ -37,26 +59,40 @@ export default async function AppartementsPage() {
         <div className="flex items-baseline justify-between">
           <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">
             {apartments.length} appartement{apartments.length > 1 ? 's' : ''}
+            {hasFilters ? ' correspondant' : ''}
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {apartments.map((apt) => (
-            <ApartmentCard
-              key={apt.id}
-              name={apt.name}
-              price={apt.price}
-              guests={apt.guests}
-              surface={apt.surface}
-              bedrooms={apt.bedrooms}
-              slug={apt.slug}
-              image={apt.images[0]}
-            />
-          ))}
-        </div>
+        {apartments.length === 0 ? (
+          <div className="mt-12 rounded-xl border border-divider/60 bg-cream/60 p-10 text-center">
+            <p className="text-coffee text-sm font-semibold">Aucun appartement disponible</p>
+            <p className="text-taupe mt-2 text-xs">
+              Essayez d'élargir vos dates ou de changer de ville.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {apartments.map((apt) => (
+              <ApartmentCard
+                key={apt.id}
+                name={apt.name}
+                price={apt.price}
+                guests={apt.guests}
+                surface={apt.surface}
+                bedrooms={apt.bedrooms}
+                slug={apt.slug}
+                image={apt.images[0]}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       <Footer />
     </>
   )
+}
+
+function formatCityLabel(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
 }

@@ -84,7 +84,57 @@ async function getApartments() {
   return FALLBACK_APARTMENTS
 }
 
-export { getApartments }
+export interface SearchCriteria {
+  city?: string
+  checkIn?: string
+  checkOut?: string
+  guests?: number
+}
+
+function normalizeCity(value: string | undefined | null): string {
+  return (value ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+async function getApartmentsForSearch(criteria: SearchCriteria) {
+  const { city, checkIn, checkOut, guests } = criteria
+  const hasDates = Boolean(checkIn && checkOut)
+
+  try {
+    if (hasDates && checkIn && checkOut) {
+      const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests)
+      console.log(
+        `[Guesty] ${results.length} dispo pour ${checkIn} → ${checkOut}` +
+          (guests ? ` (${guests} voyageurs)` : ''),
+      )
+      return applyCityFilter(results.map(mapListing), city)
+    }
+
+    const { results } = await guestyClient.getListings()
+    return applyCityFilter(results.map(mapListing), city)
+  } catch (error) {
+    console.error(
+      '[Guesty] Erreur fetch listings:',
+      error instanceof Error ? error.message : error,
+    )
+    return applyCityFilter(FALLBACK_APARTMENTS, city)
+  }
+}
+
+function applyCityFilter<T extends { city?: string }>(
+  items: T[],
+  city: string | undefined,
+): T[] {
+  if (!city) return items
+  const needle = normalizeCity(city)
+  if (!needle) return items
+  return items.filter((apt) => normalizeCity(apt.city).includes(needle))
+}
+
+export { getApartments, getApartmentsForSearch }
 
 export async function ApartmentsSection({ apartments }: { apartments?: Awaited<ReturnType<typeof getApartments>> }) {
   const data = apartments ?? await getApartments()
