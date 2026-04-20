@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
+import { getSupabaseAdmin } from '@/lib/supabase-client'
+import { sendEmail } from '@/lib/resend-client'
+import { translate } from '@/lib/i18n/email-dictionary'
+import { formatCurrency, formatDate, nightsBetween } from '@/lib/formatters'
+import BookingConfirmationEmail from '@/emails/booking-confirmation'
+import InquiryReceivedEmail from '@/emails/inquiry-received'
 
 const guestSchema = z.object({
   firstName: z.string().min(1),
@@ -9,17 +15,38 @@ const guestSchema = z.object({
   phone: z.string().min(1),
 })
 
-const schema = z.object({
+const policySchema = z.object({
+  privacy: z.literal(true),
+  terms: z.literal(true),
+})
+
+const baseSchema = z.object({
   quoteId: z.string().min(1),
   ratePlanId: z.string().min(1),
+  listingId: z.string().min(1),
+  listingTitle: z.string().min(1),
   guest: guestSchema,
-  ccToken: z.string().optional(),
-  policy: z.object({
-    privacy: z.literal(true),
-    terms: z.literal(true),
-  }),
-  mode: z.enum(['instant', 'inquiry']),
+  policy: policySchema,
+  checkIn: z.string().min(1),
+  checkOut: z.string().min(1),
+  guestsCount: z.number().int().positive(),
+  amountCents: z.number().int().positive(),
+  currency: z.string().min(1),
+  preferredLanguage: z.enum(['fr', 'en']).default('fr'),
 })
+
+const instantSchema = baseSchema.extend({
+  mode: z.literal('instant'),
+  ccToken: z.string().min(1),
+})
+
+const inquirySchema = baseSchema.extend({
+  mode: z.literal('inquiry'),
+  stripePaymentMethodId: z.string().min(1),
+  stripeCustomerId: z.string().optional(),
+})
+
+const schema = z.discriminatedUnion('mode', [instantSchema, inquirySchema])
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,23 +57,99 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
     }
 
-    const { mode, ccToken, ...rest } = parsed.data
+    const data = parsed.data
+    const locale = data.preferredLanguage
+    const nights = nightsBetween(data.checkIn, data.checkOut)
+    const formattedTotal = formatCurrency(data.amountCents, data.currency, locale)
+    const formattedCheckIn = formatDate(data.checkIn, locale)
+    const formattedCheckOut = formatDate(data.checkOut, locale)
 
-    if (mode === 'instant') {
-      if (!ccToken) {
-        return NextResponse.json(
-          { error: 'ccToken requis pour une reservation instantanee' },
-          { status: 400 },
-        )
-      }
-      const data = await guestyClient.createInstantReservation({ ...rest, ccToken })
-      return NextResponse.json(data)
+    if (data.mode === 'instant') {
+      const reservation = await guestyClient.createInstantReservation({
+        quoteId: data.quoteId,
+        ratePlanId: data.ratePlanId,
+        guest: data.guest,
+        policy: data.policy,
+        ccToken: data.ccToken,
+      })
+
+      await trySendEmail(() =>
+        sendEmail({
+          to: data.guest.email,
+          subject: translate(locale, 'confirmation.subject'),
+          react: BookingConfirmationEmail({
+            locale,
+            guest: { firstName: data.guest.firstName },
+            listing: { title: data.listingTitle },
+            reservation: {
+              checkIn: formattedCheckIn,
+              checkOut: formattedCheckOut,
+              guests: data.guestsCount,
+              nights,
+              total: formattedTotal,
+            },
+          }),
+        }),
+      )
+
+      return NextResponse.json(reservation)
     }
 
-    const data = await guestyClient.createInquiry(rest)
-    return NextResponse.json(data)
+    const inquiry = await guestyClient.createInquiry({
+      quoteId: data.quoteId,
+      ratePlanId: data.ratePlanId,
+      guest: data.guest,
+      policy: data.policy,
+    })
+
+    const supabase = getSupabaseAdmin()
+    const { error: insertError } = await supabase.from('inquiries').insert({
+      guesty_reservation_id: inquiry._id,
+      guesty_listing_id: data.listingId,
+      guest: data.guest,
+      stripe_payment_method_id: data.stripePaymentMethodId,
+      stripe_customer_id: data.stripeCustomerId ?? null,
+      check_in: data.checkIn,
+      check_out: data.checkOut,
+      amount_cents: data.amountCents,
+      currency: data.currency,
+      locale,
+      status: 'pending',
+    })
+
+    if (insertError) {
+      throw new Error(`Supabase insert failed: ${insertError.message}`)
+    }
+
+    await trySendEmail(() =>
+      sendEmail({
+        to: data.guest.email,
+        subject: translate(locale, 'inquiryReceived.subject'),
+        react: InquiryReceivedEmail({
+          locale,
+          guest: { firstName: data.guest.firstName },
+          listing: { title: data.listingTitle },
+          reservation: {
+            checkIn: formattedCheckIn,
+            checkOut: formattedCheckOut,
+            guests: data.guestsCount,
+            estimatedTotal: formattedTotal,
+          },
+        }),
+      }),
+    )
+
+    return NextResponse.json(inquiry)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue'
     return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+async function trySendEmail(send: () => Promise<unknown>) {
+  try {
+    await send()
+  } catch (error) {
+    console.error('[reservation route] email send failed', error)
   }
 }
