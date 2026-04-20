@@ -1,5 +1,6 @@
 import {
   Body,
+  Button,
   Container,
   Font,
   Head,
@@ -18,6 +19,9 @@ interface EmailLayoutProps {
   locale: InquiryLocale
   preview: string
   children: ReactNode
+  heroImage?: string
+  heroAlt?: string
+  cta?: { label: string; href: string }
 }
 
 const colors = {
@@ -35,7 +39,14 @@ const fonts = {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
 const LOGO_URL = `${SITE_URL}/images/logo-alto-light.png`
 
-export function EmailLayout({ locale, preview, children }: EmailLayoutProps) {
+export function EmailLayout({
+  locale,
+  preview,
+  children,
+  heroImage,
+  heroAlt,
+  cta,
+}: EmailLayoutProps) {
   return (
     <Html lang={locale}>
       <Head>
@@ -99,7 +110,33 @@ export function EmailLayout({ locale, preview, children }: EmailLayoutProps) {
               />
             </Section>
 
-            <Container className="bg-cream px-8 py-10">{children}</Container>
+            {heroImage ? (
+              <Section className="m-0 p-0">
+                <Img
+                  src={heroImage}
+                  alt={heroAlt ?? ''}
+                  width="600"
+                  height="340"
+                  className="block w-full"
+                  style={{ display: 'block', objectFit: 'cover' }}
+                />
+              </Section>
+            ) : null}
+
+            <Container className="bg-cream px-8 py-10">
+              {children}
+
+              {cta ? (
+                <Section className="text-center pt-8">
+                  <Button
+                    href={cta.href}
+                    className="bg-coffee text-cream text-[13px] font-semibold uppercase tracking-[0.12em] px-8 py-4 inline-block no-underline"
+                  >
+                    {cta.label}
+                  </Button>
+                </Section>
+              ) : null}
+            </Container>
 
             <Section className="pt-10 text-center">
               <Text className="text-cream/80 text-[13px] leading-relaxed m-0 my-1">
