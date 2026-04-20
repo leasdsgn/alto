@@ -30,7 +30,7 @@ export function Footer() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-content px-gutter pt-20 pb-24 md:pb-12 md:px-gutter-md">
+      <div className="relative mx-auto max-w-content px-gutter pt-20 pb-36 md:pb-24 md:px-gutter-md">
         <div className="flex items-start justify-between">
           <Image src="/images/logo-alto-light.png" alt="Alto" width={104} height={27} />
 

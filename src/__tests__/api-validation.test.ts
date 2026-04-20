@@ -34,7 +34,7 @@ describe('validation des schémas API', () => {
         quoteId: 'q-123',
         ratePlanId: 'rp-456',
         guest: { firstName: 'Jean', lastName: 'Dupont', email: 'jean@test.fr', phone: '+33612345678' },
-        ccToken: 'tok_stripe',
+        ccToken: 'pm_test_abc123',
         policy: { privacy: true, terms: true },
         mode: 'instant',
       })

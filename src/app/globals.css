@@ -44,8 +44,8 @@
   --spacing-section: 64px;
   --spacing-section-md: 96px;
   --color-divider: #e8e8e2;
-  --width-content: 1200px;
-  --width-site: 1000px;
+  --max-width-content: 1800px;
+  --max-width-site: 1800px;
 }
 
 :root {

@@ -9,6 +9,7 @@ import { BlogSection } from '@/components/sections/blog-section'
 import { FaqSection } from '@/components/sections/faq-section'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
+import { GuestySearchWidget } from '@/components/ui/guesty-search-widget'
 
 export default async function Home() {
   const apartments = await getApartments()
@@ -25,6 +26,7 @@ export default async function Home() {
         <TestimonialsSection />
         <BlogSection />
         <FaqSection />
+        <GuestySearchWidget />
       </main>
       <Footer />
       <StickyCta />
