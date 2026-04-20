@@ -1,15 +1,20 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { type InquiryInsert, type InquiryRow, type InquiryUpdate } from '@/types/inquiry'
 
-interface Database {
+export interface Database {
   public: {
     Tables: {
       inquiries: {
         Row: InquiryRow
         Insert: InquiryInsert
         Update: InquiryUpdate
+        Relationships: []
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }
 

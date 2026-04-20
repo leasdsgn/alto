@@ -11,7 +11,6 @@ export function getStripeServer(): Stripe {
   }
 
   stripeClient = new Stripe(secretKey, {
-    apiVersion: '2024-12-18.acacia',
     typescript: true,
   })
 

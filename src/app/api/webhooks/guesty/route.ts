@@ -3,7 +3,7 @@ import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
 import { verifyGuestySignature } from '@/lib/guesty-webhook'
 import { getStripeServer } from '@/lib/stripe-server'
-import { getSupabaseAdmin } from '@/lib/supabase-client'
+import { findPendingInquiryByReservation, updateInquiry } from '@/lib/inquiries-repository'
 import { sendEmail } from '@/lib/resend-client'
 import { translate } from '@/lib/i18n/email-dictionary'
 import { formatCurrency, formatDate } from '@/lib/formatters'
@@ -51,19 +51,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleReservationStatus(reservationId: string, status: string | null) {
-  const supabase = getSupabaseAdmin()
-
-  const { data: inquiry, error } = await supabase
-    .from('inquiries')
-    .select('*')
-    .eq('guesty_reservation_id', reservationId)
-    .eq('status', 'pending')
-    .maybeSingle()
-
-  if (error) {
-    throw new Error(`Supabase read failed: ${error.message}`)
-  }
-
+  const inquiry = await findPendingInquiryByReservation(reservationId)
   if (!inquiry) return
 
   if (status === 'confirmed' || status === 'reserved') {
@@ -77,9 +65,11 @@ async function handleReservationStatus(reservationId: string, status: string | n
 }
 
 async function confirmInquiry(inquiry: InquiryRow) {
-  const supabase = getSupabaseAdmin()
-  const stripe = getStripeServer()
+  if (!inquiry.stripe_payment_method_id) {
+    throw new Error('Inquiry has no stripe_payment_method_id')
+  }
 
+  const stripe = getStripeServer()
   const provider = await guestyClient.getPaymentProvider(inquiry.guesty_listing_id)
 
   try {
@@ -95,30 +85,22 @@ async function confirmInquiry(inquiry: InquiryRow) {
       { stripeAccount: provider.providerAccountId },
     )
 
-    await supabase
-      .from('inquiries')
-      .update({
-        status: 'confirmed',
-        stripe_payment_intent_id: paymentIntent.id,
-        captured_at: new Date().toISOString(),
-      })
-      .eq('id', inquiry.id)
+    await updateInquiry(inquiry.id, {
+      status: 'confirmed',
+      stripe_payment_intent_id: paymentIntent.id,
+      captured_at: new Date().toISOString(),
+    })
 
     await trySendInquiryConfirmed(inquiry)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Capture failed'
-    await supabase
-      .from('inquiries')
-      .update({ status: 'failed', failure_reason: message })
-      .eq('id', inquiry.id)
+    await updateInquiry(inquiry.id, { status: 'failed', failure_reason: message })
     throw error
   }
 }
 
 async function refuseInquiry(inquiry: InquiryRow) {
-  const supabase = getSupabaseAdmin()
-
-  await supabase.from('inquiries').update({ status: 'refused' }).eq('id', inquiry.id)
+  await updateInquiry(inquiry.id, { status: 'refused' })
 
   try {
     await sendEmail({
