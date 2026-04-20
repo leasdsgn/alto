@@ -7,7 +7,7 @@ import { type InquiryLocale } from '@/types/inquiry'
 export interface InquiryReceivedProps {
   locale: InquiryLocale
   guest: { firstName: string }
-  listing: { title: string }
+  listing: { title: string; image?: string; slug?: string }
   reservation: {
     checkIn: string
     checkOut: string
@@ -16,6 +16,8 @@ export interface InquiryReceivedProps {
   }
 }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
+
 export default function InquiryReceivedEmail({
   locale,
   guest,
@@ -23,9 +25,21 @@ export default function InquiryReceivedEmail({
   reservation,
 }: InquiryReceivedProps) {
   const preview = translate(locale, 'inquiryReceived.subject')
+  const cta = listing.slug
+    ? {
+        label: locale === 'fr' ? 'Voir l\'appartement' : 'View apartment',
+        href: `${SITE_URL}/appartements/${listing.slug}`,
+      }
+    : undefined
 
   return (
-    <EmailLayout locale={locale} preview={preview}>
+    <EmailLayout
+      locale={locale}
+      preview={preview}
+      heroImage={listing.image}
+      heroAlt={listing.title}
+      cta={cta}
+    >
       <Heading style={headingStyle}>{translate(locale, 'inquiryReceived.heading')}</Heading>
       <Text style={paragraphStyle}>
         {translate(locale, 'inquiryReceived.greeting', { firstName: guest.firstName })}
