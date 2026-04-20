@@ -71,6 +71,9 @@ async function confirmInquiry(inquiry: InquiryRow) {
 
   const stripe = getStripeServer()
   const provider = await guestyClient.getPaymentProvider(inquiry.guesty_listing_id)
+  const stripeAccountOption = provider.providerAccountId
+    ? { stripeAccount: provider.providerAccountId }
+    : undefined
 
   try {
     const paymentIntent = await stripe.paymentIntents.create(
@@ -82,7 +85,7 @@ async function confirmInquiry(inquiry: InquiryRow) {
         off_session: true,
         confirm: true,
       },
-      { stripeAccount: provider.providerAccountId },
+      stripeAccountOption,
     )
 
     await updateInquiry(inquiry.id, {
