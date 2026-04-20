@@ -30,9 +30,9 @@ export function DetailsCard({ title, items }: DetailsCardProps) {
 }
 
 const cardStyle = {
-  backgroundColor: colors.cream,
-  border: `1px solid ${colors.border}`,
-  borderRadius: '8px',
+  backgroundColor: '#ffffff',
+  borderTop: `1px solid ${colors.border}`,
+  borderBottom: `1px solid ${colors.border}`,
   padding: '20px 24px',
   margin: '24px 0',
 }

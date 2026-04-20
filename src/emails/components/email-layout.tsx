@@ -1,6 +1,7 @@
 import {
   Body,
   Container,
+  Font,
   Head,
   Html,
   Img,
@@ -37,7 +38,28 @@ const LOGO_URL = `${SITE_URL}/images/logo-alto-light.png`
 export function EmailLayout({ locale, preview, children }: EmailLayoutProps) {
   return (
     <Html lang={locale}>
-      <Head />
+      <Head>
+        <Font
+          fontFamily="Manrope"
+          fallbackFontFamily={['Helvetica', 'Arial', 'sans-serif']}
+          webFont={{
+            url: 'https://fonts.gstatic.com/s/manrope/v15/xn7_YHE41ni1AdIRggexSg.woff2',
+            format: 'woff2',
+          }}
+          fontWeight={400}
+          fontStyle="normal"
+        />
+        <Font
+          fontFamily="Manrope"
+          fallbackFontFamily={['Helvetica', 'Arial', 'sans-serif']}
+          webFont={{
+            url: 'https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRggOxSg.woff2',
+            format: 'woff2',
+          }}
+          fontWeight={700}
+          fontStyle="normal"
+        />
+      </Head>
       <Preview>{preview}</Preview>
       <Tailwind
         config={{
@@ -59,19 +81,20 @@ export function EmailLayout({ locale, preview, children }: EmailLayoutProps) {
       >
         <Body className="bg-coffee font-sans m-0 px-4 py-12">
           <Container className="mx-auto max-w-[600px]">
-            <Section className="text-center pb-8">
+            <Section className="text-center pb-10">
               <Img
                 src={LOGO_URL}
                 alt="Alto"
                 width="100"
                 height="26"
-                className="block mx-auto invert"
+                className="block mx-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
               />
             </Section>
 
-            <Container className="bg-cream rounded-2xl px-8 py-10">{children}</Container>
+            <Container className="bg-cream px-8 py-10">{children}</Container>
 
-            <Section className="pt-8 text-center">
+            <Section className="pt-10 text-center">
               <Text className="text-cream/80 text-[13px] leading-relaxed m-0 my-1">
                 {translate(locale, 'common.contact')}
               </Text>
