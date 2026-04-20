@@ -4,7 +4,7 @@
 
 create extension if not exists "pgcrypto";
 
-create table public.inquiries (
+create table if not exists public.inquiries (
   id uuid primary key default gen_random_uuid(),
   guesty_reservation_id text not null unique,
   guesty_listing_id text not null,
@@ -24,9 +24,9 @@ create table public.inquiries (
   updated_at timestamptz not null default now()
 );
 
-create index idx_inquiries_status on public.inquiries (status);
-create index idx_inquiries_guesty_reservation on public.inquiries (guesty_reservation_id);
-create index idx_inquiries_check_in on public.inquiries (check_in);
+create index if not exists idx_inquiries_status on public.inquiries (status);
+create index if not exists idx_inquiries_guesty_reservation on public.inquiries (guesty_reservation_id);
+create index if not exists idx_inquiries_check_in on public.inquiries (check_in);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -38,6 +38,7 @@ begin
 end;
 $$;
 
+drop trigger if exists inquiries_set_updated_at on public.inquiries;
 create trigger inquiries_set_updated_at
 before update on public.inquiries
 for each row execute function public.set_updated_at();
@@ -47,6 +48,7 @@ alter table public.inquiries enable row level security;
 -- Les accès se font via le service_role key côté back uniquement.
 -- Aucun accès public (anon / authenticated) à cette table.
 -- La policy ci-dessous ne laisse rien passer par défaut, le service_role bypass RLS.
+drop policy if exists "no public access" on public.inquiries;
 create policy "no public access"
 on public.inquiries
 for all
