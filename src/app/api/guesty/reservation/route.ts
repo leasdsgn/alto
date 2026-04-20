@@ -64,6 +64,8 @@ export async function POST(request: NextRequest) {
     const formattedCheckIn = formatDate(data.checkIn, locale)
     const formattedCheckOut = formatDate(data.checkOut, locale)
 
+    const supabase = getSupabaseAdmin()
+
     if (data.mode === 'instant') {
       const reservation = await guestyClient.createInstantReservation({
         quoteId: data.quoteId,
@@ -72,6 +74,25 @@ export async function POST(request: NextRequest) {
         policy: data.policy,
         ccToken: data.ccToken,
       })
+
+      const { error: insertError } = await supabase.from('inquiries').insert({
+        guesty_reservation_id: reservation._id,
+        guesty_listing_id: data.listingId,
+        guest: data.guest,
+        stripe_payment_method_id: null,
+        stripe_customer_id: null,
+        check_in: data.checkIn,
+        check_out: data.checkOut,
+        amount_cents: data.amountCents,
+        currency: data.currency,
+        locale,
+        status: 'confirmed',
+        mode: 'instant',
+      })
+
+      if (insertError) {
+        console.error('[reservation route] instant insert failed', insertError)
+      }
 
       await trySendEmail(() =>
         sendEmail({
@@ -102,7 +123,6 @@ export async function POST(request: NextRequest) {
       policy: data.policy,
     })
 
-    const supabase = getSupabaseAdmin()
     const { error: insertError } = await supabase.from('inquiries').insert({
       guesty_reservation_id: inquiry._id,
       guesty_listing_id: data.listingId,
@@ -115,6 +135,7 @@ export async function POST(request: NextRequest) {
       currency: data.currency,
       locale,
       status: 'pending',
+      mode: 'inquiry',
     })
 
     if (insertError) {
