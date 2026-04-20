@@ -63,6 +63,14 @@ export const emailDictionary = {
       checkOutTime: 'Check-out avant 11h',
       instructions: 'Instructions',
     },
+    cancellation: {
+      subject: 'Votre réservation a bien été annulée',
+      heading: 'Réservation annulée',
+      greeting: 'Bonjour {{firstName}},',
+      body: 'Votre réservation au {{listingTitle}} a bien été annulée.',
+      refund: 'Un remboursement de {{amount}} a été effectué sur votre carte. Il peut prendre 5 à 10 jours ouvrés pour apparaître.',
+      invite: 'Au plaisir de vous accueillir une prochaine fois.',
+    },
     postStay: {
       subject: 'Merci pour votre séjour',
       heading: 'Merci pour votre visite',
@@ -134,6 +142,14 @@ export const emailDictionary = {
       checkOutTime: 'Check-out before 11 AM',
       instructions: 'Instructions',
     },
+    cancellation: {
+      subject: 'Your booking has been canceled',
+      heading: 'Booking canceled',
+      greeting: 'Hi {{firstName}},',
+      body: 'Your booking at {{listingTitle}} has been canceled.',
+      refund: 'A refund of {{amount}} has been issued to your card. It may take 5 to 10 business days to appear.',
+      invite: 'We hope to welcome you another time.',
+    },
     postStay: {
       subject: 'Thank you for your stay',
       heading: 'Thanks for visiting',
@@ -155,6 +171,7 @@ export type EmailKey =
   | `inquiryRefused.${keyof Dictionary['inquiryRefused']}`
   | `preArrival.${keyof Dictionary['preArrival']}`
   | `postStay.${keyof Dictionary['postStay']}`
+  | `cancellation.${keyof Dictionary['cancellation']}`
 
 export function translate(
   locale: InquiryLocale,

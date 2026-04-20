@@ -1,6 +1,13 @@
 export type InquiryLocale = 'fr' | 'en'
 
-export type InquiryStatus = 'pending' | 'confirmed' | 'refused' | 'expired' | 'failed'
+export type InquiryStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'refused'
+  | 'expired'
+  | 'failed'
+  | 'canceled'
+  | 'refunded'
 
 export type InquiryMode = 'instant' | 'inquiry'
 
@@ -30,6 +37,8 @@ export interface InquiryRow {
   captured_at: string | null
   pre_arrival_sent_at: string | null
   post_stay_sent_at: string | null
+  canceled_at: string | null
+  stripe_refund_id: string | null
   created_at: string
   updated_at: string
 }
@@ -56,4 +65,6 @@ export interface InquiryUpdate {
   captured_at?: string | null
   pre_arrival_sent_at?: string | null
   post_stay_sent_at?: string | null
+  canceled_at?: string | null
+  stripe_refund_id?: string | null
 }
