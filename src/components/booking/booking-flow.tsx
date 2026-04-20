@@ -290,5 +290,5 @@ const altoAppearance = {
 }
 
 function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(value)
 }
