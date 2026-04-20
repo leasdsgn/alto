@@ -17,13 +17,13 @@ Le serveur tourne sur `http://localhost:3000`.
 
 ## Scripts
 
-| Commande | Action |
-|----------|--------|
-| `bun dev` | Dev server (Turbopack) |
-| `bun run build` | Build production |
-| `bun run lint` | ESLint |
-| `bun run typecheck` | Vérification TypeScript |
-| `bun run format` | Prettier (écriture) |
+| Commande               | Action                  |
+| ---------------------- | ----------------------- |
+| `bun dev`              | Dev server (Turbopack)  |
+| `bun run build`        | Build production        |
+| `bun run lint`         | ESLint                  |
+| `bun run typecheck`    | Vérification TypeScript |
+| `bun run format`       | Prettier (écriture)     |
 | `bun run format:check` | Prettier (vérification) |
 
 ## Variables d'environnement

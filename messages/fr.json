@@ -1,0 +1,38 @@
+{
+  "nav": {
+    "apartments": "Les appartements",
+    "lyon": "Lyon",
+    "story": "Notre histoire",
+    "blog": "Journal",
+    "contact": "Contact",
+    "book": "Réserver"
+  },
+  "footer": {
+    "tagline": "Location courte durée haut de gamme à Paris et Lyon.",
+    "sections": {
+      "explore": "Explorer",
+      "company": "Omen Studio x Alto",
+      "legal": "Mentions"
+    },
+    "links": {
+      "apartments": "Les appartements",
+      "lyon": "Lyon",
+      "blog": "Journal",
+      "story": "Notre histoire",
+      "contact": "Contact",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions générales"
+    },
+    "copy": "© {year} Alto. Tous droits réservés."
+  },
+  "common": {
+    "switchLocale": "EN",
+    "currency": "€",
+    "book": "Réserver",
+    "discover": "Découvrir"
+  },
+  "homepage": {
+    "heroTitle": "Paris, Lyon,",
+    "heroSub": "un pied-à-terre à chaque fois."
+  }
+}

@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      // Site en français, les apostrophes (l', d', etc.) sont omniprésentes.
+      // Échapper chaque occurrence avec &apos; rend le code illisible et n'apporte rien.
+      'react/no-unescaped-entities': 'off',
     },
   },
 ])

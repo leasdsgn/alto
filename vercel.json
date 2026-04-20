@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/reservation-emails",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

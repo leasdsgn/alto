@@ -1,26 +1,157 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import 'tailwindcss';
+@import '@heroui/styles';
+@import 'mapbox-gl/dist/mapbox-gl.css';
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cream: #fffff8;
+  --color-coffee: #301a0a;
+  --color-ash: #59453d;
+  --color-taupe: #82756b;
+  --color-silver: #aba39e;
+  --color-sand: #f3f3ed;
+  --font-sans: 'Manrope', sans-serif;
+  --font-size-display: 81px;
+  --font-size-h1: 54px;
+  --font-size-h2: 36px;
+  --font-size-h3: 29px;
+  --font-size-h4: 24px;
+  --font-size-h5: 22px;
+  --font-size-h6: 18px;
+  --font-size-body-xl: 18px;
+  --font-size-body: 16px;
+  --font-size-body-sm: 14px;
+  --font-size-caption: 12px;
+  --font-size-overline: 12px;
+  --line-height-display: 100%;
+  --line-height-h1: 120%;
+  --line-height-h2: 130%;
+  --line-height-h3: 130%;
+  --line-height-h4: 140%;
+  --line-height-h5: 150%;
+  --line-height-h6: 150%;
+  --line-height-body-xl: 150%;
+  --line-height-body: 150%;
+  --line-height-body-sm: 150%;
+  --line-height-caption: 155%;
+  --line-height-overline: 155%;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --spacing-gutter: 24px;
+  --spacing-gutter-md: 48px;
+  --spacing-gutter-lg: 64px;
+  --spacing-section: 64px;
+  --spacing-section-md: 96px;
+  --color-divider: #e8e8e2;
+  --max-width-content: 1800px;
+  --max-width-site: 1800px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: var(--color-cream);
+  --foreground: var(--color-coffee);
+  --surface: var(--color-cream);
+  --surface-foreground: var(--color-coffee);
+  --overlay: var(--color-cream);
+  --overlay-foreground: var(--color-coffee);
+  --muted: var(--color-taupe);
+  --default: var(--color-sand);
+  --default-foreground: var(--color-coffee);
+  --accent: var(--color-coffee);
+  --accent-foreground: var(--color-cream);
+  --border: var(--color-silver);
+  --separator: var(--color-silver);
+  --focus: var(--color-ash);
+  --link: var(--color-coffee);
+  --field-background: var(--color-cream);
+  --field-foreground: var(--color-coffee);
+  --field-placeholder: var(--color-taupe);
+  --field-border: transparent;
+  --segment: var(--color-sand);
+  --segment-foreground: var(--color-coffee);
+  --scrollbar: var(--color-silver);
+  --surface-shadow: none;
+  --overlay-shadow: none;
+  --field-shadow: none;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-coffee);
+  font-family: var(--font-sans);
+  background-color: var(--color-cream);
 }
+
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+}
+
+input, textarea, select, [contenteditable] {
+  cursor: auto;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+.btn-fill {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.btn-fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-sand);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-fill:hover::before {
+  transform: scaleX(1);
+}
+
+.btn-fill:hover {
+  color: var(--color-coffee) !important;
+}
+
+.btn-fill-outline::before {
+  background: var(--color-coffee);
+}
+
+.btn-fill-outline:hover {
+  color: var(--color-cream) !important;
+  border-color: var(--color-coffee) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
