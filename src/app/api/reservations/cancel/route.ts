@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
+import { guestyOpenApi } from '@/lib/guesty-openapi'
 import { getStripeServer } from '@/lib/stripe-server'
 import { getSupabaseAdmin } from '@/lib/supabase-client'
 import { updateInquiry } from '@/lib/inquiries-repository'
@@ -69,6 +70,15 @@ export async function POST(request: NextRequest) {
       stripe_refund_id: refundId,
       canceled_at: new Date().toISOString(),
     })
+
+    try {
+      await guestyOpenApi.cancelReservation(
+        inquiry.guesty_reservation_id,
+        'Annulation demandée par le guest',
+      )
+    } catch (guestyError) {
+      console.error('[cancel] Guesty Open API cancel failed', guestyError)
+    }
 
     try {
       await sendEmail({
