@@ -10,6 +10,24 @@ export interface Database {
         Update: InquiryUpdate
         Relationships: []
       }
+      guesty_webhook_events: {
+        Row: {
+          svix_id: string
+          event_name: string
+          reservation_id: string | null
+          created_at: string
+        }
+        Insert: {
+          svix_id: string
+          event_name: string
+          reservation_id?: string | null
+        }
+        Update: {
+          event_name?: string
+          reservation_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

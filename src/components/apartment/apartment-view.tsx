@@ -1,17 +1,11 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentBooking } from '@/components/apartment/booking'
+import { ApartmentGallery } from '@/components/apartment/gallery'
 import { Button } from '@/components/ui/button'
 import { type Apartment } from '@/types/apartment'
-
-gsap.registerPlugin(ScrollTrigger)
 
 interface Props {
   apartment: Apartment
@@ -36,21 +30,6 @@ const FAQ_ITEMS = [
 
 export function ApartmentView({ apartment, recommendations }: Props) {
   const a = apartment
-  const [activeImage, setActiveImage] = useState(0)
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-    const reveals = document.querySelectorAll('[data-reveal]')
-    reveals.forEach((el) => {
-      gsap.fromTo(el, { opacity: 0, y: 30 }, {
-        opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
-        scrollTrigger: { trigger: el, start: 'top 88%' },
-      })
-    })
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill())
-  }, [])
-
   const quartierName = a.address?.split(' - ')[0] ?? 'Le Marais'
 
   return (
@@ -58,73 +37,15 @@ export function ApartmentView({ apartment, recommendations }: Props) {
       <Header variant="dark" />
 
       <main className="mx-auto max-w-[1132px] px-6 md:px-12 lg:px-0">
-        {/* Hero: Gallery + Booking */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[716px_1fr] lg:gap-8">
-          {/* Gallery */}
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-[512px_211px]">
-            {/* Main image */}
-            <div className="relative h-[411px] overflow-hidden rounded-xl md:h-[429px]">
-              {a.images[activeImage] ? (
-                <Image
-                  src={a.images[activeImage]}
-                  alt={a.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 512px"
-                  quality={85}
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div className="bg-sand size-full" />
-              )}
-              {/* Dots */}
-              <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
-                {a.images.slice(0, 5).map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setActiveImage(i)}
-                    className={`size-2 rounded-full transition-colors ${
-                      i === activeImage ? 'bg-cream' : 'bg-cream/50'
-                    }`}
-                    aria-label={`Image ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
+          <ApartmentGallery name={a.name} images={a.images} />
 
-            {/* Thumbnails column */}
-            <div className="hidden flex-col gap-2 md:flex">
-              {a.images.slice(1, 5).map((img, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setActiveImage(i + 1)}
-                  className={`relative h-[100px] overflow-hidden rounded-xl transition-opacity ${
-                    activeImage === i + 1 ? 'ring-2 ring-coffee/30' : 'opacity-80 hover:opacity-100'
-                  }`}
-                >
-                  <Image
-                    src={img}
-                    alt={`${a.name} - ${i + 2}`}
-                    fill
-                    sizes="211px"
-                    quality={75}
-                    className="object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Booking sidebar - desktop */}
           <div className="hidden lg:block">
-            <ApartmentBooking price={a.price} slug={a.slug} />
+            <ApartmentBooking price={a.price} slug={a.slug} listingId={a.id} />
           </div>
         </section>
 
-        {/* Info */}
-        <section className="mt-8 border-b border-divider pb-8" data-reveal>
+        <section className="mt-8 border-b border-divider pb-8">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-coffee text-base font-bold">{a.name}</h1>
@@ -143,8 +64,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
           </div>
         </section>
 
-        {/* Description + Amenities */}
-        <section className="grid grid-cols-1 gap-8 border-b border-divider py-10 lg:grid-cols-[1fr_220px]" data-reveal>
+        <section className="grid grid-cols-1 gap-8 border-b border-divider py-10 lg:grid-cols-[1fr_220px]">
           <div>
             <p className="text-coffee max-w-[408px] text-base font-bold leading-[1.25]">
               {a.description}
@@ -157,7 +77,6 @@ export function ApartmentView({ apartment, recommendations }: Props) {
             )}
           </div>
 
-          {/* Amenities box - desktop */}
           <div className="hidden rounded-xl border border-silver/50 p-5 lg:block">
             <p className="text-silver text-xs font-bold uppercase leading-[15px] tracking-wide">
               Ce que propose<br />le logement
@@ -175,8 +94,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
           </div>
         </section>
 
-        {/* Amenities - mobile */}
-        <section className="border-b border-divider py-10 lg:hidden" data-reveal>
+        <section className="border-b border-divider py-10 lg:hidden">
           <div className="rounded-xl border border-silver/50 px-5 py-8">
             <p className="text-silver text-center text-xs font-bold uppercase tracking-wide">
               Ce que propose le logement
@@ -194,9 +112,8 @@ export function ApartmentView({ apartment, recommendations }: Props) {
           </div>
         </section>
 
-        {/* Quartier */}
         {a.neighborhood && (
-          <section className="border-b border-divider py-10" data-reveal>
+          <section className="border-b border-divider py-10">
             <p className="text-silver text-xs font-bold uppercase tracking-wide">Le quartier</p>
             <h2 className="text-coffee mt-1 text-base font-medium">{quartierName}</h2>
             <p className="text-coffee mt-6 max-w-[408px] text-xs font-medium leading-[1.85]">
@@ -211,8 +128,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
           </section>
         )}
 
-        {/* FAQ */}
-        <section className="border-b border-divider py-10" data-reveal>
+        <section className="border-b border-divider py-10">
           <p className="text-silver text-xs font-bold uppercase tracking-wide">FAQ</p>
           <h2 className="text-coffee mt-1 text-base font-medium">Questions fréquentes</h2>
 
@@ -246,8 +162,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
           </div>
         </section>
 
-        {/* Recommendations */}
-        <section className="py-10" data-reveal>
+        <section className="py-10">
           <p className="text-silver text-xs font-bold uppercase tracking-wide">Les recommandations</p>
           <h2 className="text-coffee mt-1 text-base font-medium">Vous aimerez aussi</h2>
 
@@ -261,14 +176,13 @@ export function ApartmentView({ apartment, recommendations }: Props) {
 
       <Footer />
 
-      {/* Mobile sticky CTA */}
       <div className="bg-cream/95 fixed inset-x-0 bottom-0 z-40 border-t border-divider p-4 backdrop-blur-md lg:hidden">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-coffee text-lg font-bold">{a.price}€</span>
             <span className="text-taupe text-sm"> /nuit</span>
           </div>
-          <Button href={`/reserver/${a.slug}`}>Réserver</Button>
+          <Button href={`/book/${a.slug}`}>Réserver</Button>
         </div>
       </div>
     </>

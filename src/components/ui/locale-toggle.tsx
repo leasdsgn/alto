@@ -1,8 +1,11 @@
 'use client'
 
 import { useTransition } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
-import { setLocaleCookie } from '@/lib/actions/set-locale'
+import {
+  useLocale,
+  useSetLocale,
+  useTranslations,
+} from '@/components/providers/locale-provider'
 import { type InquiryLocale } from '@/types/inquiry'
 
 interface LocaleToggleProps {
@@ -11,13 +14,14 @@ interface LocaleToggleProps {
 
 export function LocaleToggle({ className }: LocaleToggleProps) {
   const locale = useLocale() as InquiryLocale
+  const setLocale = useSetLocale()
   const t = useTranslations('common')
   const [isPending, startTransition] = useTransition()
 
   function toggle() {
     const next: InquiryLocale = locale === 'fr' ? 'en' : 'fr'
     startTransition(async () => {
-      await setLocaleCookie(next)
+      setLocale(next)
     })
   }
 

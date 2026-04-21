@@ -105,24 +105,39 @@ export const guestyMock = {
       Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000),
     )
     const subTotal = nightly * nights
+    const now = new Date()
     return Promise.resolve({
       _id: `quote-mock-${Date.now()}`,
-      listingId,
-      checkIn,
-      checkOut,
+      createdAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + 24 * 3600 * 1000).toISOString(),
+      accountId: 'mock-account',
       guestsCount,
-      ratePlanId: 'rate-plan-mock',
+      unitTypeId: listingId,
+      checkInDateLocalized: checkIn,
+      checkOutDateLocalized: checkOut,
       rates: {
-        fareAccommodation: subTotal,
-        fareCleaning: 50,
-        fareAccommodationAdjusted: subTotal,
-        totalFees: 50,
-        totalTaxes: Math.round(subTotal * 0.1),
-        subTotalPrice: subTotal,
-        totalPrice: subTotal + 50 + Math.round(subTotal * 0.1),
-        currency: 'EUR',
+        ratePlans: [
+          {
+            ratePlan: {
+              _id: 'rate-plan-mock',
+              name: 'Standard',
+              type: 'default',
+              money: {
+                currency: 'EUR',
+                fareAccommodation: subTotal,
+                fareAccommodationAdjusted: subTotal,
+                fareCleaning: 50,
+                totalFees: 50,
+                subTotalPrice: subTotal + 50,
+                hostPayout: subTotal + 50,
+                totalTaxes: 0,
+              },
+            },
+            inquiryId: `inquiry-mock-${Date.now()}`,
+          },
+        ],
       },
-      expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      status: 'valid',
     })
   },
 
@@ -152,6 +167,8 @@ export const guestyMock = {
     return Promise.resolve(buildReservation('reserved', body))
   },
 }
+
+export type GuestyMock = typeof guestyMock
 
 function buildReservation(
   status: 'confirmed' | 'reserved',

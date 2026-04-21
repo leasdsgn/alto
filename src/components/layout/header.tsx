@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useTranslations } from '@/components/providers/locale-provider'
 import { Button } from '@/components/ui/button'
 import { LocaleToggle } from '@/components/ui/locale-toggle'
 
@@ -23,7 +23,7 @@ export function Header({ variant = 'light' }: HeaderProps) {
   return (
     <header className={`${positionClass} flex items-center justify-between px-gutter py-6 md:px-gutter-md lg:px-gutter-lg lg:py-12`}>
       <Link href="/">
-        <Image src={logo} alt="Alto" width={140} height={37} priority />
+        <Image src={logo} alt="Alto" width={140} height={37} priority style={{ width: 'auto', height: 'auto' }} />
       </Link>
 
       <button

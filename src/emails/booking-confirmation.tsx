@@ -15,6 +15,7 @@ export interface BookingConfirmationProps {
     nights: number
     total: string
   }
+  cancelUrl?: string
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
@@ -24,6 +25,7 @@ export default function BookingConfirmationEmail({
   guest,
   listing,
   reservation,
+  cancelUrl,
 }: BookingConfirmationProps) {
   const preview = translate(locale, 'confirmation.subject')
   const nightsPlural = reservation.nights > 1 ? 's' : ''
@@ -31,6 +33,12 @@ export default function BookingConfirmationEmail({
     ? {
         label: locale === 'fr' ? 'Voir ma réservation' : 'View my booking',
         href: `${SITE_URL}/appartements/${listing.slug}`,
+      }
+    : undefined
+  const secondaryCta = cancelUrl
+    ? {
+        label: locale === 'fr' ? 'Annuler ma réservation' : 'Cancel my booking',
+        href: cancelUrl,
       }
     : undefined
 
@@ -41,6 +49,7 @@ export default function BookingConfirmationEmail({
       heroImage={listing.image}
       heroAlt={listing.title}
       cta={cta}
+      secondaryCta={secondaryCta}
     >
       <Heading style={headingStyle}>{translate(locale, 'confirmation.heading')}</Heading>
       <Text style={paragraphStyle}>
@@ -84,6 +93,7 @@ BookingConfirmationEmail.PreviewProps = {
     nights: 4,
     total: '1 120 EUR',
   },
+  cancelUrl: 'https://alto-virid.vercel.app/annulation?token=demo',
 } satisfies BookingConfirmationProps
 
 const headingStyle = {

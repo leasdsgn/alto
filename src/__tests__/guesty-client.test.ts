@@ -61,4 +61,61 @@ describe('guesty-client', () => {
     expect(apiCall[0]).toContain('checkOut=2026-05-05')
     expect(apiCall[0]).toContain('minOccupancy=2')
   })
+
+  it('transmet le ccToken dans le payload inquiry', async () => {
+    process.env.GUESTY_BEAPI_CLIENT_ID = 'test-id'
+    process.env.GUESTY_BEAPI_CLIENT_SECRET = 'test-secret'
+
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ access_token: 'tok', expires_in: 3600, token_type: 'Bearer' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            _id: 'res-123',
+            confirmationCode: 'CONF123',
+            status: 'reserved',
+            listingId: 'lst-123',
+            checkIn: '2026-05-01',
+            checkOut: '2026-05-05',
+            guestsCount: 2,
+            money: { totalPaid: 0, balanceDue: 1200, currency: 'EUR' },
+            guest: {
+              firstName: 'Jean',
+              lastName: 'Dupont',
+              email: 'jean@test.fr',
+              phone: '+33612345678',
+            },
+          }),
+      })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { guestyClient } = await import('@/lib/guesty-client')
+
+    await guestyClient.createInquiry({
+      quoteId: 'quote-123',
+      ratePlanId: 'rate-123',
+      ccToken: 'pm_visa_123',
+      guest: {
+        firstName: 'Jean',
+        lastName: 'Dupont',
+        email: 'jean@test.fr',
+        phone: '+33612345678',
+      },
+      policy: { privacy: true, terms: true },
+    })
+
+    const [, request] = mockFetch.mock.calls[1]
+    expect(String(mockFetch.mock.calls[1][0])).toContain('/reservations/quotes/quote-123/inquiry')
+    expect(request.method).toBe('POST')
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      ratePlanId: 'rate-123',
+      ccToken: 'pm_visa_123',
+    })
+  })
 })

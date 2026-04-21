@@ -13,15 +13,22 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const lenis = new Lenis()
+    const lenis = new Lenis({
+      lerp: 0.18,
+      duration: 0.8,
+      wheelMultiplier: 1.1,
+      touchMultiplier: 1.8,
+      smoothWheel: true,
+      syncTouch: false,
+    })
     lenisRef.current = lenis
 
     lenis.on('scroll', ScrollTrigger.update)
+    ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: true })
 
     gsap.ticker.add((time) => {
       lenis.raf(time * 1000)
     })
-    gsap.ticker.lagSmoothing(0)
 
     return () => {
       lenis.destroy()

@@ -65,20 +65,112 @@ async function openApiFetch<T>(path: string, options: RequestInit = {}): Promise
   return response.json() as Promise<T>
 }
 
+interface GuestyOpenApiPayment {
+  _id?: string
+  id?: string
+  amount?: number
+  currency?: string
+  status?: string
+}
+
+export interface GuestyOpenApiReservation {
+  _id?: string
+  id?: string
+  status?: string
+  listingId?: string
+  guest?: {
+    firstName?: string
+    lastName?: string
+    email?: string
+    phone?: string
+  }
+  checkInDateLocalized?: string
+  checkOutDateLocalized?: string
+  guestsCount?: number
+  money?: {
+    totalPaid?: number
+    balanceDue?: number
+    currency?: string
+    payments?: GuestyOpenApiPayment[]
+  }
+  payments?: GuestyOpenApiPayment[]
+}
+
 export const guestyOpenApi = {
+  getReservation(reservationId: string) {
+    if (process.env.GUESTY_MOCK === 'true') {
+      return Promise.resolve(buildMockReservation(reservationId))
+    }
+    return openApiFetch<GuestyOpenApiReservation>(`/v1/reservations/${reservationId}`)
+  },
+
   cancelReservation(reservationId: string, reason?: string) {
     if (process.env.GUESTY_MOCK === 'true') {
       return Promise.resolve({ _id: reservationId, status: 'canceled', mock: true })
     }
-    return openApiFetch<{ _id: string; status: string }>(
-      `/reservations/${reservationId}`,
+    return openApiFetch<{ _id: string; status: string }>(`/v1/reservations/${reservationId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        status: 'canceled',
+        ...(reason && { cancellationReason: reason }),
+      }),
+    })
+  },
+
+  refundReservationPayment(
+    reservationId: string,
+    paymentId: string,
+    amount: number,
+    note?: string,
+  ) {
+    if (process.env.GUESTY_MOCK === 'true') {
+      return Promise.resolve({
+        reservationId,
+        paymentId,
+        amount,
+        status: 'refunded',
+        mock: true,
+      })
+    }
+    return openApiFetch<{ status: string }>(
+      `/v1/reservations/${reservationId}/payments/${paymentId}/refund`,
       {
-        method: 'PUT',
+        method: 'POST',
         body: JSON.stringify({
-          status: 'canceled',
-          ...(reason && { cancellationReason: reason }),
+          amount,
+          ...(note && { note }),
         }),
       },
     )
   },
+}
+
+function buildMockReservation(reservationId: string): GuestyOpenApiReservation {
+  return {
+    _id: reservationId,
+    status: 'confirmed',
+    listingId: 'mock-faubourg',
+    guest: {
+      firstName: 'Camille',
+      lastName: 'Martin',
+      email: 'camille@example.com',
+      phone: '+33600000000',
+    },
+    checkInDateLocalized: '2026-05-20',
+    checkOutDateLocalized: '2026-05-24',
+    guestsCount: 2,
+    money: {
+      totalPaid: 980,
+      balanceDue: 0,
+      currency: 'EUR',
+      payments: [
+        {
+          _id: 'pay-mock-1',
+          amount: 980,
+          currency: 'EUR',
+          status: 'done',
+        },
+      ],
+    },
+  }
 }

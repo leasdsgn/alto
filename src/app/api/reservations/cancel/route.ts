@@ -1,19 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
-import { guestyClient } from '@/lib/guesty-client'
-import { guestyOpenApi } from '@/lib/guesty-openapi'
-import { getStripeServer } from '@/lib/stripe-server'
-import { getSupabaseAdmin } from '@/lib/supabase-client'
-import { updateInquiry } from '@/lib/inquiries-repository'
+import { guestyOpenApi, type GuestyOpenApiReservation } from '@/lib/guesty-openapi'
+import { findInquiryByReservation, updateInquiry } from '@/lib/inquiries-repository'
 import { sendEmail } from '@/lib/resend-client'
 import { translate } from '@/lib/i18n/email-dictionary'
+import { calculateRefundAmountCents } from '@/lib/cancellation-policy'
 import { formatCurrency } from '@/lib/formatters'
 import CancellationConfirmedEmail from '@/emails/cancellation-confirmed'
 import { type InquiryRow } from '@/types/inquiry'
+import { verifyCancellationToken } from '@/lib/cancel-token'
 
 const schema = z.object({
-  guestyReservationId: z.string().min(1),
-  email: z.email(),
+  token: z.string().min(1),
 })
 
 export async function POST(request: NextRequest) {
@@ -24,19 +22,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
     }
 
-    const supabase = getSupabaseAdmin()
-    const { data, error } = await supabase
-      .from('inquiries')
-      .select('*')
-      .eq('guesty_reservation_id', parsed.data.guestyReservationId)
-      .maybeSingle()
+    const tokenPayload = verifyCancellationToken(parsed.data.token)
 
-    if (error) throw new Error(`read failed: ${error.message}`)
-    if (!data) return NextResponse.json({ error: 'not_found' }, { status: 404 })
+    const inquiry = await findInquiryByReservation(tokenPayload.reservationId)
+    if (!inquiry) {
+      return NextResponse.json({ error: 'not_found' }, { status: 404 })
+    }
 
-    const inquiry = data as InquiryRow
-
-    if (inquiry.guest.email.toLowerCase() !== parsed.data.email.toLowerCase()) {
+    if (inquiry.guest.email.toLowerCase() !== tokenPayload.email.toLowerCase()) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 403 })
     }
 
@@ -47,59 +40,93 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let refundId: string | null = null
-    let refundedAmount: string | null = null
+    const reservation = await guestyOpenApi.getReservation(inquiry.guesty_reservation_id)
+    const refundAmountCents = calculateRefundAmountCents(
+      inquiry.amount_cents,
+      inquiry.check_in,
+    )
 
-    if (inquiry.status === 'confirmed' && inquiry.stripe_payment_intent_id) {
-      const stripe = getStripeServer()
-      const provider = await guestyClient.getPaymentProvider(inquiry.guesty_listing_id)
-      const stripeAccountOption = provider.providerAccountId
-        ? { stripeAccount: provider.providerAccountId }
-        : undefined
+    await guestyOpenApi.cancelReservation(
+      inquiry.guesty_reservation_id,
+      'Annulation demandée par le voyageur',
+    )
 
-      const refund = await stripe.refunds.create(
-        { payment_intent: inquiry.stripe_payment_intent_id },
-        stripeAccountOption,
+    if (refundAmountCents > 0) {
+      const paymentId = findRefundablePaymentId(reservation)
+      if (!paymentId) {
+        throw new Error('Aucun paiement Guesty remboursable trouvé pour cette réservation')
+      }
+
+      await guestyOpenApi.refundReservationPayment(
+        inquiry.guesty_reservation_id,
+        paymentId,
+        refundAmountCents / 100,
+        'Refund déclenché depuis le site Alto',
       )
-      refundId = refund.id
-      refundedAmount = formatCurrency(inquiry.amount_cents, inquiry.currency, inquiry.locale)
+    } else {
+      await sendCancellationEmail(inquiry, null)
     }
 
     await updateInquiry(inquiry.id, {
-      status: refundId ? 'refunded' : 'canceled',
-      stripe_refund_id: refundId,
+      status: 'canceled',
       canceled_at: new Date().toISOString(),
     })
 
-    try {
-      await guestyOpenApi.cancelReservation(
-        inquiry.guesty_reservation_id,
-        'Annulation demandée par le guest',
-      )
-    } catch (guestyError) {
-      console.error('[cancel] Guesty Open API cancel failed', guestyError)
-    }
-
-    try {
-      await sendEmail({
-        to: inquiry.guest.email,
-        subject: translate(inquiry.locale, 'cancellation.subject'),
-        react: CancellationConfirmedEmail({
-          locale: inquiry.locale,
-          guest: { firstName: inquiry.guest.firstName },
-          listing: {
-            title: (await guestyClient.getListing(inquiry.guesty_listing_id)).title ?? 'Alto',
-          },
-          refund: refundedAmount ? { amount: refundedAmount } : null,
-        }),
-      })
-    } catch (emailError) {
-      console.error('[cancel] mail send failed', emailError)
-    }
-
-    return NextResponse.json({ ok: true, status: refundId ? 'refunded' : 'canceled' })
+    return NextResponse.json({
+      ok: true,
+      status: 'canceled',
+      refundAmountCents,
+    })
   } catch (error) {
+    if (
+      error instanceof Error &&
+      ['invalid_token_format', 'invalid_token_signature', 'invalid_token_payload', 'expired_token'].includes(
+        error.message,
+      )
+    ) {
+      return NextResponse.json({ error: error.message }, { status: 401 })
+    }
+
     const message = error instanceof Error ? error.message : 'Erreur inconnue'
     return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+function findRefundablePaymentId(reservation: GuestyOpenApiReservation): string | null {
+  const payments = reservation.money?.payments ?? reservation.payments ?? []
+
+  for (const payment of payments) {
+    if (!payment) continue
+
+    const status = payment.status?.toUpperCase()
+    if (status && ['FAILED', 'CANCELED', 'DECLINED'].includes(status)) {
+      continue
+    }
+
+    if (payment._id) return payment._id
+    if (payment.id) return payment.id
+  }
+
+  return null
+}
+
+async function sendCancellationEmail(
+  inquiry: InquiryRow,
+  refundAmountCents: number | null,
+) {
+  await sendEmail({
+    to: inquiry.guest.email,
+    subject: translate(inquiry.locale, 'cancellation.subject'),
+    react: CancellationConfirmedEmail({
+      locale: inquiry.locale,
+      guest: { firstName: inquiry.guest.firstName },
+      listing: { title: inquiry.listing_title },
+      refund:
+        refundAmountCents && refundAmountCents > 0
+          ? {
+              amount: formatCurrency(refundAmountCents, inquiry.currency, inquiry.locale),
+            }
+          : null,
+    }),
+  })
 }

@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { LOCALE_COOKIE, SUPPORTED_LOCALES } from '@/lib/i18n/request'
+import { LOCALE_COOKIE, SUPPORTED_LOCALES } from '@/lib/i18n/locale'
 import { type InquiryLocale } from '@/types/inquiry'
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365

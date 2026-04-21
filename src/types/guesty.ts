@@ -54,24 +54,40 @@ export interface GuestyCalendarDay {
   currency: string
 }
 
+export interface GuestyQuoteMoney {
+  currency: string
+  fareAccommodation: number
+  fareAccommodationAdjusted: number
+  fareCleaning: number
+  totalFees: number
+  subTotalPrice: number
+  hostPayout: number
+  totalTaxes: number
+}
+
+export interface GuestyQuoteRatePlan {
+  ratePlan: {
+    _id: string
+    name: string
+    type: string
+    money: GuestyQuoteMoney
+  }
+  inquiryId: string
+}
+
 export interface GuestyQuote {
   _id: string
-  listingId: string
-  checkIn: string
-  checkOut: string
-  guestsCount: number
-  ratePlanId: string
-  rates: {
-    fareAccommodation: number
-    fareCleaning: number
-    fareAccommodationAdjusted: number
-    totalFees: number
-    totalTaxes: number
-    subTotalPrice: number
-    totalPrice: number
-    currency: string
-  }
+  createdAt: string
   expiresAt: string
+  accountId: string
+  guestsCount: number
+  unitTypeId: string
+  checkInDateLocalized: string
+  checkOutDateLocalized: string
+  rates: {
+    ratePlans: GuestyQuoteRatePlan[]
+  }
+  status: string
 }
 
 export interface GuestyGuest {

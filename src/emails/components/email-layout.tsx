@@ -6,6 +6,7 @@ import {
   Head,
   Html,
   Img,
+  Link,
   Preview,
   Section,
   Tailwind,
@@ -22,6 +23,7 @@ interface EmailLayoutProps {
   heroImage?: string
   heroAlt?: string
   cta?: { label: string; href: string }
+  secondaryCta?: { label: string; href: string }
 }
 
 const colors = {
@@ -46,6 +48,7 @@ export function EmailLayout({
   heroImage,
   heroAlt,
   cta,
+  secondaryCta,
 }: EmailLayoutProps) {
   return (
     <Html lang={locale}>
@@ -134,6 +137,21 @@ export function EmailLayout({
                   >
                     {cta.label}
                   </Button>
+                </Section>
+              ) : null}
+
+              {secondaryCta ? (
+                <Section className="text-center pt-4">
+                  <Link
+                    href={secondaryCta.href}
+                    style={{
+                      color: colors.secondary,
+                      fontSize: '13px',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    {secondaryCta.label}
+                  </Link>
                 </Section>
               ) : null}
             </Container>

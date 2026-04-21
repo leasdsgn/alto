@@ -5,7 +5,9 @@ import {
   type GuestyQuote,
   type GuestyPaymentProvider,
   type GuestyReservation,
+  type GuestyReservationRequest,
 } from '@/types/guesty'
+import { type GuestyMock } from './guesty-mock'
 import { readOAuthCache, writeOAuthCache, writeRateLimit } from './guesty-oauth-cache'
 
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
@@ -118,9 +120,7 @@ async function guestyFetch<T>(
 
 const USE_MOCK = process.env.GUESTY_MOCK === 'true'
 
-async function mock<K extends keyof typeof import('./guesty-mock').guestyMock>(
-  method: K,
-): Promise<(typeof import('./guesty-mock').guestyMock)[K]> {
+async function mock<K extends keyof GuestyMock>(method: K): Promise<GuestyMock[K]> {
   const { guestyMock } = await import('./guesty-mock')
   return guestyMock[method]
 }
@@ -171,30 +171,21 @@ export const guestyClient = {
     return guestyFetch<GuestyPaymentProvider>(`/listings/${listingId}/payment-provider`)
   },
 
-  createInstantReservation(body: {
-    quoteId: string
-    ratePlanId: string
-    ccToken: string
-    guest: { firstName: string; lastName: string; email: string; phone: string }
-    policy: { privacy: boolean; terms: boolean }
-  }) {
+  createInstantReservation(body: GuestyReservationRequest) {
+    const { quoteId, ...payload } = body
     if (USE_MOCK) return mock('createInstantReservation').then((fn) => fn(body))
-    return guestyFetch<GuestyReservation>('/reservations/instant', {
+    return guestyFetch<GuestyReservation>(`/reservations/quotes/${quoteId}/instant`, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
   },
 
-  createInquiry(body: {
-    quoteId: string
-    ratePlanId: string
-    guest: { firstName: string; lastName: string; email: string; phone: string }
-    policy: { privacy: boolean; terms: boolean }
-  }) {
+  createInquiry(body: GuestyReservationRequest) {
+    const { quoteId, ...payload } = body
     if (USE_MOCK) return mock('createInquiry').then((fn) => fn(body))
-    return guestyFetch<GuestyReservation>('/reservations/inquiry', {
+    return guestyFetch<GuestyReservation>(`/reservations/quotes/${quoteId}/inquiry`, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
   },
 }
