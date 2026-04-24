@@ -79,7 +79,7 @@ export function BlogIndex({ articles, categories, copy }: BlogIndexProps) {
               </div>
               <p className="text-coffee mt-4 text-base font-medium leading-[24px]">{article.title}</p>
               <p className="text-silver mt-1 text-xs font-bold uppercase tracking-[0.24px]">
-                {copy.datePrefix} {article.date}
+                {[copy.datePrefix, article.date].filter(Boolean).join(' ')}
               </p>
             </Link>
           ))}
