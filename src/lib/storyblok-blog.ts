@@ -55,10 +55,10 @@ async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticl
     }),
   )
 
-  return responses.flat().map(mapStoryblokArticle).filter(Boolean) as BlogArticle[]
+  return responses.flat().map((story) => mapStoryblokArticle(story, locale)).filter(Boolean) as BlogArticle[]
 }
 
-function mapStoryblokArticle(story: StoryblokStory): BlogArticle | null {
+function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): BlogArticle | null {
   const content = story.content ?? {}
   const title = asString(content.title) ?? story.name
   const slug = story.slug || story.full_slug.split('/').at(-1)
@@ -68,7 +68,7 @@ function mapStoryblokArticle(story: StoryblokStory): BlogArticle | null {
     slug,
     title,
     subtitle: asString(content.subtitle) ?? asString(content.excerpt) ?? '',
-    date: formatStoryblokDate(asString(content.date) ?? story.first_published_at),
+    date: formatStoryblokDate(asString(content.date) ?? story.first_published_at ?? null, locale),
     category: asString(content.category) ?? 'Journal',
     image: assetUrl(content.image) ?? assetUrl(content.cover) ?? assetUrl(content.heroImage) ?? '/images/alto-salon.jpg',
     sections: mapSections(content),
@@ -116,11 +116,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function formatStoryblokDate(value: string | null): string {
+function formatStoryblokDate(value: string | null, locale: InquiryLocale): string {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

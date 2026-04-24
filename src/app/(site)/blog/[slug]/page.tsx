@@ -1,18 +1,21 @@
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { BLOG_ARTICLES } from '@/lib/blog-data'
+import { LOCALE_COOKIE, resolveLocale } from '@/lib/i18n/locale'
+import { getBlogArticle } from '@/lib/storyblok-blog'
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const article = BLOG_ARTICLES.find((a) => a.slug === slug)
+  const cookieStore = await cookies()
+  const locale = resolveLocale(cookieStore.get(LOCALE_COOKIE)?.value)
+  const article = await getBlogArticle(slug, locale)
 
   if (!article) notFound()
 
   return (
     <>
-      {/* Hero */}
       <div className="relative h-[422px] overflow-hidden">
         <Image
           src={article.image}
@@ -40,7 +43,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <main className="mx-auto max-w-content px-gutter py-section md:px-gutter-md">
         <article className="max-w-[616px]">
           {article.sections.map((section, i) => (
-            <div key={i} className={i > 0 ? 'mt-12' : ''}>
+            <div key={`${section.heading}-${i}`} className={i > 0 ? 'mt-12' : ''}>
               <p className="text-coffee text-base font-bold leading-[20px]">{section.heading}</p>
 
               {section.label && (
@@ -48,7 +51,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               )}
 
               {section.body.split('\n\n').map((para, j) => (
-                <p key={j} className="text-coffee mt-4 text-xs font-medium leading-[22px] first:mt-4">{para}</p>
+                <p key={`${para}-${j}`} className="text-coffee mt-4 text-xs font-medium leading-[22px] first:mt-4">{para}</p>
               ))}
             </div>
           ))}
