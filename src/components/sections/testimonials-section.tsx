@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const TESTIMONIALS = [
   {
-    quote: 'On s\'est sentis chez nous des la premiere minute. L\'appartement est exactement comme sur les photos, en mieux.',
+    quote: 'On s\'est sentis chez nous dès la première minute. L\'appartement est exactement comme sur les photos, en mieux.',
     name: 'Marie & Thomas',
     apartment: 'Le Faubourg',
     stay: 'Avril 2026',
@@ -16,7 +16,7 @@ const TESTIMONIALS = [
     stay: 'Mars 2026',
   },
   {
-    quote: 'Trois nuits, et on a deja rebooke pour l\'ete. Le Saint-Germain est devenu notre adresse parisienne.',
+    quote: 'Trois nuits, et on a déjà réservé pour l\'été. Le Saint-Germain est devenu notre adresse parisienne.',
     name: 'Sofia & Leo',
     apartment: 'Le Saint-Germain',
     stay: 'Février 2026',
@@ -26,6 +26,14 @@ const TESTIMONIALS = [
 export function TestimonialsSection() {
   const [current, setCurrent] = useState(0)
   const testimonial = TESTIMONIALS[current]
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCurrent((index) => (index + 1) % TESTIMONIALS.length)
+    }, 4500)
+
+    return () => window.clearInterval(timer)
+  }, [])
 
   return (
     <section className="bg-sand">
@@ -57,7 +65,7 @@ export function TestimonialsSection() {
                     : 'bg-silver size-2'
                 }`}
                 onClick={() => setCurrent(i)}
-                aria-label={`Temoignage ${i + 1}`}
+                aria-label={`Témoignage ${i + 1}`}
               />
             ))}
           </div>

@@ -11,24 +11,24 @@ gsap.registerPlugin(ScrollTrigger)
 const BLOG_POSTS = [
   {
     id: 1,
-    title: 'Terreaux à hauteur de regard : façades, galeries et lumière lyonnaise',
+    title: 'Le Marais à hauteur de regard',
     date: 'Le 12 mars 2026',
     image: '/images/lyon/blog-terreaux.jpg',
-    slug: 'terreaux-facades-galeries',
+    slug: 'le-marais-a-hauteur-de-regard',
   },
   {
     id: 2,
-    title: "Un week-end à Croix-Rousse : ateliers d'artistes, marchés et vues sur la ville",
+    title: 'Un week-end à Saint-Germain',
     date: 'Le 12 mars 2026',
     image: '/images/lyon/apt-vieux-lyon.jpg',
-    slug: 'week-end-croix-rousse',
+    slug: 'un-week-end-a-saint-germain',
   },
   {
     id: 3,
-    title: 'Autour des Brotteaux : élégance haussmannienne et adresses confidentielles',
+    title: 'Autour de l\'Opéra',
     date: 'Le 12 mars 2026',
     image: '/images/lyon/apt-bellecour.jpg',
-    slug: 'brotteaux-elegance-haussmannienne',
+    slug: 'autour-de-l-opera',
   },
 ]
 
@@ -78,7 +78,7 @@ export function LyonBlogSection() {
             </h3>
 
             <p className="text-coffee mt-8 text-base font-medium leading-relaxed">
-              Depuis 2016 nous aidons les voyageurs grâce à des logements premium au coeur des villes
+              Depuis 2016 nous aidons les voyageurs grâce à des logements premium au cœur des villes
             </p>
           </div>
 

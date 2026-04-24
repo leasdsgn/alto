@@ -100,6 +100,12 @@ input, textarea, select, [contenteditable] {
   display: none;
 }
 
+@media (min-width: 768px) {
+  .experience-track {
+    min-width: 160vw;
+  }
+}
+
 body::after {
   content: '';
   position: fixed;
@@ -154,4 +160,3 @@ body::after {
     scroll-behavior: auto !important;
   }
 }
-

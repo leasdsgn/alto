@@ -1,9 +1,9 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Link from 'next/link'
 import { ApartmentCard } from '@/components/ui/apartment-card'
 import { Chip } from '@/components/ui/chip'
-import { Button } from '@/components/ui/button'
 
 interface Apartment {
   name: string
@@ -22,36 +22,12 @@ const CITY_FILTERS = [
   { id: 'lyon', label: 'Lyon' },
 ]
 
-const NEIGHBORHOOD_FILTERS: Record<string, { id: string; label: string }[]> = {
-  paris: [
-    { id: 'marais', label: 'Le Marais' },
-    { id: 'saint-germain', label: 'Saint-Germain' },
-    { id: 'opera', label: 'Opéra' },
-  ],
-  lyon: [
-    { id: 'presquile', label: 'Presqu\'île' },
-    { id: 'confluence', label: 'Confluence' },
-    { id: 'croix-rousse', label: 'Croix-Rousse' },
-  ],
-}
-
-const QUARTIER_MAP: Record<string, string> = {
-  'le-faubourg': 'marais',
-  'le-marais': 'marais',
-  'l-opera': 'opera',
-  'le-saint-germain': 'saint-germain',
-}
-
 export function ApartmentsCarousel({ apartments }: { apartments: Apartment[] }) {
   const [activeCity, setActiveCity] = useState('all')
-  const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null)
   const trackRef = useRef<HTMLDivElement>(null)
-
-  const neighborhoods = activeCity !== 'all' ? (NEIGHBORHOOD_FILTERS[activeCity] ?? []) : []
 
   const filtered = apartments.filter((apt) => {
     if (activeCity !== 'all' && apt.city?.toLowerCase() !== activeCity) return false
-    if (activeNeighborhood && QUARTIER_MAP[apt.slug] !== activeNeighborhood) return false
     return true
   })
 
@@ -77,43 +53,16 @@ export function ApartmentsCarousel({ apartments }: { apartments: Apartment[] }) 
               <Chip
                 key={f.id}
                 variant={activeCity === f.id ? 'active' : 'default'}
-                onPress={() => { setActiveCity(f.id); setActiveNeighborhood(null) }}
+                onPress={() => setActiveCity(f.id)}
               >
                 {f.label}
               </Chip>
             ))}
-            <Button href="/appartements" className="hidden md:flex">
-              Voir tout
-            </Button>
-          </div>
-          <div className={`grid transition-all duration-300 ease-in-out ${neighborhoods.length > 0 ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden">
-              <div className="flex items-center gap-1.5 pb-0.5">
-                {neighborhoods.map((n) => (
-                  <Chip
-                    key={n.id}
-                    variant={activeNeighborhood === n.id ? 'active' : 'default'}
-                    onPress={() => setActiveNeighborhood(activeNeighborhood === n.id ? null : n.id)}
-                  >
-                    {n.label}
-                  </Chip>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
       <div className="relative mt-10">
-        <button
-          type="button"
-          onClick={() => scroll('left')}
-          className="bg-cream/90 text-coffee absolute -left-4 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full shadow-md backdrop-blur-sm transition-opacity hover:opacity-80 md:flex"
-          aria-label="Précédent"
-        >
-          <ArrowLeft />
-        </button>
-
         <div
           ref={trackRef}
           className="-mx-gutter flex snap-x snap-mandatory gap-3 overflow-x-auto px-gutter scrollbar-none md:-mx-0 md:px-0"
@@ -128,15 +77,33 @@ export function ApartmentsCarousel({ apartments }: { apartments: Apartment[] }) 
             </div>
           ))}
         </div>
+      </div>
 
-        <button
-          type="button"
-          onClick={() => scroll('right')}
-          className="bg-cream/90 text-coffee absolute -right-4 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full shadow-md backdrop-blur-sm transition-opacity hover:opacity-80 md:flex"
-          aria-label="Suivant"
+      <div className="mt-6 flex items-center justify-between">
+        <Link
+          href="/appartements"
+          className="text-coffee border-b border-coffee/40 text-xs font-bold uppercase tracking-[0.24px] transition-opacity hover:opacity-70"
         >
-          <ArrowRight />
-        </button>
+          Voir tout
+        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            className="text-coffee flex size-9 items-center justify-center rounded-full border border-coffee/20 transition-colors hover:bg-sand"
+            aria-label="Précédent"
+          >
+            <ArrowLeft />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll('right')}
+            className="text-coffee flex size-9 items-center justify-center rounded-full border border-coffee/20 transition-colors hover:bg-sand"
+            aria-label="Suivant"
+          >
+            <ArrowRight />
+          </button>
+        </div>
       </div>
     </div>
   )

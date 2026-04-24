@@ -1,0 +1,128 @@
+import {
+  getFallbackBlogArticles,
+  type BlogArticle,
+} from '@/lib/blog-data'
+import type { InquiryLocale } from '@/types/inquiry'
+
+interface StoryblokStory {
+  name: string
+  slug: string
+  full_slug: string
+  first_published_at?: string
+  content?: Record<string, unknown>
+}
+
+interface StoryblokStoriesResponse {
+  stories?: StoryblokStory[]
+}
+
+const STORYBLOK_BASE_URL = 'https://api.storyblok.com/v2/cdn/stories'
+const STORYBLOK_STARTS_WITH = ['blog/', 'articles/']
+
+export async function getBlogArticles(locale: InquiryLocale): Promise<BlogArticle[]> {
+  const articles = await fetchStoryblokArticles(locale)
+  return articles.length > 0 ? articles : getFallbackBlogArticles(locale)
+}
+
+export async function getBlogArticle(slug: string, locale: InquiryLocale): Promise<BlogArticle | null> {
+  const articles = await getBlogArticles(locale)
+  return articles.find((article) => article.slug === slug) ?? null
+}
+
+async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticle[]> {
+  const token = process.env.NEXT_PUBLIC_STORYBLOK_TOKEN
+  if (!token) return []
+
+  const responses = await Promise.all(
+    STORYBLOK_STARTS_WITH.map(async (startsWith) => {
+      const params = new URLSearchParams({
+        token,
+        version: process.env.NODE_ENV === 'production' ? 'published' : 'draft',
+        starts_with: startsWith,
+        content_type: 'article',
+        language: locale,
+        fallback_lang: 'fr',
+        per_page: '100',
+      })
+
+      const response = await fetch(`${STORYBLOK_BASE_URL}?${params}`, {
+        next: { revalidate: 300 },
+      }).catch(() => null)
+
+      if (!response?.ok) return []
+      const data = await response.json() as StoryblokStoriesResponse
+      return data.stories ?? []
+    }),
+  )
+
+  return responses.flat().map(mapStoryblokArticle).filter(Boolean) as BlogArticle[]
+}
+
+function mapStoryblokArticle(story: StoryblokStory): BlogArticle | null {
+  const content = story.content ?? {}
+  const title = asString(content.title) ?? story.name
+  const slug = story.slug || story.full_slug.split('/').at(-1)
+  if (!slug || !title) return null
+
+  return {
+    slug,
+    title,
+    subtitle: asString(content.subtitle) ?? asString(content.excerpt) ?? '',
+    date: formatStoryblokDate(asString(content.date) ?? story.first_published_at),
+    category: asString(content.category) ?? 'Journal',
+    image: assetUrl(content.image) ?? assetUrl(content.cover) ?? assetUrl(content.heroImage) ?? '/images/alto-salon.jpg',
+    sections: mapSections(content),
+  }
+}
+
+function mapSections(content: Record<string, unknown>): BlogArticle['sections'] {
+  const sections = Array.isArray(content.sections) ? content.sections : []
+  const mapped = sections
+    .map((section) => {
+      if (!isRecord(section)) return null
+      const heading = asString(section.heading) ?? asString(section.title)
+      const body = asString(section.body) ?? asString(section.text)
+      if (!heading || !body) return null
+      return {
+        label: asString(section.label),
+        heading,
+        body,
+      }
+    })
+    .filter(Boolean) as BlogArticle['sections']
+
+  if (mapped.length > 0) return mapped
+
+  const body = asString(content.body) ?? asString(content.text) ?? asString(content.content)
+  return [
+    {
+      heading: asString(content.heading) ?? asString(content.title) ?? '',
+      body: body ?? '',
+    },
+  ].filter((section) => section.heading || section.body)
+}
+
+function assetUrl(value: unknown): string | null {
+  if (typeof value === 'string') return value || null
+  if (!isRecord(value)) return null
+  return asString(value.filename) ?? asString(value.url)
+}
+
+function asString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value : null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function formatStoryblokDate(value: string | null): string {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}

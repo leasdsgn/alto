@@ -32,6 +32,7 @@ export function AboutSection() {
 
   useLayoutEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (window.matchMedia('(max-width: 767px)').matches) return
 
     const section = sectionRef.current
     const left = leftRef.current
@@ -62,7 +63,7 @@ export function AboutSection() {
   return (
     <section
       ref={sectionRef}
-      className="flex min-h-screen flex-col justify-center"
+      className="flex flex-col justify-center py-section md:min-h-screen md:py-0"
     >
       <div className="mx-auto w-full max-w-content px-gutter md:px-gutter-md">
         <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">
@@ -72,22 +73,22 @@ export function AboutSection() {
           Une autre idée de l'hospitalité
         </h2>
 
-        <div className="mt-10 flex gap-6">
+        <div className="mt-10 flex flex-col gap-6 md:flex-row">
           <div
             ref={leftRef}
-            className="bg-coffee flex min-h-[441px] shrink-0 flex-col justify-between overflow-hidden rounded-lg p-8 md:p-10"
+            className="bg-coffee flex min-h-[441px] flex-col justify-between overflow-hidden rounded-lg p-8 md:shrink-0 md:p-10"
           >
             <div className="flex flex-col gap-8">
               <div>
-                <p className="text-cream/40 text-[10px] font-bold uppercase tracking-[2px]">Manifeste</p>
-                <p className="text-cream mt-3 text-sm leading-[1.8]">
+                <p className="text-cream/40 text-xs font-bold">Manifeste</p>
+                <p className="text-cream mt-3 text-base leading-[1.75] md:text-lg">
                   Un appartement ne devrait pas ressembler à un hôtel. Il devrait ressembler à quelque chose que vous n'avez pas encore trouvé.
                 </p>
               </div>
               <div className="flex flex-col gap-6">
                 {PILLARS.map((pillar) => (
                   <div key={pillar.title} className="flex gap-4">
-                    <span className="text-cream/30 text-xs font-bold tabular-nums">{pillar.number}</span>
+                    <span className="text-cream/30 text-base font-bold tabular-nums md:text-lg">{pillar.number}</span>
                     <div>
                       <h3 className="text-cream text-sm font-bold">{pillar.title}</h3>
                       <p className="text-cream/60 mt-1.5 text-xs leading-[1.7]">{pillar.description}</p>
@@ -96,15 +97,11 @@ export function AboutSection() {
                 ))}
               </div>
             </div>
-
-            <p className="text-cream/30 mt-10 text-caption font-bold uppercase tracking-[1px]">
-              Paris · Lyon · Bientôt ailleurs
-            </p>
           </div>
 
           <div
             ref={rightRef}
-            className="relative flex-1 overflow-hidden rounded-lg md:min-h-[441px]"
+            className="relative min-h-[360px] flex-1 overflow-hidden rounded-lg md:min-h-[441px]"
           >
             <Image
               src="/images/alto-salon.jpg"

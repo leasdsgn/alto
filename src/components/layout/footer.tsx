@@ -17,7 +17,17 @@ const COL3 = [
   { label: 'Investir', href: '/investir' },
 ]
 
-export function Footer() {
+interface FooterProps {
+  reserveStickyCtaSpace?: boolean | 'mobile'
+}
+
+export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
+  const bottomPadding = reserveStickyCtaSpace === true
+    ? 'pb-56 md:pb-40'
+    : reserveStickyCtaSpace === 'mobile'
+      ? 'pb-56 md:pb-24'
+      : 'pb-36 md:pb-24'
+
   return (
     <footer className="relative overflow-hidden">
       <div className="absolute inset-0">
@@ -30,9 +40,9 @@ export function Footer() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-content px-gutter pt-20 pb-36 md:pb-24 md:px-gutter-md">
+      <div className={`relative mx-auto max-w-content px-gutter pt-20 md:px-gutter-md ${bottomPadding}`}>
         <div className="flex items-start justify-between">
-          <Image src="/images/logo-alto-light.png" alt="Alto" width={104} height={27} />
+          <Image src="/images/logo-alto-light.png" alt="Alto" width={140} height={37} style={{ width: 140, height: 'auto' }} />
 
           <div className="flex items-center gap-5">
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">

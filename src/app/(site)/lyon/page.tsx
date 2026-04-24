@@ -25,7 +25,7 @@ export default function LyonPage() {
         <LyonBlogSection />
         <FaqSection />
       </main>
-      <Footer />
+      <Footer reserveStickyCtaSpace />
       <StickyCta />
     </>
   )

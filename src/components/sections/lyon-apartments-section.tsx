@@ -17,7 +17,7 @@ const LYON_APARTMENTS = [
     guests: 4,
     surface: 80,
     image: '/images/lyon/apt-bellecour.jpg',
-    slug: 'bellecour',
+    slug: 'constantine-i',
   },
   {
     id: 'vieux-lyon',
@@ -27,7 +27,7 @@ const LYON_APARTMENTS = [
     guests: 2,
     surface: 45,
     image: '/images/lyon/apt-vieux-lyon.jpg',
-    slug: 'vieux-lyon',
+    slug: 'terreaux-i',
   },
   {
     id: 'terreaux',
@@ -37,7 +37,7 @@ const LYON_APARTMENTS = [
     guests: 2,
     surface: 55,
     image: '/images/lyon/apt-terreaux.jpg',
-    slug: 'terreaux',
+    slug: 'terreaux-ii',
   },
 ]
 
@@ -114,7 +114,7 @@ export function LyonApartmentsSection() {
                   <rect x="1" y="1" width="11" height="11" rx="1" stroke="currentColor" strokeWidth="1.2"/>
                   <path d="M1 5H12M5 1V12" stroke="currentColor" strokeWidth="1.2"/>
                 </svg>
-                {apt.surface}m2
+                {apt.surface}m²
               </span>
             </div>
 

@@ -26,7 +26,6 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
     guests: guestsCount,
   })
 
-  const hasFilters = Boolean(sp.city || sp.checkIn || sp.checkOut)
   const cityLabel = sp.city ? formatCityLabel(sp.city) : null
 
   return (
@@ -54,7 +53,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
               {cityLabel ? `Nos appartements à ${cityLabel}` : 'Nos appartements'}
             </h1>
             <p className="text-cream/80 mt-2 max-w-[505px] text-xs font-medium leading-[20px]">
-              Une collection d'adresses ou chaque detail compte. Paris, Lyon, bientot ailleurs.
+              Une collection d'adresses où chaque détail compte. Paris, Lyon, bientôt ailleurs.
             </p>
           </div>
         </div>
