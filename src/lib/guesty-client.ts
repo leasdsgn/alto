@@ -5,7 +5,9 @@ import {
   type GuestyQuote,
   type GuestyPaymentProvider,
   type GuestyReservation,
+  type GuestyReservationRequest,
 } from '@/types/guesty'
+import { type GuestyMock } from './guesty-mock'
 import { readOAuthCache, writeOAuthCache, writeRateLimit } from './guesty-oauth-cache'
 
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
@@ -116,16 +118,26 @@ async function guestyFetch<T>(
   return response.json() as Promise<T>
 }
 
+const USE_MOCK = process.env.GUESTY_MOCK === 'true'
+
+async function mock<K extends keyof GuestyMock>(method: K): Promise<GuestyMock[K]> {
+  const { guestyMock } = await import('./guesty-mock')
+  return guestyMock[method]
+}
+
 export const guestyClient = {
   getListings() {
+    if (USE_MOCK) return mock('getListings').then((fn) => fn())
     return guestyFetch<{ results: GuestyListing[] }>('/listings', { revalidate: 300 })
   },
 
   getListing(listingId: string) {
+    if (USE_MOCK) return mock('getListing').then((fn) => fn(listingId))
     return guestyFetch<GuestyListing>(`/listings/${listingId}`)
   },
 
   getListingCalendar(listingId: string, from: string, to: string) {
+    if (USE_MOCK) return mock('getListingCalendar').then((fn) => fn(listingId, from, to))
     const params = new URLSearchParams({ from, to })
     return guestyFetch<{ days: GuestyCalendarDay[] }>(
       `/listings/${listingId}/calendar?${params}`,
@@ -133,12 +145,16 @@ export const guestyClient = {
   },
 
   getAvailableListings(checkIn: string, checkOut: string, guests?: number) {
+    if (USE_MOCK)
+      return mock('getAvailableListings').then((fn) => fn(checkIn, checkOut, guests))
     const params = new URLSearchParams({ checkIn, checkOut })
     if (guests) params.set('minOccupancy', String(guests))
     return guestyFetch<{ results: GuestyListing[] }>(`/listings?${params}`, { revalidate: 60 })
   },
 
   createQuote(listingId: string, checkIn: string, checkOut: string, guestsCount: number) {
+    if (USE_MOCK)
+      return mock('createQuote').then((fn) => fn(listingId, checkIn, checkOut, guestsCount))
     return guestyFetch<GuestyQuote>('/reservations/quotes', {
       method: 'POST',
       body: JSON.stringify({
@@ -151,31 +167,25 @@ export const guestyClient = {
   },
 
   getPaymentProvider(listingId: string) {
+    if (USE_MOCK) return mock('getPaymentProvider').then((fn) => fn(listingId))
     return guestyFetch<GuestyPaymentProvider>(`/listings/${listingId}/payment-provider`)
   },
 
-  createInstantReservation(body: {
-    quoteId: string
-    ratePlanId: string
-    ccToken: string
-    guest: { firstName: string; lastName: string; email: string; phone: string }
-    policy: { privacy: boolean; terms: boolean }
-  }) {
-    return guestyFetch<GuestyReservation>('/reservations/instant', {
+  createInstantReservation(body: GuestyReservationRequest) {
+    const { quoteId, ...payload } = body
+    if (USE_MOCK) return mock('createInstantReservation').then((fn) => fn(body))
+    return guestyFetch<GuestyReservation>(`/reservations/quotes/${quoteId}/instant`, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
   },
 
-  createInquiry(body: {
-    quoteId: string
-    ratePlanId: string
-    guest: { firstName: string; lastName: string; email: string; phone: string }
-    policy: { privacy: boolean; terms: boolean }
-  }) {
-    return guestyFetch<GuestyReservation>('/reservations/inquiry', {
+  createInquiry(body: GuestyReservationRequest) {
+    const { quoteId, ...payload } = body
+    if (USE_MOCK) return mock('createInquiry').then((fn) => fn(body))
+    return guestyFetch<GuestyReservation>(`/reservations/quotes/${quoteId}/inquiry`, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
   },
 }

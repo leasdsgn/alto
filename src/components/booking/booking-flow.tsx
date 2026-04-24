@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Elements, useElements, useStripe } from '@stripe/react-stripe-js'
-import { useLocale } from 'next-intl'
+import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
+import { toast } from 'sonner'
+import { useLocale } from '@/components/providers/locale-provider'
 import { getStripeInstance } from '@/lib/stripe-client'
 import { nightsBetween } from '@/lib/formatters'
 import { t } from '@/lib/i18n/booking-dictionary'
@@ -11,6 +12,7 @@ import { GuestForm, type GuestFormValues } from './guest-form'
 import { PolicyCheckboxes, type PolicyValues } from './policy-checkboxes'
 import { PaymentForm } from './payment-form'
 import { type InquiryLocale } from '@/types/inquiry'
+import type { GuestyErrorBody } from '@/lib/guesty-errors'
 
 interface BookingFlowProps {
   listingId: string
@@ -26,13 +28,16 @@ interface BookingFlowProps {
 }
 
 export function BookingFlow(props: BookingFlowProps) {
-  const locale = useLocale() as InquiryLocale
-  const [setupState, setSetupState] = useState<{
-    clientSecret: string | null
-    customerId: string | null
+  const locale = useLocale()
+  const [paymentProviderState, setPaymentProviderState] = useState<{
     connectedAccountId: string | null
+    ready: boolean
     error: string | null
-  }>({ clientSecret: null, customerId: null, connectedAccountId: null, error: null })
+  }>({
+    connectedAccountId: null,
+    ready: false,
+    error: null,
+  })
 
   const [guest, setGuest] = useState<GuestFormValues>({
     firstName: '',
@@ -43,89 +48,57 @@ export function BookingFlow(props: BookingFlowProps) {
 
   useEffect(() => {
     let cancelled = false
+
     async function loadProvider() {
       try {
-        if (props.mode === 'inquiry') {
-          if (!guest.email) return
-          const response = await fetch('/api/stripe/setup-intent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ listingId: props.listingId, email: guest.email }),
+        const response = await fetch(`/api/guesty/payment-provider?listingId=${props.listingId}`)
+        if (!response.ok) throw new Error('payment_provider_failed')
+
+        const data = await response.json()
+        if (!cancelled) {
+          setPaymentProviderState({
+            connectedAccountId: data.providerAccountId ?? null,
+            ready: true,
+            error: null,
           })
-          if (!response.ok) throw new Error('setup_intent_failed')
-          const data = await response.json()
-          if (!cancelled) {
-            setSetupState({
-              clientSecret: data.clientSecret,
-              customerId: data.customerId,
-              connectedAccountId: data.connectedAccountId,
-              error: null,
-            })
-          }
-        } else {
-          const response = await fetch(
-            `/api/guesty/payment-provider?listingId=${props.listingId}`,
-          )
-          if (!response.ok) throw new Error('payment_provider_failed')
-          const data = await response.json()
-          if (!cancelled) {
-            setSetupState({
-              clientSecret: null,
-              customerId: null,
-              connectedAccountId: data.providerAccountId,
-              error: null,
-            })
-          }
         }
       } catch (error) {
         if (!cancelled) {
-          setSetupState((prev) => ({
-            ...prev,
+          setPaymentProviderState({
+            connectedAccountId: null,
+            ready: false,
             error: error instanceof Error ? error.message : 'unknown',
-          }))
+          })
         }
       }
     }
 
     loadProvider()
+
     return () => {
       cancelled = true
     }
-  }, [props.listingId, props.mode, guest.email])
+  }, [props.listingId])
 
-  const stripePromise = setupState.connectedAccountId
-    ? getStripeInstance(setupState.connectedAccountId)
+  const stripePromise = paymentProviderState.ready
+    ? getStripeInstance(paymentProviderState.connectedAccountId)
     : null
-
-  const elementsOptions = setupState.clientSecret
-    ? { clientSecret: setupState.clientSecret, appearance: altoAppearance }
-    : { mode: 'payment' as const, amount: props.amountCents, currency: props.currency, appearance: altoAppearance }
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_420px]">
       <div className="space-y-8">
-        <GuestForm
-          locale={locale}
-          values={guest}
-          onChange={setGuest}
-          disabled={false}
-        />
+        <GuestForm locale={locale} values={guest} onChange={setGuest} disabled={false} />
 
         {stripePromise ? (
-          <Elements stripe={stripePromise} options={elementsOptions}>
-            <PaymentSection
-              locale={locale}
-              guest={guest}
-              {...props}
-              customerId={setupState.customerId}
-            />
+          <Elements stripe={stripePromise} options={{ appearance: altoAppearance }}>
+            <PaymentSection locale={locale} guest={guest} {...props} />
           </Elements>
         ) : (
           <p className="text-taupe text-sm">{t(locale, 'loading')}...</p>
         )}
 
-        {setupState.error ? (
-          <p className="text-sm text-red-700">{t(locale, 'error')}</p>
+        {paymentProviderState.error ? (
+          <p className="text-taupe text-sm italic">{t(locale, 'errorGenericDesc')}</p>
         ) : null}
       </div>
 
@@ -146,7 +119,16 @@ export function BookingFlow(props: BookingFlowProps) {
 interface PaymentSectionProps extends BookingFlowProps {
   locale: InquiryLocale
   guest: GuestFormValues
-  customerId: string | null
+}
+
+class ReservationError extends Error {
+  constructor(
+    public readonly code: string,
+    public readonly title: string,
+    public readonly description: string,
+  ) {
+    super(description)
+  }
 }
 
 function PaymentSection(props: PaymentSectionProps) {
@@ -154,84 +136,85 @@ function PaymentSection(props: PaymentSectionProps) {
   const elements = useElements()
   const [policy, setPolicy] = useState<PolicyValues>({ privacy: false, terms: false })
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
     if (!stripe || !elements) return
 
     setSubmitting(true)
-    setError(null)
 
     try {
-      const paymentMethodId = await createPaymentMethod(props.mode)
-      await submitReservation(paymentMethodId)
+      const ccToken = await createPaymentMethodToken()
+      await submitReservation(ccToken)
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'unknown')
+      if (err instanceof ReservationError) {
+        toast.error(err.title, { description: err.description })
+      } else {
+        toast.error(t(props.locale, 'errorPaymentFailedTitle'), {
+          description: err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc'),
+        })
+      }
     } finally {
       setSubmitting(false)
     }
   }
 
-  async function createPaymentMethod(mode: 'instant' | 'inquiry'): Promise<string> {
-    if (!stripe || !elements) throw new Error('stripe_not_ready')
-    await elements.submit()
+  async function createPaymentMethodToken(): Promise<string> {
+    if (!stripe || !elements) throw new Error(t(props.locale, 'errorGenericDesc'))
 
-    if (mode === 'inquiry') {
-      const { error, setupIntent } = await stripe.confirmSetup({
-        elements,
-        confirmParams: { return_url: window.location.href },
-        redirect: 'if_required',
-      })
-      if (error) throw new Error(error.message ?? 'setup_failed')
-      if (!setupIntent?.payment_method) throw new Error('no_payment_method')
-      return String(setupIntent.payment_method)
-    }
+    const cardElement = elements.getElement(CardElement)
+    if (!cardElement) throw new Error(t(props.locale, 'errorGenericDesc'))
 
     const { error, paymentMethod } = await stripe.createPaymentMethod({
-      elements,
+      type: 'card',
+      card: cardElement,
+      billing_details: {
+        name: `${props.guest.firstName} ${props.guest.lastName}`.trim(),
+        email: props.guest.email,
+        phone: props.guest.phone,
+      },
     })
-    if (error) throw new Error(error.message ?? 'pm_failed')
+
+    if (error) throw new Error(error.message ?? t(props.locale, 'errorInvalidCardDesc'))
+    if (!paymentMethod?.id) throw new Error(t(props.locale, 'errorInvalidCardDesc'))
+
     return paymentMethod.id
   }
 
-  async function submitReservation(paymentIdentifier: string) {
-    const basePayload = {
-      quoteId: props.quoteId,
-      ratePlanId: props.ratePlanId,
-      listingId: props.listingId,
-      listingTitle: props.listingTitle,
-      guest: props.guest,
-      policy: { privacy: true, terms: true },
-      checkIn: props.checkIn,
-      checkOut: props.checkOut,
-      guestsCount: props.guestsCount,
-      amountCents: props.amountCents,
-      currency: props.currency,
-      preferredLanguage: props.locale,
-    }
-
-    const payload =
-      props.mode === 'instant'
-        ? { ...basePayload, mode: 'instant' as const, ccToken: paymentIdentifier }
-        : {
-            ...basePayload,
-            mode: 'inquiry' as const,
-            stripePaymentMethodId: paymentIdentifier,
-            stripeCustomerId: props.customerId ?? undefined,
-          }
-
+  async function submitReservation(ccToken: string) {
     const response = await fetch('/api/guesty/reservation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        quoteId: props.quoteId,
+        ratePlanId: props.ratePlanId,
+        listingId: props.listingId,
+        listingTitle: props.listingTitle,
+        guest: props.guest,
+        policy: { privacy: true, terms: true },
+        checkIn: props.checkIn,
+        checkOut: props.checkOut,
+        guestsCount: props.guestsCount,
+        amountCents: props.amountCents,
+        currency: props.currency,
+        preferredLanguage: props.locale,
+        mode: props.mode,
+        ccToken,
+      }),
     })
 
     if (!response.ok) {
-      const body = await response.json().catch(() => ({ error: 'reservation_failed' }))
-      throw new Error(typeof body.error === 'string' ? body.error : 'reservation_failed')
+      const body = (await response.json().catch(() => null)) as GuestyErrorBody | null
+      if (body?.error?.title && body.error.description) {
+        throw new ReservationError(body.error.code, body.error.title, body.error.description)
+      }
+      throw new ReservationError(
+        'UNKNOWN',
+        t(props.locale, 'errorGenericTitle'),
+        t(props.locale, 'errorGenericDesc'),
+      )
     }
   }
 
@@ -245,7 +228,7 @@ function PaymentSection(props: PaymentSectionProps) {
     )
   }
 
-  const canSubmit = policy.privacy && policy.terms && !submitting && stripe && elements
+  const canSubmit = policy.privacy && policy.terms && !submitting && Boolean(stripe) && Boolean(elements)
   const submitLabel =
     props.mode === 'instant' ? t(props.locale, 'submitInstant') : t(props.locale, 'submitInquiry')
 
@@ -263,8 +246,6 @@ function PaymentSection(props: PaymentSectionProps) {
       {props.mode === 'inquiry' ? (
         <p className="text-taupe text-xs italic">{t(props.locale, 'noCharge')}</p>
       ) : null}
-
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
 
       <button
         type="submit"

@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { ApartmentCard } from '@/components/ui/apartment-card'
+import { AppartementsGrid } from '@/components/sections/appartements-grid'
 import { getApartmentsForSearch } from '@/components/sections/apartments-section'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
 
@@ -61,36 +61,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       </div>
 
       <main className="mx-auto max-w-content px-gutter py-section md:px-gutter-md">
-        <div className="flex items-baseline justify-between">
-          <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">
-            {apartments.length} appartement{apartments.length > 1 ? 's' : ''}
-            {hasFilters ? ' correspondant' : ''}
-          </p>
-        </div>
-
-        {apartments.length === 0 ? (
-          <div className="mt-12 rounded-xl border border-divider/60 bg-cream/60 p-10 text-center">
-            <p className="text-coffee text-sm font-semibold">Aucun appartement disponible</p>
-            <p className="text-taupe mt-2 text-xs">
-              Essayez d'élargir vos dates ou de changer de ville.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {apartments.map((apt) => (
-              <ApartmentCard
-                key={apt.id}
-                name={apt.name}
-                price={apt.price}
-                guests={apt.guests}
-                surface={apt.surface}
-                bedrooms={apt.bedrooms}
-                slug={apt.slug}
-                image={apt.images[0]}
-              />
-            ))}
-          </div>
-        )}
+        <AppartementsGrid apartments={apartments} />
       </main>
 
       <Footer />

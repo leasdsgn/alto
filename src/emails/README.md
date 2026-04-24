@@ -1,6 +1,6 @@
 # Emails transactionnels Alto
 
-Flow Resend + Supabase pour les emails liés au cycle de réservation.
+Flow Resend + Guesty pour les emails liés au cycle de réservation.
 
 ## Templates disponibles
 
@@ -8,10 +8,11 @@ Dans `src/emails/` :
 
 | Template | Déclencheur | Envoyé par |
 |---|---|---|
-| `booking-confirmation.tsx` | Résa instant créée via `/api/guesty/reservation` mode=instant | Route reservation après succès Guesty |
+| `booking-confirmation.tsx` | Paiement reçu et réservation confirmée | Webhook Guesty `payments.received` |
 | `inquiry-received.tsx` | Demande inquiry créée via `/api/guesty/reservation` mode=inquiry | Route reservation après succès Guesty |
-| `inquiry-confirmed.tsx` | Guesty valide une inquiry (webhook) | `/api/webhooks/guesty` après capture Stripe |
+| `inquiry-confirmed.tsx` | Template legacy, non utilisé dans le flow actuel | Réservé si on veut distinguer validation inquiry et confirmation finale |
 | `inquiry-refused.tsx` | Guesty refuse une inquiry (webhook) | `/api/webhooks/guesty` |
+| `cancellation-confirmed.tsx` | Annulation confirmée, avec ou sans remboursement | Webhook Guesty `payments.refunded` ou route cancel si remboursement nul |
 | `pre-arrival.tsx` | Check-in dans 3 jours | Cron `/api/cron/reservation-emails` |
 | `post-stay.tsx` | Check-out hier | Cron `/api/cron/reservation-emails` |
 
@@ -33,20 +34,23 @@ Ouvre `http://localhost:3001` pour naviguer les templates. Chaque template expos
 
 Pour `pre-arrival.tsx`, les infos (WiFi, code accès, adresse, instructions) viennent de Guesty via `guestyClient.getListing()`. Le client doit remplir ces custom fields côté dashboard Guesty sur chaque listing.
 
-## Flow inquiry hybride
+## Flow inquiry Guesty-natif
 
-Le mode inquiry ne transmet pas de carte à Guesty (BEAPI n'accepte pas). Le site :
+Le mode inquiry transmet bien un `ccToken` à Guesty. Le site :
 
-1. Tokenise la carte côté Stripe.js (via SetupIntent pour permettre la ré-utilisation off_session)
-2. Envoie le `stripePaymentMethodId` à `/api/guesty/reservation` mode=inquiry
-3. La route stocke l'inquiry en Supabase avec le PaymentMethod ID + envoie `inquiry-received`
-4. Alto valide ou refuse dans le dashboard Guesty
-5. Guesty envoie un webhook `reservation.updated` à `/api/webhooks/guesty`
-6. Le webhook crée un PaymentIntent off_session, capture le paiement via le Stripe Connect du listing, et envoie `inquiry-confirmed`
+1. Récupère le Stripe account du listing via `GET /api/guesty/payment-provider`
+2. Crée un PaymentMethod Stripe côté front, sans Customer ni SetupIntent
+3. Envoie ce `pm_...` comme `ccToken` à `/api/guesty/reservation` mode=inquiry
+4. Stocke un miroir léger de la réservation dans Supabase pour le suivi emails / cron
+5. Alto valide ou refuse dans Guesty
+6. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
+7. `payments.received` déclenche `booking-confirmation`, `reservation.updated` gère les refus, `payments.refunded` gère les annulations remboursées
+
+Le template `booking-confirmation` embarque aussi un lien d’annulation signé, construit côté serveur avec `CANCEL_TOKEN_SECRET`.
 
 ## Table Supabase
 
-Schema dans `supabase/migrations/`. La table `inquiries` stocke les réservations (mode instant et inquiry), avec tracking du statut + des emails envoyés pour éviter les doublons.
+Schema dans `supabase/migrations/`. La table `inquiries` stocke un miroir léger des réservations (mode instant et inquiry), avec tracking du statut et des emails envoyés pour éviter les doublons. La table `guesty_webhook_events` déduplique les webhooks Svix.
 
 Appliquer les migrations :
 
@@ -63,16 +67,20 @@ Voir `.env.example`. À minima :
 
 - `RESEND_API_KEY` + `RESEND_FROM_EMAIL` + `RESEND_FROM_NAME`
 - `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
-- `GUESTY_WEBHOOK_SECRET` pour la verification signature
+- `GUESTY_WEBHOOK_SECRET` au format Svix (`whsec_...`)
 - `CRON_SECRET` pour protéger la route cron
-- `STRIPE_SECRET_KEY` pour la capture off_session
+- `CANCEL_TOKEN_SECRET` pour signer les liens d’annulation
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `GUESTY_BEAPI_CLIENT_ID` + `GUESTY_BEAPI_CLIENT_SECRET`
+- `GUESTY_OPENAPI_CLIENT_ID` + `GUESTY_OPENAPI_CLIENT_SECRET`
 
 ## Tests
 
 Tests Vitest dans `src/__tests__/` :
 - `formatters.test.ts` : dates / currency / nights
 - `email-dictionary.test.ts` : translate + interpolation
-- `guesty-webhook.test.ts` : signature HMAC
+- `guesty-webhook.test.ts` : signature Svix
+- `cancellation-policy.test.ts` : règles de remboursement
 
 ```bash
 bun test

@@ -36,6 +36,49 @@ export async function findPendingInquiryByReservation(
   return (data as InquiryRow | null) ?? null
 }
 
+export async function findInquiryByReservation(reservationId: string): Promise<InquiryRow | null> {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('inquiries')
+    .select('*')
+    .eq('guesty_reservation_id', reservationId)
+    .maybeSingle()
+
+  if (error) throw new Error(`findInquiryByReservation failed: ${error.message}`)
+  return (data as InquiryRow | null) ?? null
+}
+
+export async function updateInquiryByReservation(
+  reservationId: string,
+  patch: InquiryUpdate,
+): Promise<void> {
+  const supabase = getSupabaseAdmin()
+  const { error } = await supabase
+    .from('inquiries')
+    .update(patch as never)
+    .eq('guesty_reservation_id', reservationId)
+
+  if (error) throw new Error(`updateInquiryByReservation failed: ${error.message}`)
+}
+
+export async function recordWebhookEvent(args: {
+  svixId: string
+  eventName: string
+  reservationId?: string | null
+}): Promise<boolean> {
+  const supabase = getSupabaseAdmin()
+  const { error } = await supabase.from('guesty_webhook_events').insert({
+    svix_id: args.svixId,
+    event_name: args.eventName,
+    reservation_id: args.reservationId ?? null,
+  } as never)
+
+  if (!error) return true
+  if (error.code === '23505') return false
+
+  throw new Error(`recordWebhookEvent failed: ${error.message}`)
+}
+
 interface FindByDateArgs {
   status: InquiryStatus
   column: 'check_in' | 'check_out'

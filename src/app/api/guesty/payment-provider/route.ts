@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const data = await guestyClient.getPaymentProvider(parsed.data.listingId)
     return NextResponse.json(data)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erreur inconnue'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[payment-provider] error', error)
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 })
   }
 }

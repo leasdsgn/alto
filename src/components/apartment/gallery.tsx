@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 
 interface GalleryProps {
   name: string
@@ -17,10 +18,14 @@ export function ApartmentGallery({ name, images }: GalleryProps) {
     <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_210px] md:grid-rows-4">
       <div className="relative row-span-4 h-[300px] overflow-hidden rounded-lg md:h-[429px]">
         {photos[activeIndex] ? (
-          <img
+          <Image
             src={photos[activeIndex]!}
             alt={`${name} - photo principale`}
-            className="size-full object-cover transition-opacity duration-500"
+            fill
+            sizes="(max-width: 768px) 100vw, 640px"
+            quality={85}
+            className="object-cover transition-opacity duration-500"
+            priority
           />
         ) : (
           <div className="bg-sand size-full" />
@@ -37,7 +42,14 @@ export function ApartmentGallery({ name, images }: GalleryProps) {
           }`}
         >
           {img ? (
-            <img src={img} alt={`${name} - photo ${i + 2}`} className="size-full object-cover" />
+            <Image
+              src={img}
+              alt={`${name} - photo ${i + 2}`}
+              fill
+              sizes="210px"
+              quality={75}
+              className="object-cover"
+            />
           ) : (
             <div className="bg-sand size-full" />
           )}

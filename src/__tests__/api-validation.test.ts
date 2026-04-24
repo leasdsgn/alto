@@ -8,17 +8,26 @@ const reservationGuestSchema = z.object({
   phone: z.string().min(1),
 })
 
-const reservationSchema = z.object({
+const reservationBaseSchema = z.object({
   quoteId: z.string().min(1),
   ratePlanId: z.string().min(1),
   guest: reservationGuestSchema,
-  ccToken: z.string().optional(),
   policy: z.object({
     privacy: z.literal(true),
     terms: z.literal(true),
   }),
-  mode: z.enum(['instant', 'inquiry']),
 })
+
+const reservationSchema = z.discriminatedUnion('mode', [
+  reservationBaseSchema.extend({
+    mode: z.literal('instant'),
+    ccToken: z.string().min(1),
+  }),
+  reservationBaseSchema.extend({
+    mode: z.literal('inquiry'),
+    ccToken: z.string().min(1),
+  }),
+])
 
 const availabilitySchema = z.object({
   listingId: z.string().min(1),

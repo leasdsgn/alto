@@ -2,49 +2,90 @@ import { createHmac } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { verifyGuestySignature } from '@/lib/guesty-webhook'
 
-function sign(secret: string, body: string): string {
-  return createHmac('sha256', secret).update(body).digest('hex')
+function buildSecret(secret: string): string {
+  return `whsec_${Buffer.from(secret).toString('base64')}`
+}
+
+function sign(secret: string, id: string, timestamp: string, body: string): string {
+  return createHmac('sha256', secret).update(`${id}.${timestamp}.${body}`).digest('base64')
 }
 
 describe('verifyGuestySignature', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-04-21T10:00:00.000Z'))
     vi.stubEnv('NODE_ENV', 'production')
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.unstubAllEnvs()
   })
 
-  it('valide une signature HMAC SHA256 correcte', () => {
-    vi.stubEnv('GUESTY_WEBHOOK_SECRET', 'test-secret')
-    const body = '{"event":"reservation.updated"}'
-    const signature = sign('test-secret', body)
+  it('valide une signature Svix correcte', () => {
+    const rawSecret = 'test-secret'
+    vi.stubEnv('GUESTY_WEBHOOK_SECRET', buildSecret(rawSecret))
 
-    const headers = new Headers({ 'x-guesty-signature': signature })
+    const id = 'msg_123'
+    const timestamp = String(Math.floor(new Date('2026-04-21T10:00:00.000Z').getTime() / 1000))
+    const body = '{"event":"payments.received"}'
+    const signature = sign(rawSecret, id, timestamp, body)
+
+    const headers = new Headers({
+      'svix-id': id,
+      'svix-timestamp': timestamp,
+      'svix-signature': `v1,${signature}`,
+    })
+
     expect(verifyGuestySignature(headers, body)).toBe(true)
   })
 
-  it('accepte le prefix sha256=', () => {
-    vi.stubEnv('GUESTY_WEBHOOK_SECRET', 'test-secret')
-    const body = '{"event":"reservation.updated"}'
-    const signature = `sha256=${sign('test-secret', body)}`
+  it('accepte plusieurs signatures si une v1 est valide', () => {
+    const rawSecret = 'test-secret'
+    vi.stubEnv('GUESTY_WEBHOOK_SECRET', buildSecret(rawSecret))
 
-    const headers = new Headers({ 'x-guesty-signature': signature })
+    const id = 'msg_123'
+    const timestamp = String(Math.floor(new Date('2026-04-21T10:00:00.000Z').getTime() / 1000))
+    const body = '{"event":"payments.received"}'
+    const signature = sign(rawSecret, id, timestamp, body)
+
+    const headers = new Headers({
+      'svix-id': id,
+      'svix-timestamp': timestamp,
+      'svix-signature': `v0,legacy v1,${signature}`,
+    })
+
     expect(verifyGuestySignature(headers, body)).toBe(true)
   })
 
   it('rejette une signature invalide', () => {
-    vi.stubEnv('GUESTY_WEBHOOK_SECRET', 'test-secret')
-    const body = '{"event":"reservation.updated"}'
+    vi.stubEnv('GUESTY_WEBHOOK_SECRET', buildSecret('test-secret'))
 
-    const headers = new Headers({ 'x-guesty-signature': 'deadbeef' })
-    expect(verifyGuestySignature(headers, body)).toBe(false)
+    const headers = new Headers({
+      'svix-id': 'msg_123',
+      'svix-timestamp': '1776765600',
+      'svix-signature': 'v1,invalid',
+    })
+
+    expect(verifyGuestySignature(headers, '{"event":"reservation.updated"}')).toBe(false)
   })
 
-  it('rejette si header de signature manquant', () => {
-    vi.stubEnv('GUESTY_WEBHOOK_SECRET', 'test-secret')
-    const headers = new Headers()
-    expect(verifyGuestySignature(headers, '{}')).toBe(false)
+  it('rejette un timestamp trop ancien', () => {
+    const rawSecret = 'test-secret'
+    vi.stubEnv('GUESTY_WEBHOOK_SECRET', buildSecret(rawSecret))
+
+    const id = 'msg_123'
+    const timestamp = String(Math.floor(new Date('2026-04-21T09:40:00.000Z').getTime() / 1000))
+    const body = '{"event":"reservation.updated"}'
+    const signature = sign(rawSecret, id, timestamp, body)
+
+    const headers = new Headers({
+      'svix-id': id,
+      'svix-timestamp': timestamp,
+      'svix-signature': `v1,${signature}`,
+    })
+
+    expect(verifyGuestySignature(headers, body)).toBe(false)
   })
 
   it('bypass en dev sans secret configuré', () => {

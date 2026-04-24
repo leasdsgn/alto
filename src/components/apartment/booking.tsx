@@ -17,13 +17,14 @@ import { formatDateShort } from '@/lib/format-date'
 interface BookingProps {
   price: number
   slug: string
+  listingId?: string
 }
 
 export function ApartmentBooking({ price, slug }: BookingProps) {
   const { dates, guests, setDates, setGuests } = useSearchStore()
   const checkIn = dates.start.toString()
   const checkOut = dates.end.toString()
-  const reserveHref = `/reserver/${slug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}`
+  const reserveHref = `/book/${slug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}`
   const [dateOpen, setDateOpen] = useState(false)
   const nights = dates.end.compare(dates.start)
   const total = price * nights
@@ -71,7 +72,7 @@ export function ApartmentBooking({ price, slug }: BookingProps) {
               </div>
             </div>
           </button>
-          <DateField.Group className="hidden" fullWidth>
+          <DateField.Group className="pointer-events-none absolute inset-0 opacity-0" fullWidth>
             <DateField.Input slot="start">{(s) => <DateField.Segment segment={s} />}</DateField.Input>
             <DateField.Input slot="end">{(s) => <DateField.Segment segment={s} />}</DateField.Input>
           </DateField.Group>

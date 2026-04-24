@@ -1,6 +1,6 @@
 'use client'
 
-import { PaymentElement } from '@stripe/react-stripe-js'
+import { CardElement } from '@stripe/react-stripe-js'
 import { t } from '@/lib/i18n/booking-dictionary'
 import { type InquiryLocale } from '@/types/inquiry'
 
@@ -15,10 +15,23 @@ export function PaymentForm({ locale }: PaymentFormProps) {
         {t(locale, 'cardLabel')}
       </p>
       <div className="border-divider bg-cream rounded-lg border p-4">
-        <PaymentElement
+        <CardElement
           options={{
-            layout: 'tabs',
-            fields: { billingDetails: { email: 'never' } },
+            hidePostalCode: true,
+            style: {
+              base: {
+                color: '#2f1a09',
+                fontFamily: 'Manrope, system-ui, sans-serif',
+                fontSize: '16px',
+                '::placeholder': {
+                  color: '#8e7d6d',
+                },
+              },
+              invalid: {
+                color: '#9b2c2c',
+                iconColor: '#9b2c2c',
+              },
+            },
           }}
         />
       </div>

@@ -37,15 +37,6 @@ export interface GuestyListing {
   maxNights: number
 }
 
-export interface GuestyAvailability {
-  listingId: string
-  status: 'available' | 'unavailable' | 'booked'
-  date: string
-  price: number
-  currency: string
-  minNights: number
-}
-
 export interface GuestyCalendarDay {
   date: string
   status: 'available' | 'booked' | 'blocked'
@@ -54,24 +45,40 @@ export interface GuestyCalendarDay {
   currency: string
 }
 
+export interface GuestyQuoteMoney {
+  currency: string
+  fareAccommodation: number
+  fareAccommodationAdjusted: number
+  fareCleaning: number
+  totalFees: number
+  subTotalPrice: number
+  hostPayout: number
+  totalTaxes: number
+}
+
+export interface GuestyQuoteRatePlan {
+  ratePlan: {
+    _id: string
+    name: string
+    type: string
+    money: GuestyQuoteMoney
+  }
+  inquiryId: string
+}
+
 export interface GuestyQuote {
   _id: string
-  listingId: string
-  checkIn: string
-  checkOut: string
-  guestsCount: number
-  ratePlanId: string
-  rates: {
-    fareAccommodation: number
-    fareCleaning: number
-    fareAccommodationAdjusted: number
-    totalFees: number
-    totalTaxes: number
-    subTotalPrice: number
-    totalPrice: number
-    currency: string
-  }
+  createdAt: string
   expiresAt: string
+  accountId: string
+  guestsCount: number
+  unitTypeId: string
+  checkInDateLocalized: string
+  checkOutDateLocalized: string
+  rates: {
+    ratePlans: GuestyQuoteRatePlan[]
+  }
+  status: string
 }
 
 export interface GuestyGuest {
@@ -81,14 +88,19 @@ export interface GuestyGuest {
   phone: string
 }
 
+export interface GuestyPolicyConsent {
+  accepted: boolean
+  acceptedAt: string
+}
+
 export interface GuestyReservationRequest {
   quoteId: string
   ratePlanId: string
   guest: GuestyGuest
   ccToken: string
   policy: {
-    privacy: boolean
-    terms: boolean
+    privacy: GuestyPolicyConsent
+    terms: GuestyPolicyConsent
   }
 }
 

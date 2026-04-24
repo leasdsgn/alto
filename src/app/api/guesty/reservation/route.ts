@@ -4,9 +4,14 @@ import { guestyClient } from '@/lib/guesty-client'
 import { insertInquiry } from '@/lib/inquiries-repository'
 import { sendEmail } from '@/lib/resend-client'
 import { translate } from '@/lib/i18n/email-dictionary'
-import { formatCurrency, formatDate, nightsBetween } from '@/lib/formatters'
-import BookingConfirmationEmail from '@/emails/booking-confirmation'
+import { formatCurrency, formatDate } from '@/lib/formatters'
 import InquiryReceivedEmail from '@/emails/inquiry-received'
+import { generateCancellationToken } from '@/lib/cancel-token'
+import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
+import { assertSameOrigin } from '@/lib/api-guard'
+import type { GuestyReservationRequest } from '@/types/guesty'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
 
 const guestSchema = z.object({
   firstName: z.string().min(1),
@@ -42,91 +47,63 @@ const instantSchema = baseSchema.extend({
 
 const inquirySchema = baseSchema.extend({
   mode: z.literal('inquiry'),
-  stripePaymentMethodId: z.string().min(1),
-  stripeCustomerId: z.string().optional(),
+  ccToken: z.string().min(1),
 })
 
 const schema = z.discriminatedUnion('mode', [instantSchema, inquirySchema])
 
 export async function POST(request: NextRequest) {
+  const guard = assertSameOrigin(request)
+  if (guard) return guard
+
+  let locale: 'fr' | 'en' = 'fr'
+
   try {
     const body = await request.json()
     const parsed = schema.safeParse(body)
 
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.issues }, { status: 400 })
+      locale = (body as { preferredLanguage?: 'fr' | 'en' })?.preferredLanguage ?? 'fr'
+      const { body: errorBody, status } = toErrorResponse(
+        new Error('{"error":{"code":"VALIDATION_FAILED"}}'),
+        locale,
+      )
+      return NextResponse.json(
+        { ...errorBody, issues: parsed.error.issues },
+        { status },
+      )
     }
 
     const data = parsed.data
-    const locale = data.preferredLanguage
-    const nights = nightsBetween(data.checkIn, data.checkOut)
+    locale = data.preferredLanguage
     const formattedTotal = formatCurrency(data.amountCents, data.currency, locale)
     const formattedCheckIn = formatDate(data.checkIn, locale)
     const formattedCheckOut = formatDate(data.checkOut, locale)
 
+    const nowIso = new Date().toISOString()
+    const guestyPolicy: GuestyReservationRequest['policy'] = {
+      privacy: { accepted: data.policy.privacy, acceptedAt: nowIso },
+      terms: { accepted: data.policy.terms, acceptedAt: nowIso },
+    }
+
     if (data.mode === 'instant') {
-      const reservation = await guestyClient.createInstantReservation({
-        quoteId: data.quoteId,
-        ratePlanId: data.ratePlanId,
-        guest: data.guest,
-        policy: data.policy,
-        ccToken: data.ccToken,
-      })
-
-      try {
-        await insertInquiry({
-          guesty_reservation_id: reservation._id,
-          guesty_listing_id: data.listingId,
-          guest: data.guest,
-          stripe_payment_method_id: null,
-          stripe_customer_id: null,
-          check_in: data.checkIn,
-          check_out: data.checkOut,
-          amount_cents: data.amountCents,
-          currency: data.currency,
-          locale,
-          status: 'confirmed',
-          mode: 'instant',
-        })
-      } catch (insertError) {
-        console.error('[reservation route] instant insert failed', insertError)
-      }
-
-      await trySendEmail(() =>
-        sendEmail({
-          to: data.guest.email,
-          subject: translate(locale, 'confirmation.subject'),
-          react: BookingConfirmationEmail({
-            locale,
-            guest: { firstName: data.guest.firstName },
-            listing: { title: data.listingTitle },
-            reservation: {
-              checkIn: formattedCheckIn,
-              checkOut: formattedCheckOut,
-              guests: data.guestsCount,
-              nights,
-              total: formattedTotal,
-            },
-          }),
-        }),
-      )
-
-      return NextResponse.json(reservation)
+      return NextResponse.json({ error: { code: 'INSTANT_BOOKING_DISABLED' } }, { status: 501 })
     }
 
     const inquiry = await guestyClient.createInquiry({
       quoteId: data.quoteId,
       ratePlanId: data.ratePlanId,
       guest: data.guest,
-      policy: data.policy,
+      policy: guestyPolicy,
+      ccToken: data.ccToken,
     })
 
     await insertInquiry({
       guesty_reservation_id: inquiry._id,
       guesty_listing_id: data.listingId,
+      listing_title: data.listingTitle,
       guest: data.guest,
-      stripe_payment_method_id: data.stripePaymentMethodId,
-      stripe_customer_id: data.stripeCustomerId ?? null,
+      guests_count: data.guestsCount,
       check_in: data.checkIn,
       check_out: data.checkOut,
       amount_cents: data.amountCents,
@@ -156,8 +133,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(inquiry)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erreur inconnue'
-    return NextResponse.json({ error: message }, { status: 500 })
+    const { body, status } = toErrorResponse(error, locale)
+    console.error('[reservation route] error', {
+      code: parseGuestyError(error).code,
+      rawMessage: error instanceof Error ? error.message : String(error),
+    })
+    return NextResponse.json(body, { status })
   }
 }
 
@@ -167,4 +148,9 @@ async function trySendEmail(send: () => Promise<unknown>) {
   } catch (error) {
     console.error('[reservation route] email send failed', error)
   }
+}
+
+function buildCancellationUrl(reservationId: string, email: string): string {
+  const token = generateCancellationToken({ reservationId, email })
+  return `${SITE_URL}/annulation?token=${encodeURIComponent(token)}`
 }

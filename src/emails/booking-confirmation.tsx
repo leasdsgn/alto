@@ -7,7 +7,7 @@ import { type InquiryLocale } from '@/types/inquiry'
 export interface BookingConfirmationProps {
   locale: InquiryLocale
   guest: { firstName: string }
-  listing: { title: string }
+  listing: { title: string; image?: string; slug?: string }
   reservation: {
     checkIn: string
     checkOut: string
@@ -15,19 +15,42 @@ export interface BookingConfirmationProps {
     nights: number
     total: string
   }
+  cancelUrl?: string
 }
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
 
 export default function BookingConfirmationEmail({
   locale,
   guest,
   listing,
   reservation,
+  cancelUrl,
 }: BookingConfirmationProps) {
   const preview = translate(locale, 'confirmation.subject')
   const nightsPlural = reservation.nights > 1 ? 's' : ''
+  const cta = listing.slug
+    ? {
+        label: locale === 'fr' ? 'Voir ma réservation' : 'View my booking',
+        href: `${SITE_URL}/appartements/${listing.slug}`,
+      }
+    : undefined
+  const secondaryCta = cancelUrl
+    ? {
+        label: locale === 'fr' ? 'Annuler ma réservation' : 'Cancel my booking',
+        href: cancelUrl,
+      }
+    : undefined
 
   return (
-    <EmailLayout locale={locale} preview={preview}>
+    <EmailLayout
+      locale={locale}
+      preview={preview}
+      heroImage={listing.image}
+      heroAlt={listing.title}
+      cta={cta}
+      secondaryCta={secondaryCta}
+    >
       <Heading style={headingStyle}>{translate(locale, 'confirmation.heading')}</Heading>
       <Text style={paragraphStyle}>
         {translate(locale, 'confirmation.greeting', { firstName: guest.firstName })}
@@ -58,7 +81,11 @@ export default function BookingConfirmationEmail({
 BookingConfirmationEmail.PreviewProps = {
   locale: 'fr',
   guest: { firstName: 'Camille' },
-  listing: { title: 'Le Marais Terrasse' },
+  listing: {
+    title: 'Le Marais Terrasse',
+    image: 'https://alto-virid.vercel.app/images/alto-salon.jpg',
+    slug: 'le-marais-terrasse',
+  },
   reservation: {
     checkIn: '28 avril 2026',
     checkOut: '2 mai 2026',
@@ -66,6 +93,7 @@ BookingConfirmationEmail.PreviewProps = {
     nights: 4,
     total: '1 120 EUR',
   },
+  cancelUrl: 'https://alto-virid.vercel.app/annulation?token=demo',
 } satisfies BookingConfirmationProps
 
 const headingStyle = {

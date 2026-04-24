@@ -13,14 +13,27 @@ interface Apartment {
   bedrooms: number
   slug: string
   image?: string
+  city?: string
 }
 
-const FILTERS = [
+const CITY_FILTERS = [
   { id: 'all', label: 'Tous' },
-  { id: 'marais', label: 'Le Marais' },
-  { id: 'saint-germain', label: 'Saint-Germain' },
-  { id: 'opera', label: 'Opera' },
+  { id: 'paris', label: 'Paris' },
+  { id: 'lyon', label: 'Lyon' },
 ]
+
+const NEIGHBORHOOD_FILTERS: Record<string, { id: string; label: string }[]> = {
+  paris: [
+    { id: 'marais', label: 'Le Marais' },
+    { id: 'saint-germain', label: 'Saint-Germain' },
+    { id: 'opera', label: 'Opéra' },
+  ],
+  lyon: [
+    { id: 'presquile', label: 'Presqu\'île' },
+    { id: 'confluence', label: 'Confluence' },
+    { id: 'croix-rousse', label: 'Croix-Rousse' },
+  ],
+}
 
 const QUARTIER_MAP: Record<string, string> = {
   'le-faubourg': 'marais',
@@ -30,12 +43,17 @@ const QUARTIER_MAP: Record<string, string> = {
 }
 
 export function ApartmentsCarousel({ apartments }: { apartments: Apartment[] }) {
-  const [activeFilter, setActiveFilter] = useState('all')
+  const [activeCity, setActiveCity] = useState('all')
+  const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null)
   const trackRef = useRef<HTMLDivElement>(null)
 
-  const filtered = activeFilter === 'all'
-    ? apartments
-    : apartments.filter((apt) => QUARTIER_MAP[apt.slug] === activeFilter)
+  const neighborhoods = activeCity !== 'all' ? (NEIGHBORHOOD_FILTERS[activeCity] ?? []) : []
+
+  const filtered = apartments.filter((apt) => {
+    if (activeCity !== 'all' && apt.city?.toLowerCase() !== activeCity) return false
+    if (activeNeighborhood && QUARTIER_MAP[apt.slug] !== activeNeighborhood) return false
+    return true
+  })
 
   function scroll(direction: 'left' | 'right') {
     const track = trackRef.current
@@ -53,19 +71,36 @@ export function ApartmentsCarousel({ apartments }: { apartments: Apartment[] }) 
           Nos appartements
         </h2>
 
-        <div className="flex items-center gap-2">
-          {FILTERS.map((f) => (
-            <Chip
-              key={f.id}
-              variant={activeFilter === f.id ? 'active' : 'default'}
-              onPress={() => setActiveFilter(f.id)}
-            >
-              {f.label}
-            </Chip>
-          ))}
-          <Button href="/appartements" className="hidden md:flex">
-            Voir tout
-          </Button>
+        <div className="flex flex-col items-start gap-2 md:items-end">
+          <div className="flex items-center gap-2">
+            {CITY_FILTERS.map((f) => (
+              <Chip
+                key={f.id}
+                variant={activeCity === f.id ? 'active' : 'default'}
+                onPress={() => { setActiveCity(f.id); setActiveNeighborhood(null) }}
+              >
+                {f.label}
+              </Chip>
+            ))}
+            <Button href="/appartements" className="hidden md:flex">
+              Voir tout
+            </Button>
+          </div>
+          <div className={`grid transition-all duration-300 ease-in-out ${neighborhoods.length > 0 ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+            <div className="overflow-hidden">
+              <div className="flex items-center gap-1.5 pb-0.5">
+                {neighborhoods.map((n) => (
+                  <Chip
+                    key={n.id}
+                    variant={activeNeighborhood === n.id ? 'active' : 'default'}
+                    onPress={() => setActiveNeighborhood(activeNeighborhood === n.id ? null : n.id)}
+                  >
+                    {n.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -19,51 +19,72 @@ export function CustomCursor() {
     const ring = ringRef.current
     if (!cursor || !follower || !dot || !ring) return
 
-    let lastElement: Element | null = null
+    const cursorX = gsap.quickTo(cursor, 'x', { duration: 0.12, ease: 'power2.out' })
+    const cursorY = gsap.quickTo(cursor, 'y', { duration: 0.12, ease: 'power2.out' })
+    const followerX = gsap.quickTo(follower, 'x', { duration: 0.3, ease: 'power2.out' })
+    const followerY = gsap.quickTo(follower, 'y', { duration: 0.3, ease: 'power2.out' })
+
+    let lastBgCheck = 0
+    const BG_THROTTLE_MS = 80
+    const bgCache = new WeakMap<Element, boolean>()
 
     const onMove = (e: MouseEvent) => {
-      gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1 })
-      gsap.to(follower, { x: e.clientX, y: e.clientY, duration: 0.3 })
+      cursorX(e.clientX)
+      cursorY(e.clientY)
+      followerX(e.clientX)
+      followerY(e.clientY)
+
+      const now = performance.now()
+      if (now - lastBgCheck < BG_THROTTLE_MS) return
+      lastBgCheck = now
 
       const el = document.elementFromPoint(e.clientX, e.clientY)
-      if (!el || el === lastElement) return
-      lastElement = el
+      if (!el) return
 
-      const bg = getEffectiveBg(el as HTMLElement)
-      const isDark = isDarkBg(bg)
+      let isDark = bgCache.get(el)
+      if (isDark === undefined) {
+        isDark = isDarkBg(getEffectiveBg(el as HTMLElement))
+        bgCache.set(el, isDark)
+      }
 
-      dot.style.background = isDark ? '#fffff8' : '#301a0a'
-      ring.style.borderColor = isDark ? '#fffff8' : '#301a0a'
+      const color = isDark ? '#fffff8' : '#301a0a'
+      if (dot.style.background !== color) {
+        dot.style.background = color
+        ring.style.borderColor = color
+      }
     }
 
     const onEnterInteractive = () => {
-      gsap.to(cursor, { scale: 0, duration: 0.2 })
-      gsap.to(follower, { scale: 2.5, opacity: 0.15, duration: 0.3 })
+      gsap.to(cursor, { scale: 0, duration: 0.2, overwrite: 'auto' })
+      gsap.to(follower, { scale: 2.5, opacity: 0.15, duration: 0.3, overwrite: 'auto' })
     }
 
     const onLeaveInteractive = () => {
-      gsap.to(cursor, { scale: 1, duration: 0.2 })
-      gsap.to(follower, { scale: 1, opacity: 0.3, duration: 0.3 })
+      gsap.to(cursor, { scale: 1, duration: 0.2, overwrite: 'auto' })
+      gsap.to(follower, { scale: 1, opacity: 0.3, duration: 0.3, overwrite: 'auto' })
     }
 
-    document.body.addEventListener('mouseenter', (e) => {
+    const onEnter = (e: Event) => {
       const target = e.target as HTMLElement
-      if (target.matches('a, button, [role="button"], input, select, [data-hover]')) {
+      if (target.matches?.('a, button, [role="button"], input, select, [data-hover]')) {
         onEnterInteractive()
       }
-    }, true)
-
-    document.body.addEventListener('mouseleave', (e) => {
+    }
+    const onLeave = (e: Event) => {
       const target = e.target as HTMLElement
-      if (target.matches('a, button, [role="button"], input, select, [data-hover]')) {
+      if (target.matches?.('a, button, [role="button"], input, select, [data-hover]')) {
         onLeaveInteractive()
       }
-    }, true)
+    }
 
-    window.addEventListener('mousemove', onMove)
+    document.body.addEventListener('mouseenter', onEnter, true)
+    document.body.addEventListener('mouseleave', onLeave, true)
+    window.addEventListener('mousemove', onMove, { passive: true })
 
     return () => {
       window.removeEventListener('mousemove', onMove)
+      document.body.removeEventListener('mouseenter', onEnter, true)
+      document.body.removeEventListener('mouseleave', onLeave, true)
     }
   }, [])
 
