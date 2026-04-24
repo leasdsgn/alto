@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 
 const CITIES = ['Paris', 'Lyon']
 
-export function SearchBar() {
+export function SearchBar({ calendarPlacement = 'bottom start' }: { calendarPlacement?: 'bottom start' | 'top start' } = {}) {
   const router = useRouter()
   const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
 
@@ -113,7 +113,7 @@ export function SearchBar() {
                 <span className="mr-3"><CalendarIcon /></span>
               </DateField.Group>
             </div>
-            <DateRangePicker.Popover className="bg-cream rounded-lg border border-divider p-5 shadow-none" placement="bottom start">
+            <DateRangePicker.Popover className="bg-cream rounded-lg border border-divider p-5 shadow-none" placement={calendarPlacement}>
               <RangeCalendar aria-label="Dates du séjour" minValue={minDate}>
                 <RangeCalendar.Header>
                   <RangeCalendar.Heading className="text-coffee text-sm font-bold" />

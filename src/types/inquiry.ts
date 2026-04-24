@@ -48,7 +48,7 @@ export interface InquiryInsert {
   check_in: string
   check_out: string
   amount_cents: number
-  currency?: string
+  currency: string
   locale: InquiryLocale
   status?: InquiryStatus
   mode: InquiryMode

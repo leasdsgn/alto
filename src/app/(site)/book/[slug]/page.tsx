@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { getApartments } from '@/components/sections/apartments-section'
@@ -18,6 +19,13 @@ interface PageProps {
 }
 
 const BOOKING_MODE = 'inquiry' as const
+
+const getCachedQuote = unstable_cache(
+  (listingId: string, checkIn: string, checkOut: string, guestsCount: number) =>
+    guestyClient.createQuote(listingId, checkIn, checkOut, guestsCount),
+  ['guesty-quote'],
+  { revalidate: 60 },
+)
 
 export default async function ReserverPage({ params, searchParams }: PageProps) {
   const { slug } = await params
@@ -68,12 +76,7 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
 
   let quote: GuestyQuote
   try {
-    quote = await guestyClient.createQuote(
-      apartment.id,
-      search.check_in,
-      search.check_out,
-      guestsCount,
-    )
+    quote = await getCachedQuote(apartment.id, search.check_in, search.check_out, guestsCount)
   } catch (error) {
     return <QuoteErrorView slug={slug} apartmentName={apartment.name} error={error} locale={locale} />
   }
@@ -93,7 +96,7 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
 
       <main className="mx-auto max-w-[1132px] px-6 py-16 md:px-12 lg:px-0">
         <h1 className="text-coffee mb-10 text-3xl font-semibold md:text-4xl">
-          Demander à réserver {apartment.name}
+          {locale === 'en' ? `Request to book ${apartment.name}` : `Demander à réserver ${apartment.name}`}
         </h1>
 
         <BookingFlow

@@ -51,26 +51,30 @@ export async function POST(request: NextRequest) {
       'Annulation demandée par le voyageur',
     )
 
-    if (refundAmountCents > 0) {
-      const paymentId = findRefundablePaymentId(reservation)
-      if (!paymentId) {
-        throw new Error('Aucun paiement Guesty remboursable trouvé pour cette réservation')
-      }
-
-      await guestyOpenApi.refundReservationPayment(
-        inquiry.guesty_reservation_id,
-        paymentId,
-        refundAmountCents / 100,
-        'Refund déclenché depuis le site Alto',
-      )
-    } else {
-      await sendCancellationEmail(inquiry, null)
-    }
-
     await updateInquiry(inquiry.id, {
       status: 'canceled',
       canceled_at: new Date().toISOString(),
     })
+
+    if (refundAmountCents > 0) {
+      const paymentId = findRefundablePaymentId(reservation)
+      if (paymentId) {
+        try {
+          await guestyOpenApi.refundReservationPayment(
+            inquiry.guesty_reservation_id,
+            paymentId,
+            refundAmountCents / 100,
+            'Refund déclenché depuis le site Alto',
+          )
+        } catch (refundError) {
+          console.error('[cancel] refund failed after successful cancel', refundError)
+        }
+      } else {
+        console.error('[cancel] no refundable payment found', { reservationId: inquiry.guesty_reservation_id })
+      }
+    } else {
+      await sendCancellationEmail(inquiry, null)
+    }
 
     return NextResponse.json({
       ok: true,
@@ -87,8 +91,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
-    const message = error instanceof Error ? error.message : 'Erreur inconnue'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[cancel] internal error', error)
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 })
   }
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -30,7 +30,7 @@ export function AboutSection() {
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const section = sectionRef.current
@@ -38,39 +38,25 @@ export function AboutSection() {
     const right = rightRef.current
     if (!section || !left || !right) return
 
-    gsap.set(right, { opacity: 0, xPercent: 20 })
-    gsap.set(left, { width: '100%' })
+    const ctx = gsap.context(() => {
+      gsap.set(right, { opacity: 0, xPercent: 20 })
+      gsap.set(left, { width: '100%' })
 
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: section,
-        start: 'top top',
-        end: '+=150%',
-        pin: true,
-        scrub: 0.6,
-      },
-    })
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: '+=150%',
+          pin: true,
+          scrub: 0.6,
+        },
+      })
 
-    tl.to(left, {
-      width: '33%',
-      duration: 1,
-      ease: 'power2.inOut',
-    })
+      tl.to(left, { width: '33%', duration: 1, ease: 'power2.inOut' })
+      tl.to(right, { opacity: 1, xPercent: 0, duration: 1, ease: 'power2.out' }, 0.3)
+    }, section)
 
-    tl.to(
-      right,
-      {
-        opacity: 1,
-        xPercent: 0,
-        duration: 1,
-        ease: 'power2.out',
-      },
-      0.3,
-    )
-
-    return () => {
-      tl.kill()
-    }
+    return () => ctx.revert()
   }, [])
 
   return (
@@ -91,16 +77,24 @@ export function AboutSection() {
             ref={leftRef}
             className="bg-coffee flex min-h-[441px] shrink-0 flex-col justify-between overflow-hidden rounded-lg p-8 md:p-10"
           >
-            <div className="flex flex-col gap-10">
-              {PILLARS.map((pillar) => (
-                <div key={pillar.title} className="flex gap-4">
-                  <span className="text-cream/30 text-xs font-bold tabular-nums">{pillar.number}</span>
-                  <div>
-                    <h3 className="text-cream text-sm font-bold">{pillar.title}</h3>
-                    <p className="text-cream/60 mt-1.5 text-xs leading-[1.7]">{pillar.description}</p>
+            <div className="flex flex-col gap-8">
+              <div>
+                <p className="text-cream/40 text-[10px] font-bold uppercase tracking-[2px]">Manifeste</p>
+                <p className="text-cream mt-3 text-sm leading-[1.8]">
+                  Un appartement ne devrait pas ressembler à un hôtel. Il devrait ressembler à quelque chose que vous n'avez pas encore trouvé.
+                </p>
+              </div>
+              <div className="flex flex-col gap-6">
+                {PILLARS.map((pillar) => (
+                  <div key={pillar.title} className="flex gap-4">
+                    <span className="text-cream/30 text-xs font-bold tabular-nums">{pillar.number}</span>
+                    <div>
+                      <h3 className="text-cream text-sm font-bold">{pillar.title}</h3>
+                      <p className="text-cream/60 mt-1.5 text-xs leading-[1.7]">{pillar.description}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             <p className="text-cream/30 mt-10 text-caption font-bold uppercase tracking-[1px]">

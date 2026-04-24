@@ -4,11 +4,12 @@ import { guestyClient } from '@/lib/guesty-client'
 import { insertInquiry } from '@/lib/inquiries-repository'
 import { sendEmail } from '@/lib/resend-client'
 import { translate } from '@/lib/i18n/email-dictionary'
-import { formatCurrency, formatDate, nightsBetween } from '@/lib/formatters'
-import BookingConfirmationEmail from '@/emails/booking-confirmation'
+import { formatCurrency, formatDate } from '@/lib/formatters'
 import InquiryReceivedEmail from '@/emails/inquiry-received'
 import { generateCancellationToken } from '@/lib/cancel-token'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
+import { assertSameOrigin } from '@/lib/api-guard'
+import type { GuestyReservationRequest } from '@/types/guesty'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
 
@@ -52,6 +53,9 @@ const inquirySchema = baseSchema.extend({
 const schema = z.discriminatedUnion('mode', [instantSchema, inquirySchema])
 
 export async function POST(request: NextRequest) {
+  const guard = assertSameOrigin(request)
+  if (guard) return guard
+
   let locale: 'fr' | 'en' = 'fr'
 
   try {
@@ -72,73 +76,25 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data
     locale = data.preferredLanguage
-    const nights = nightsBetween(data.checkIn, data.checkOut)
     const formattedTotal = formatCurrency(data.amountCents, data.currency, locale)
     const formattedCheckIn = formatDate(data.checkIn, locale)
     const formattedCheckOut = formatDate(data.checkOut, locale)
 
     const nowIso = new Date().toISOString()
-    const guestyPolicy = {
+    const guestyPolicy: GuestyReservationRequest['policy'] = {
       privacy: { accepted: data.policy.privacy, acceptedAt: nowIso },
       terms: { accepted: data.policy.terms, acceptedAt: nowIso },
     }
 
     if (data.mode === 'instant') {
-      const reservation = await guestyClient.createInstantReservation({
-        quoteId: data.quoteId,
-        ratePlanId: data.ratePlanId,
-        guest: data.guest,
-        policy: guestyPolicy as unknown as typeof data.policy,
-        ccToken: data.ccToken,
-      })
-
-      try {
-        await insertInquiry({
-          guesty_reservation_id: reservation._id,
-          guesty_listing_id: data.listingId,
-          listing_title: data.listingTitle,
-          guest: data.guest,
-          guests_count: data.guestsCount,
-          check_in: data.checkIn,
-          check_out: data.checkOut,
-          amount_cents: data.amountCents,
-          currency: data.currency,
-          locale,
-          status: 'confirmed',
-          mode: 'instant',
-        })
-      } catch (insertError) {
-        console.error('[reservation route] instant insert failed', insertError)
-      }
-
-      await trySendEmail(() =>
-        sendEmail({
-          to: data.guest.email,
-          subject: translate(locale, 'confirmation.subject'),
-          react: BookingConfirmationEmail({
-            locale,
-            guest: { firstName: data.guest.firstName },
-            listing: { title: data.listingTitle },
-            reservation: {
-              checkIn: formattedCheckIn,
-              checkOut: formattedCheckOut,
-              guests: data.guestsCount,
-              nights,
-              total: formattedTotal,
-            },
-            cancelUrl: buildCancellationUrl(reservation._id, data.guest.email),
-          }),
-        }),
-      )
-
-      return NextResponse.json(reservation)
+      return NextResponse.json({ error: { code: 'INSTANT_BOOKING_DISABLED' } }, { status: 501 })
     }
 
     const inquiry = await guestyClient.createInquiry({
       quoteId: data.quoteId,
       ratePlanId: data.ratePlanId,
       guest: data.guest,
-      policy: guestyPolicy as unknown as typeof data.policy,
+      policy: guestyPolicy,
       ccToken: data.ccToken,
     })
 

@@ -37,15 +37,6 @@ export interface GuestyListing {
   maxNights: number
 }
 
-export interface GuestyAvailability {
-  listingId: string
-  status: 'available' | 'unavailable' | 'booked'
-  date: string
-  price: number
-  currency: string
-  minNights: number
-}
-
 export interface GuestyCalendarDay {
   date: string
   status: 'available' | 'booked' | 'blocked'
@@ -97,14 +88,19 @@ export interface GuestyGuest {
   phone: string
 }
 
+export interface GuestyPolicyConsent {
+  accepted: boolean
+  acceptedAt: string
+}
+
 export interface GuestyReservationRequest {
   quoteId: string
   ratePlanId: string
   guest: GuestyGuest
   ccToken: string
   policy: {
-    privacy: boolean
-    terms: boolean
+    privacy: GuestyPolicyConsent
+    terms: GuestyPolicyConsent
   }
 }
 

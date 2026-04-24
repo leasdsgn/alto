@@ -107,7 +107,10 @@ describe('guesty-client', () => {
         email: 'jean@test.fr',
         phone: '+33612345678',
       },
-      policy: { privacy: true, terms: true },
+      policy: {
+        privacy: { accepted: true, acceptedAt: '2026-04-23T00:00:00.000Z' },
+        terms: { accepted: true, acceptedAt: '2026-04-23T00:00:00.000Z' },
+      },
     })
 
     const [, request] = mockFetch.mock.calls[1]

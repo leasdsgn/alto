@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
+import { assertSameOrigin } from '@/lib/api-guard'
 
 const schema = z.object({
   listingId: z.string().min(1),
@@ -12,6 +13,9 @@ const schema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const guard = assertSameOrigin(request)
+  if (guard) return guard
+
   let locale: 'fr' | 'en' = 'fr'
 
   try {

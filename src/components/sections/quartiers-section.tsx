@@ -18,7 +18,7 @@ interface QuartiersSectionProps {
   apartments?: Apartment[]
 }
 
-const QUARTIERS = [
+const QUARTIERS_PARIS = [
   {
     id: 'marais',
     name: 'Le Marais',
@@ -37,7 +37,7 @@ const QUARTIERS = [
   },
   {
     id: 'opera',
-    name: 'Opera',
+    name: 'Opéra',
     arrondissement: '9e',
     description: 'Grands boulevards, Palais Garnier, la vie parisienne à son apogée.',
     lng: 2.3316,
@@ -45,12 +45,42 @@ const QUARTIERS = [
   },
 ]
 
+const QUARTIERS_LYON = [
+  {
+    id: 'presquile',
+    name: 'Presqu\'île',
+    arrondissement: '2e',
+    description: 'Le cœur battant de Lyon. Restaurants, boutiques, vie nocturne.',
+    lng: 4.8340,
+    lat: 45.7591,
+  },
+  {
+    id: 'confluence',
+    name: 'Confluence',
+    arrondissement: '2e',
+    description: 'Architecture contemporaine au confluent du Rhône et de la Saône.',
+    lng: 4.8161,
+    lat: 45.7411,
+  },
+  {
+    id: 'croix-rousse',
+    name: 'Croix-Rousse',
+    arrondissement: '1er',
+    description: 'La colline qui travaille. Canut, bobos, marchés et traboules.',
+    lng: 4.8295,
+    lat: 45.7716,
+  },
+]
 
-function getClosestQuartier(lat?: number, lng?: number): string | null {
+function getClosestQuartier(
+  lat?: number,
+  lng?: number,
+  quartiers: typeof QUARTIERS_PARIS = QUARTIERS_PARIS,
+): string | null {
   if (!lat || !lng) return null
   let closest: string | null = null
   let minDist = Infinity
-  for (const q of QUARTIERS) {
+  for (const q of quartiers) {
     const dist = Math.abs(q.lat - lat) + Math.abs(q.lng - lng)
     if (dist < minDist) {
       minDist = dist
@@ -66,17 +96,25 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapboxMap | null>(null)
+  const [city, setCity] = useState<'paris' | 'lyon'>('paris')
   const [active, setActive] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [shouldLoadMap, setShouldLoadMap] = useState(false)
 
+  const activeQuartiers = city === 'paris' ? QUARTIERS_PARIS : QUARTIERS_LYON
+
   const filteredApartments = useMemo(() => {
     if (!active) return apartments
-    return apartments.filter((apt) => getClosestQuartier(apt.lat, apt.lng) === active)
-  }, [active, apartments])
+    return apartments.filter((apt) => getClosestQuartier(apt.lat, apt.lng, activeQuartiers) === active)
+  }, [active, apartments, activeQuartiers])
 
   const totalPages = Math.ceil(filteredApartments.length / ITEMS_PER_PAGE)
   const pagedApartments = filteredApartments.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE)
+
+  useEffect(() => {
+    setActive(null)
+    setPage(0)
+  }, [city])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -101,6 +139,9 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
   useEffect(() => {
     if (!shouldLoadMap || !mapContainer.current || !process.env.NEXT_PUBLIC_MAPBOX_TOKEN) return
 
+    const quartiers = city === 'paris' ? QUARTIERS_PARIS : QUARTIERS_LYON
+    const center: [number, number] = city === 'paris' ? [2.3488, 48.8634] : [4.8357, 45.7640]
+
     let cancelled = false
     let mapInstance: MapboxMap | null = null
 
@@ -113,7 +154,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
-        center: [2.3488, 48.8634],
+        center,
         zoom: 12.5,
         pitch: 0,
         bearing: 0,
@@ -134,7 +175,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
         } catch {
           // layers might not exist in all styles
         }
-        QUARTIERS.forEach((q) => {
+        quartiers.forEach((q) => {
           const sourceId = `quartier-${q.id}`
 
           map.addSource(sourceId, {
@@ -253,7 +294,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
       mapInstance?.remove()
       mapRef.current = null
     }
-  }, [apartments, shouldLoadMap])
+  }, [apartments, shouldLoadMap, city])
 
   useEffect(() => {
     const map = mapRef.current
@@ -267,7 +308,8 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
     })
 
     if (!map || !map.isStyleLoaded()) return
-    QUARTIERS.forEach((q) => {
+    const quartiers = city === 'paris' ? QUARTIERS_PARIS : QUARTIERS_LYON
+    quartiers.forEach((q) => {
       const isActive = q.id === active
       try {
         map.setPaintProperty(`quartier-${q.id}-fill`, 'circle-opacity', isActive ? 0.12 : 0.06)
@@ -277,7 +319,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
         // layer might not be ready
       }
     })
-  }, [active])
+  }, [active, city])
 
   return (
     <section
@@ -381,9 +423,31 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
 
       <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">Nos quartiers</p>
 
-      <h2 className="text-coffee mt-4 text-2xl leading-[1.3] font-bold tracking-[-0.48px] md:text-4xl md:tracking-[-0.72px]">
-        Au cœur de Paris
-      </h2>
+      <div className="mt-4 flex items-end justify-between">
+        <h2 className="text-coffee text-2xl leading-[1.3] font-bold tracking-[-0.48px] md:text-4xl md:tracking-[-0.72px]">
+          Au cœur de {city === 'paris' ? 'Paris' : 'Lyon'}
+        </h2>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={`rounded-sm px-5 py-2 text-xs font-bold tracking-[0.24px] transition-colors ${
+              city === 'paris' ? 'bg-coffee text-cream' : 'bg-sand text-coffee hover:bg-sand/80'
+            }`}
+            onClick={() => setCity('paris')}
+          >
+            Paris
+          </button>
+          <button
+            type="button"
+            className={`rounded-sm px-5 py-2 text-xs font-bold tracking-[0.24px] transition-colors ${
+              city === 'lyon' ? 'bg-coffee text-cream' : 'bg-sand text-coffee hover:bg-sand/80'
+            }`}
+            onClick={() => setCity('lyon')}
+          >
+            Lyon
+          </button>
+        </div>
+      </div>
 
       <div className="mt-10 grid grid-cols-1 items-stretch gap-8 lg:grid-cols-[1fr_340px]">
         <div
@@ -401,14 +465,14 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
 
         <div className="flex max-h-[480px] flex-col gap-3">
           <div className="flex gap-2">
-            {QUARTIERS.map((q) => (
+            {activeQuartiers.map((q) => (
               <button
                 key={q.id}
                 type="button"
                 className={`flex-1 rounded-sm px-4 py-2.5 text-xs font-bold tracking-[0.24px] transition-colors ${
                   active === q.id
                     ? 'bg-coffee text-cream'
-                    : 'bg-sand text-coffee'
+                    : 'bg-sand text-coffee hover:bg-sand/80'
                 }`}
                 onClick={() => {
                   setActive(active === q.id ? null : q.id)
