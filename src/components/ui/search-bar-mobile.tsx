@@ -107,8 +107,6 @@ export function SearchBarMobile() {
           className="date-picker"
         >
           <Label className="sr-only">Dates du séjour</Label>
-          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div
             className="cursor-pointer px-4 py-4"
             onClick={() => setDateOpen(true)}

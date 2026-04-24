@@ -15,8 +15,12 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'Alto - Location courte duree haut de gamme',
+  title: 'Alto - Location courte durée haut de gamme',
   description: 'Appartements de luxe en location courte durée à Paris et Lyon.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+  },
 }
 
 export default async function RootLayout({

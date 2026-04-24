@@ -6,12 +6,9 @@ import { sendEmail } from '@/lib/resend-client'
 import { translate } from '@/lib/i18n/email-dictionary'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import InquiryReceivedEmail from '@/emails/inquiry-received'
-import { generateCancellationToken } from '@/lib/cancel-token'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
 import type { GuestyReservationRequest } from '@/types/guesty'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
 
 const guestSchema = z.object({
   firstName: z.string().min(1),
@@ -148,9 +145,4 @@ async function trySendEmail(send: () => Promise<unknown>) {
   } catch (error) {
     console.error('[reservation route] email send failed', error)
   }
-}
-
-function buildCancellationUrl(reservationId: string, email: string): string {
-  const token = generateCancellationToken({ reservationId, email })
-  return `${SITE_URL}/annulation?token=${encodeURIComponent(token)}`
 }

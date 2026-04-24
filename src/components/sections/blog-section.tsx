@@ -1,13 +1,10 @@
 import Image from 'next/image'
-
-const ARTICLES = [
-  { title: "Nom de l'article", image: '/images/blog-3.jpg' },
-  { title: "Nom de l'article", image: '/images/blog-1.jpg' },
-  { title: "Nom de l'article", image: '/images/blog-4.jpg' },
-  { title: "Nom de l'article", image: '/images/blog-2.jpg' },
-]
+import Link from 'next/link'
+import { BLOG_ARTICLES } from '@/lib/blog-data'
 
 export function BlogSection() {
+  const articles = BLOG_ARTICLES.slice(0, 4)
+
   return (
     <section className="bg-silver">
       <div className="mx-auto max-w-content px-gutter pt-section pb-section-md md:px-gutter-md">
@@ -28,8 +25,13 @@ export function BlogSection() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {ARTICLES.map((article, i) => (
-                <ArticleCard key={i} {...article} />
+              {articles.map((article) => (
+                <ArticleCard
+                  key={article.slug}
+                  title={article.title}
+                  image={article.image}
+                  href={`/blog/${article.slug}`}
+                />
               ))}
             </div>
           </div>
@@ -39,9 +41,9 @@ export function BlogSection() {
   )
 }
 
-function ArticleCard({ title, image }: { title: string; image: string }) {
+function ArticleCard({ title, image, href }: { title: string; image: string; href: string }) {
   return (
-    <article className="group relative h-[180px] overflow-hidden rounded-lg md:h-[274px]">
+    <Link href={href} className="group relative block h-[180px] overflow-hidden rounded-lg md:h-[274px]">
       <Image src={image} alt={title} fill sizes="(max-width: 1024px) 50vw, 25vw" className="object-cover" />
       <div className="to-coffee absolute inset-0 rounded-lg bg-gradient-to-b from-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
@@ -49,6 +51,6 @@ function ArticleCard({ title, image }: { title: string; image: string }) {
           {title}
         </h3>
       </div>
-    </article>
+    </Link>
   )
 }

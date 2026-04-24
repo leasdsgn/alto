@@ -23,6 +23,7 @@ export function ServicesSection() {
     const section = sectionRef.current
     const image = imageRef.current
     if (!section) return
+    const items = itemsRef.current
 
     if (image) {
       gsap.fromTo(
@@ -41,7 +42,7 @@ export function ServicesSection() {
       )
     }
 
-    itemsRef.current.forEach((item, i) => {
+    items.forEach((item, i) => {
       if (!item) return
       const check = item.querySelector('svg')
       if (!check) return
@@ -63,7 +64,7 @@ export function ServicesSection() {
 
     return () => {
       ScrollTrigger.getAll().forEach((t) => {
-        if (t.trigger === section || itemsRef.current.includes(t.trigger as HTMLLIElement)) t.kill()
+        if (t.trigger === section || items.includes(t.trigger as HTMLLIElement)) t.kill()
       })
     }
   }, [])

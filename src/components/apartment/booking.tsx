@@ -35,7 +35,7 @@ export function ApartmentBooking({ price, slug }: BookingProps) {
   }
 
   return (
-    <div className="bg-cream sticky top-8 rounded-lg border border-divider p-5">
+    <div className="bg-cream sticky top-8 flex h-full min-h-[429px] flex-col rounded-lg border border-divider p-5">
       <div className="flex items-baseline gap-1">
         <span className="text-coffee text-2xl font-bold tabular-nums">{price}€</span>
         <span className="text-coffee text-xs font-medium">pour une nuit</span>
@@ -130,11 +130,9 @@ export function ApartmentBooking({ price, slug }: BookingProps) {
         </div>
       </div>
 
-      <Button href={reserveHref} className="mt-5 h-[40px] w-full">
+      <Button href={reserveHref} className="mt-auto h-[40px] w-full">
         Réserver
       </Button>
-
-      <p className="text-silver mt-3 text-center text-caption">Pas de frais Airbnb</p>
     </div>
   )
 }

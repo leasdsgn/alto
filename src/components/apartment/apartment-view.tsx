@@ -15,8 +15,10 @@ interface Props {
 const AMENITIES_ICONS: Record<string, React.ReactNode> = {
   wifi: <WifiIcon />,
   cuisine: <KitchenIcon />,
+  kitchen: <KitchenIcon />,
   linge: <LinenIcon />,
   climatisation: <AcIcon />,
+  'air conditioning': <AcIcon />,
   parking: <ParkingIcon />,
 }
 
@@ -66,12 +68,12 @@ export function ApartmentView({ apartment, recommendations }: Props) {
 
         <section className="grid grid-cols-1 gap-8 border-b border-divider py-10 lg:grid-cols-[1fr_220px]">
           <div>
-            <p className="text-coffee max-w-[408px] text-base font-bold leading-[1.25]">
+            <p className="text-coffee max-w-[560px] text-base font-bold leading-[1.35]">
               {a.description}
             </p>
 
             {a.space && (
-              <p className="text-coffee mt-6 max-w-[408px] text-xs font-medium leading-[1.85]">
+              <p className="text-coffee mt-6 max-w-[560px] text-xs font-medium leading-[1.85]">
                 {a.space}
               </p>
             )}
@@ -85,7 +87,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
               {a.amenities.slice(0, 6).map((amenity) => (
                 <div key={amenity} className="flex items-center gap-2 py-1">
                   <span className="text-ash flex size-4 items-center justify-center">
-                    {AMENITIES_ICONS[amenity.toLowerCase()] ?? <DefaultAmenityIcon />}
+                    {getAmenityIcon(amenity)}
                   </span>
                   <span className="text-ash text-xs leading-[45px]">{amenity}</span>
                 </div>
@@ -103,7 +105,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
               {a.amenities.slice(0, 5).map((amenity) => (
                 <div key={amenity} className="flex flex-col items-center gap-2">
                   <span className="text-ash flex size-10 items-center justify-center">
-                    {AMENITIES_ICONS[amenity.toLowerCase()] ?? <DefaultAmenityIcon />}
+                    {getAmenityIcon(amenity)}
                   </span>
                   <span className="text-ash text-xs font-medium">{amenity}</span>
                 </div>
@@ -120,10 +122,10 @@ export function ApartmentView({ apartment, recommendations }: Props) {
               {a.neighborhood}
             </p>
             <Link
-              href={`/quartiers/${quartierName.toLowerCase().replace(/\s+/g, '-')}`}
+              href="/appartements"
               className="text-silver mt-6 inline-block border-b border-silver/50 text-xs leading-[27px]"
             >
-              Voir la page {quartierName}
+              Voir les appartements
             </Link>
           </section>
         )}
@@ -174,7 +176,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
         </section>
       </main>
 
-      <Footer />
+      <Footer reserveStickyCtaSpace="mobile" />
 
       <div className="bg-cream/95 fixed inset-x-0 bottom-0 z-40 border-t border-divider p-4 backdrop-blur-md lg:hidden">
         <div className="flex items-center justify-between">
@@ -205,8 +207,8 @@ function RecommendationCard({ apartment }: { apartment: Apartment }) {
   const location = a.address?.split(' - ')[0] ?? a.city ?? 'Paris'
 
   return (
-    <article className="flex flex-1 flex-col">
-      <div className="relative h-[331px] overflow-hidden rounded-xl">
+    <article className="flex min-h-[520px] flex-1 flex-col">
+      <div className="relative h-[360px] overflow-hidden rounded-xl">
         {img ? (
           <Image
             src={img}
@@ -221,7 +223,7 @@ function RecommendationCard({ apartment }: { apartment: Apartment }) {
         )}
       </div>
 
-      <div className="mt-4 flex items-start justify-between">
+      <div className="mt-6 flex min-h-[56px] items-start justify-between gap-4">
         <div>
           <h3 className="text-coffee text-base font-bold">{a.name}</h3>
           <p className="text-coffee mt-0.5 text-xs font-medium">{location}</p>
@@ -229,12 +231,12 @@ function RecommendationCard({ apartment }: { apartment: Apartment }) {
         <p className="text-silver text-xs font-bold uppercase">{a.price}€/nuit</p>
       </div>
 
-      <div className="mt-2 flex items-center gap-4">
+      <div className="mt-4 flex items-center gap-4">
         <Stat icon={<GuestsIcon />} value={`${a.guests}p.`} />
         {a.surface > 0 && <Stat icon={<SurfaceIcon />} value={`${a.surface}m²`} />}
       </div>
 
-      <Button href={`/appartements/${a.slug}`} className="mt-auto w-full pt-4 lg:w-24">
+      <Button href={`/appartements/${a.slug}`} className="mt-8 w-fit lg:mt-auto lg:w-24">
         Voir
       </Button>
     </article>
@@ -242,6 +244,22 @@ function RecommendationCard({ apartment }: { apartment: Apartment }) {
 }
 
 // Icons
+function getAmenityIcon(amenity: string) {
+  const normalized = amenity.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+  if (normalized.includes('wifi') || normalized.includes('internet')) return <WifiIcon />
+  if (normalized.includes('cuisine') || normalized.includes('kitchen')) return <KitchenIcon />
+  if (normalized.includes('linge') || normalized.includes('linen') || normalized.includes('washer') || normalized.includes('dryer')) return <LinenIcon />
+  if (normalized.includes('clim') || normalized.includes('air conditioning') || normalized.includes('heating')) return <AcIcon />
+  if (normalized.includes('parking')) return <ParkingIcon />
+  if (normalized.includes('tv') || normalized.includes('television')) return <TvIcon />
+  if (normalized.includes('ascenseur') || normalized.includes('elevator')) return <ElevatorIcon />
+  if (normalized.includes('seche') || normalized.includes('hair')) return <HairDryerIcon />
+  if (normalized.includes('travail') || normalized.includes('workspace') || normalized.includes('desk')) return <WorkspaceIcon />
+
+  return AMENITIES_ICONS[normalized] ?? <CheckIcon />
+}
+
 function GuestsIcon() {
   return (
     <svg width="18" height="13" viewBox="0 0 18 13" fill="none">
@@ -314,11 +332,45 @@ function ParkingIcon() {
   )
 }
 
-function DefaultAmenityIcon() {
+function TvIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1" />
-      <circle cx="6" cy="6" r="2" fill="currentColor" />
+    <svg width="15" height="13" viewBox="0 0 15 13" fill="none">
+      <rect x="1" y="2" width="13" height="8" rx="1.5" stroke="currentColor" strokeWidth="1" />
+      <path d="M5 12h5M7.5 10v2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function ElevatorIcon() {
+  return (
+    <svg width="13" height="15" viewBox="0 0 13 15" fill="none">
+      <rect x="1" y="1" width="11" height="13" rx="1.5" stroke="currentColor" strokeWidth="1" />
+      <path d="M4.5 5L6.5 3l2 2M4.5 10l2 2 2-2M6.5 3v9" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function HairDryerIcon() {
+  return (
+    <svg width="16" height="13" viewBox="0 0 16 13" fill="none">
+      <path d="M1 4.5h7.5a3 3 0 0 1 0 6H1v-6Z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
+      <path d="M7 10.5 9 12M11.5 5.5h3M11.8 7.5h2.2M11.5 9.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function WorkspaceIcon() {
+  return (
+    <svg width="15" height="14" viewBox="0 0 15 14" fill="none">
+      <path d="M2 6h11v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6ZM5 6V3h5v3M4 13h7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+      <path d="M2.5 6.5 5.3 9.2 10.5 3.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

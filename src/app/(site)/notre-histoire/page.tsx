@@ -49,7 +49,7 @@ export default function NotreHistoirePage() {
           <div className="mx-auto w-full max-w-content px-gutter pb-10 md:px-gutter-md">
             <h1 className="text-cream text-base font-bold leading-[18px]">Notre histoire</h1>
             <p className="text-cream/80 mt-3 max-w-[505px] text-xs font-medium leading-[20px]">
-              Alto est ne d'une conviction simple : on peut voyager autrement, sans compromis entre confort, esthetique et authenticite.
+              Alto est né d'une conviction simple : on peut voyager autrement, sans compromis entre confort, esthétique et authenticité.
             </p>
           </div>
         </div>
@@ -65,20 +65,20 @@ export default function NotreHistoirePage() {
           <div className="mt-10 grid grid-cols-1 gap-12 lg:grid-cols-2">
             <div className="max-w-[408px] space-y-4">
               <p className="text-coffee text-base font-bold leading-[20px]">
-                Alto est parti d'un constat : les locations courte duree oscillent entre le standardise et l'approximatif.
+                Alto est parti d'un constat : les locations courte durée oscillent entre le standardisé et l'approximatif.
               </p>
               <p className="text-coffee text-xs font-medium leading-[22px]">
-                Nous avons voulu creer un entre-deux. Des lieux ou l'on se sent chez soi, avec l'attention d'un hotel. Des interieurs penses, pas decores. Des quartiers choisis, pas subis.
+                Nous avons voulu créer un entre-deux. Des lieux où l'on se sent chez soi, avec l'attention d'un hôtel. Des intérieurs pensés, pas décorés. Des quartiers choisis, pas subis.
               </p>
               <p className="text-coffee text-xs font-medium leading-[22px]">
-                Chaque appartement de la collection est une adresse a part entiere, avec son caractere, son histoire, sa lumiere.
+                Chaque appartement de la collection est une adresse à part entière, avec son caractère, son histoire, sa lumière.
               </p>
             </div>
 
             <div className="relative h-[350px] overflow-hidden rounded-lg">
               <Image
                 src="/images/alto-salon.jpg"
-                alt="Interieur Alto"
+                alt="Intérieur Alto"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 quality={85}
@@ -110,14 +110,14 @@ export default function NotreHistoirePage() {
         <section className="mx-auto max-w-content px-gutter py-section md:px-gutter-md">
           <p className="text-silver text-xs font-bold uppercase leading-[24px] tracking-[0.24px]">Parcours</p>
           <h2 className="text-coffee mt-1 text-base font-medium leading-[24px]">
-            Les etapes qui nous ont construits
+            Les étapes qui nous ont construits
           </h2>
 
           <div className="mt-10 space-y-8">
             {MILESTONES.map((m) => (
-              <div key={m.year} className="flex gap-6">
-                <span className="text-silver w-12 shrink-0 text-sm font-bold tabular-nums">{m.year}</span>
-                <div className="border-divider flex-1 border-t pt-4">
+              <div key={m.year} className="grid grid-cols-[72px_1fr] gap-6">
+                <span className="text-silver shrink-0 pt-4 text-sm font-bold tabular-nums">{m.year}</span>
+                <div className="border-divider border-t pt-4">
                   <p className="text-coffee text-xs font-medium leading-[22px]">{m.text}</p>
                 </div>
               </div>
@@ -128,10 +128,10 @@ export default function NotreHistoirePage() {
         <section className="bg-sand">
           <div className="mx-auto max-w-content px-gutter py-section text-center md:px-gutter-md">
             <h2 className="text-coffee text-xl font-bold leading-[1.4] tracking-[-0.4px]">
-              Envie de decouvrir nos adresses ?
+              Envie de découvrir nos adresses ?
             </h2>
             <p className="text-taupe mx-auto mt-3 max-w-[400px] text-xs font-medium leading-[22px]">
-              Parcourez notre collection d'appartements a Paris et Lyon.
+              Parcourez notre collection d'appartements à Paris et Lyon.
             </p>
             <div className="mt-8 flex justify-center gap-3">
               <Button href="/appartements">Voir les appartements</Button>

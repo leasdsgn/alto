@@ -75,9 +75,10 @@ export function LyonHeroSection() {
           <Image
             src="/images/logo-alto-light.png"
             alt="Alto"
-            width={117}
-            height={30}
+            width={140}
+            height={37}
             priority
+            style={{ width: 140, height: 'auto' }}
           />
         </Link>
 

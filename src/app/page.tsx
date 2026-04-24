@@ -28,7 +28,7 @@ export default async function Home() {
         <FaqSection />
         <GuestySearchWidget />
       </main>
-      <Footer />
+      <Footer reserveStickyCtaSpace />
       <StickyCta />
     </>
   )

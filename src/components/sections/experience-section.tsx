@@ -38,6 +38,7 @@ export function ExperienceSection() {
     const section = sectionRef.current
     const track = trackRef.current
     if (!section || !track) return
+    if (window.matchMedia('(max-width: 767px)').matches) return
 
     const ctx = gsap.context(() => {
       gsap.to(track, {
@@ -60,8 +61,8 @@ export function ExperienceSection() {
 
   return (
     <section ref={sectionRef} className="overflow-hidden">
-      <div ref={trackRef} className="flex h-screen items-center" style={{ minWidth: `${35 + STEPS.length * 30 + 5}vw` }}>
-        <div className="flex w-[35vw] shrink-0 flex-col justify-center px-gutter md:px-gutter-md">
+      <div ref={trackRef} className="experience-track flex flex-col gap-4 px-gutter py-section md:h-screen md:flex-row md:items-center md:gap-0 md:px-0 md:py-0">
+        <div className="flex shrink-0 flex-col justify-center md:w-[35vw] md:px-gutter-md">
           <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">L'expérience</p>
           <h2 className="text-coffee mt-4 text-2xl leading-[1.3] font-bold tracking-[-0.48px] md:text-4xl md:tracking-[-0.72px]">
             Vivre Alto
@@ -74,7 +75,7 @@ export function ExperienceSection() {
         {STEPS.map((step, i) => (
           <div
             key={step.title}
-            className={`relative flex h-[70vh] w-[30vw] shrink-0 flex-col justify-end overflow-hidden rounded-lg p-8 md:p-10 ${i < STEPS.length - 1 ? 'mr-4' : ''}`}
+            className={`relative flex min-h-[360px] w-full flex-col justify-end overflow-hidden rounded-lg p-8 md:h-[70vh] md:w-[30vw] md:shrink-0 md:p-10 ${i < STEPS.length - 1 ? 'md:mr-4' : ''}`}
           >
             <Image
               src={step.image}
@@ -84,7 +85,7 @@ export function ExperienceSection() {
               sizes="30vw"
             />
             <div className="absolute inset-0 bg-coffee/55" />
-            <div className="relative z-10">
+            <div className="relative z-10 flex min-h-[150px] flex-col justify-end md:min-h-[170px]">
               <p className="text-cream/40 text-xs font-bold tracking-[0.24px]">0{i + 1}</p>
               <h3 className="text-cream mt-2 text-xl font-bold md:text-2xl">{step.title}</h3>
               <p className="text-cream/70 mt-3 max-w-[280px] text-sm leading-[1.6]">{step.description}</p>
@@ -92,7 +93,7 @@ export function ExperienceSection() {
           </div>
         ))}
 
-        <div className="w-[5vw] shrink-0" />
+        <div className="hidden w-[5vw] shrink-0 md:block" />
       </div>
     </section>
   )

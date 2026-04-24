@@ -85,7 +85,7 @@ export function LyonQuartiersSection() {
         {LYON_QUARTIERS.map((quartier, index) => (
           <Link
             key={quartier.id}
-            href={`/quartiers/${quartier.id}`}
+            href="/appartements?city=lyon"
             className={`quartier-card group relative overflow-hidden rounded-lg transition-all duration-500 ${
               index === 1 ? 'h-[429px] flex-[1.3]' : 'h-[331px] flex-1 self-center'
             }`}

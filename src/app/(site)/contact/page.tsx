@@ -23,7 +23,7 @@ export default function ContactPage() {
           <div className="mx-auto w-full max-w-content px-gutter pb-10 md:px-gutter-md">
             <h1 className="text-cream text-base font-bold leading-[18px]">Contact</h1>
             <p className="text-cream/80 mt-3 max-w-[505px] text-xs font-medium leading-[20px]">
-              Une question, un projet d'investissement, une reservation ? Ecrivez-nous.
+              Une question, un projet d'investissement, une réservation ? Écrivez-nous.
             </p>
           </div>
         </div>
@@ -39,7 +39,7 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label htmlFor="firstName" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                    Prenom
+                    Prénom
                   </label>
                   <input
                     id="firstName"
@@ -85,7 +85,7 @@ export default function ContactPage() {
                   name="subject"
                   className="border-divider text-coffee mt-2 block w-full rounded-sm border bg-transparent px-4 py-3 text-xs font-medium outline-none focus:border-coffee"
                 >
-                  <option value="reservation">Reservation</option>
+                  <option value="reservation">Réservation</option>
                   <option value="investissement">Investissement</option>
                   <option value="partenariat">Partenariat</option>
                   <option value="autre">Autre</option>

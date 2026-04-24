@@ -90,7 +90,6 @@ export function SearchBar({ calendarPlacement = 'bottom start' }: { calendarPlac
             className="date-picker flex-1 px-3 py-2 md:px-4 md:py-0"
           >
             <Label className="sr-only">Dates du séjour</Label>
-            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div className="cursor-pointer" onClick={() => setDateOpen(true)}>
               <DateField.Group className="pointer-events-none flex items-center gap-0.5" fullWidth>
                 <DateField.Input slot="start" className="flex items-center gap-0.5">
