@@ -32,14 +32,15 @@ export function AboutSection() {
 
   useLayoutEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    if (window.matchMedia('(max-width: 767px)').matches) return
 
     const section = sectionRef.current
     const left = leftRef.current
     const right = rightRef.current
     if (!section || !left || !right) return
 
-    const ctx = gsap.context(() => {
+    const media = gsap.matchMedia()
+
+    media.add('(min-width: 768px)', () => {
       gsap.set(right, { opacity: 0, xPercent: 20 })
       gsap.set(left, { width: '100%' })
 
@@ -57,7 +58,12 @@ export function AboutSection() {
       tl.to(right, { opacity: 1, xPercent: 0, duration: 1, ease: 'power2.out' }, 0.3)
     }, section)
 
-    return () => ctx.revert()
+    media.add('(max-width: 767px)', () => {
+      gsap.set(left, { clearProps: 'width' })
+      gsap.set(right, { clearProps: 'opacity,transform' })
+    }, section)
+
+    return () => media.revert()
   }, [])
 
   return (

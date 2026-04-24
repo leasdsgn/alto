@@ -38,9 +38,10 @@ export function ExperienceSection() {
     const section = sectionRef.current
     const track = trackRef.current
     if (!section || !track) return
-    if (window.matchMedia('(max-width: 767px)').matches) return
 
-    const ctx = gsap.context(() => {
+    const media = gsap.matchMedia()
+
+    media.add('(min-width: 768px)', () => {
       gsap.to(track, {
         x: () => -(track.scrollWidth - window.innerWidth),
         ease: 'none',
@@ -56,7 +57,11 @@ export function ExperienceSection() {
       })
     }, section)
 
-    return () => ctx.revert()
+    media.add('(max-width: 767px)', () => {
+      gsap.set(track, { clearProps: 'transform' })
+    }, section)
+
+    return () => media.revert()
   }, [])
 
   return (
