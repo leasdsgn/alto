@@ -3,12 +3,12 @@ import { AboutView } from '@/components/about/about-view'
 import { Footer } from '@/components/layout/footer'
 
 export const metadata: Metadata = {
-  title: 'Notre histoire | Alto',
+  title: 'About | Alto',
   description:
-    'Découvrez le concept Alto, notre approche de l’hospitalité et les standards qui guident chaque adresse.',
+    'Discover Alto’s hospitality concept, our design standards, and the story behind our addresses.',
 }
 
-export default function NotreHistoirePage() {
+export default function AboutPage() {
   return (
     <>
       <AboutView />

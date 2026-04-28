@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useTranslations } from '@/components/providers/locale-provider'
 import { LocaleToggle } from '@/components/ui/locale-toggle'
 import { BookingNavPill } from '@/components/ui/booking-nav-pill'
@@ -17,7 +18,10 @@ interface HeaderProps {
 }
 
 export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
-  const [open, setOpen] = useState(false)
+  const [openPath, setOpenPath] = useState<string | null>(null)
+  const pathname = usePathname()
+  const t = useTranslations('nav')
+  const open = openPath === pathname
   const isApartment = mode === 'apartment'
   const tone: Tone = isApartment ? 'dark' : variant
   const isLight = tone === 'light'
@@ -27,11 +31,62 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
   const positionClass = isApartment
     ? 'sticky top-0 z-30 border-b border-divider bg-cream'
     : 'absolute inset-x-0 top-0 z-30 bg-transparent'
+  const apartmentBackgroundStyle = isApartment
+    ? { background: 'var(--Floral-white, #FFFFF8)' }
+    : undefined
+  const primaryLinks = useMemo(
+    () => [
+      {
+        href: '/appartements',
+        label: t('apartments'),
+        description: 'Paris & Lyon',
+        match: (path: string) => path.startsWith('/appartements'),
+      },
+      {
+        href: '/blog',
+        label: t('blog'),
+        description: 'Adresses, quartiers, voyages',
+        match: (path: string) => path.startsWith('/blog'),
+      },
+      {
+        href: '/notre-histoire',
+        label: t('story'),
+        description: 'L’approche Alto',
+        match: (path: string) => path.startsWith('/notre-histoire') || path.startsWith('/about'),
+      },
+    ],
+    [t],
+  )
+  const secondaryLinks = useMemo(
+    () => [
+      { href: '/appartements?city=paris', label: 'Paris' },
+      { href: '/appartements?city=lyon', label: 'Lyon' },
+      { href: '/contact', label: t('contact') },
+    ],
+    [t],
+  )
+
+  useEffect(() => {
+    if (!open) return
+
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpenPath(null)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
 
   return (
     <>
-      <header className={`${positionClass} py-5 lg:py-6`}>
-        <div className="mx-auto flex max-w-content items-center justify-between gap-6 px-gutter md:px-gutter-md">
+      <header className={`${positionClass} py-5 lg:py-6`} style={apartmentBackgroundStyle}>
+        <div className="max-w-content px-gutter md:px-gutter-md mx-auto flex items-center justify-between gap-6">
           <Link href="/" className="shrink-0">
             <Image
               src={logoSrc}
@@ -56,12 +111,18 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
               </Button>
             )}
             {isApartment && <MapButton />}
-            <BurgerButton open={open} onClick={() => setOpen((o) => !o)} />
+            <BurgerButton open={open} onClick={() => setOpenPath(open ? null : pathname)} />
           </div>
         </div>
       </header>
 
-      {open && <BurgerOverlay onClose={() => setOpen(false)} />}
+      <BurgerOverlay
+        open={open}
+        onClose={() => setOpenPath(null)}
+        pathname={pathname}
+        primaryLinks={primaryLinks}
+        secondaryLinks={secondaryLinks}
+      />
 
       <span className={textClass} aria-hidden="true" hidden />
     </>
@@ -75,7 +136,16 @@ function MapButton() {
       aria-label="Voir la carte"
       className="bg-coffee text-cream flex size-8 items-center justify-center rounded-md transition-opacity hover:opacity-80"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z" />
         <path d="M9 4v14M15 6v14" />
       </svg>
@@ -90,43 +160,200 @@ function BurgerButton({ open, onClick }: { open: boolean; onClick: () => void })
       aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
       aria-expanded={open}
       onClick={onClick}
-      className="bg-coffee text-cream flex size-8 items-center justify-center rounded-md transition-opacity hover:opacity-80"
+      className="bg-coffee text-cream relative flex size-8 items-center justify-center rounded-md transition-opacity hover:opacity-80"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <path d="M5 7h14M5 12h14M5 17h14" />
-      </svg>
+      <span className="sr-only">{open ? 'Fermer le menu' : 'Ouvrir le menu'}</span>
+      <span
+        className={`absolute h-0.5 w-4 rounded-full bg-current transition-transform duration-300 ${open ? 'translate-y-0 rotate-45' : '-translate-y-[5px]'}`}
+      />
+      <span
+        className={`absolute h-0.5 w-4 rounded-full bg-current transition-opacity duration-200 ${open ? 'opacity-0' : 'opacity-100'}`}
+      />
+      <span
+        className={`absolute h-0.5 w-4 rounded-full bg-current transition-transform duration-300 ${open ? 'translate-y-0 -rotate-45' : 'translate-y-[5px]'}`}
+      />
     </button>
   )
 }
 
-function BurgerOverlay({ onClose }: { onClose: () => void }) {
-  const t = useTranslations('nav')
+function BurgerOverlay({
+  open,
+  onClose,
+  pathname,
+  primaryLinks,
+  secondaryLinks,
+}: {
+  open: boolean
+  onClose: () => void
+  pathname: string
+  primaryLinks: Array<{
+    href: string
+    label: string
+    description: string
+    match: (path: string) => boolean
+  }>
+  secondaryLinks: Array<{ href: string; label: string }>
+}) {
+  const isActive = (href: string, match?: (path: string) => boolean) =>
+    match ? match(pathname) : pathname === href
+
   return (
-    <div className="bg-coffee/95 fixed inset-0 z-40 flex flex-col items-center justify-center gap-8 backdrop-blur-sm">
+    <div
+      inert={!open}
+      aria-hidden={!open}
+      className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+        open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+      }`}
+    >
       <button
         type="button"
-        className="text-cream absolute top-6 right-6 flex size-8 items-center justify-center"
         aria-label="Fermer le menu"
         onClick={onClose}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M6 6l12 12M18 6L6 18" />
-        </svg>
-      </button>
+        className={`bg-coffee/40 absolute inset-0 backdrop-blur-md transition-opacity duration-300 ${
+          open ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
 
-      <nav className="flex flex-col items-center gap-6">
-        <Link href="/appartements" className="text-cream text-h3 font-bold tracking-[-0.02em]" onClick={onClose}>
-          {t('book')}
-        </Link>
-        <Link href="/blog" className="text-cream text-h5 font-bold" onClick={onClose}>
-          {t('blog')}
-        </Link>
-        <Link href="/notre-histoire" className="text-cream text-h5 font-bold" onClick={onClose}>
-          {t('story')}
-        </Link>
-      </nav>
+      <div className="absolute inset-x-4 top-4 bottom-4 md:right-6 md:left-auto md:w-[420px]">
+        <div
+          className={`border-divider bg-cream text-coffee flex h-full flex-col overflow-hidden rounded-[28px] border shadow-[0_24px_80px_rgba(48,26,10,0.18)] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            open ? 'translate-x-0' : 'translate-x-[calc(100%+2rem)]'
+          }`}
+        >
+          <div className="border-divider flex items-center justify-between border-b px-5 py-5">
+            <Link href="/" className="shrink-0" onClick={onClose}>
+              <Image
+                src="/images/logo-alto-dark.png"
+                alt="Alto"
+                width={110}
+                height={28}
+                style={{ width: 110, height: 'auto' }}
+              />
+            </Link>
 
-      <LocaleToggle className="text-cream/70 text-overline font-bold uppercase tracking-[0.24px] transition-opacity hover:opacity-100" />
+            <div className="flex items-center gap-2">
+              <LocaleToggle className="text-taupe text-overline border-divider hover:bg-sand hover:text-coffee rounded-full border px-3 py-2 font-bold tracking-[0.24px] uppercase transition-colors" />
+              <button
+                type="button"
+                className="bg-coffee text-cream flex size-9 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+                aria-label="Fermer le menu"
+                onClick={onClose}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                >
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-col justify-between overflow-y-auto px-5 py-5">
+            <div className="space-y-8">
+              <div>
+                <p className="text-silver text-overline mb-4 font-bold tracking-[0.24px] uppercase">
+                  Navigation
+                </p>
+                <nav className="space-y-3">
+                  {primaryLinks.map((link) => {
+                    const active = isActive(link.href, link.match)
+
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={onClose}
+                        className={`group block rounded-[20px] border px-4 py-4 transition-colors ${
+                          active
+                            ? 'border-coffee bg-coffee text-cream'
+                            : 'border-divider text-coffee hover:bg-sand bg-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-[22px] leading-[1.5] font-semibold tracking-[-1.98px]">
+                              {link.label}
+                            </p>
+                            <p
+                              className={`text-body mt-1 font-medium ${active ? 'text-cream/82' : 'text-taupe'}`}
+                            >
+                              {link.description}
+                            </p>
+                          </div>
+                          <span
+                            className={`flex size-9 items-center justify-center rounded-full border transition-transform group-hover:translate-x-0.5 ${
+                              active
+                                ? 'border-cream/20 bg-cream/10 text-cream'
+                                : 'border-divider bg-cream text-coffee'
+                            }`}
+                          >
+                            <ArrowOutward />
+                          </span>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </nav>
+              </div>
+
+              <div>
+                <p className="text-silver text-overline mb-4 font-bold tracking-[0.24px] uppercase">
+                  Accès rapide
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {secondaryLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={onClose}
+                      className={`text-overline rounded-full border px-4 py-2 font-bold uppercase transition-colors ${
+                        isActive(link.href)
+                          ? 'border-coffee bg-coffee text-cream'
+                          : 'border-divider text-coffee hover:bg-sand'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-divider mt-8 border-t pt-5">
+              <p className="text-taupe text-body-sm mb-4 max-w-[26ch]">
+                Séjours haut de gamme à Paris et Lyon, avec une expérience simple à réserver et
+                claire à vivre.
+              </p>
+              <Button href="/appartements" className="w-full justify-center">
+                Réserver un séjour
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  )
+}
+
+function ArrowOutward() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 11 11 3M11 3H5M11 3v6" />
+    </svg>
   )
 }

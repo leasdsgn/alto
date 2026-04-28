@@ -15,16 +15,18 @@ export function ApartmentFaq({ items }: FaqProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
-    <div className="mt-8 border-t border-divider pt-8">
-      <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">FAQ</p>
-      <h2 className="text-coffee mt-2 text-base font-medium leading-[24px]">Questions fréquentes</h2>
+    <div>
+      <p className="text-silver text-overline font-bold tracking-[0.24px] uppercase">FAQ</p>
+      <h2 className="text-coffee text-body-xl mt-2 leading-[1.5] font-semibold">
+        Questions fréquentes
+      </h2>
 
       <div className="mt-6 flex flex-col">
         {items.map((item, i) => (
-          <div key={i} className="border-t border-divider">
+          <div key={i} className="border-divider border-b">
             <button
               type="button"
-              className="flex w-full items-center gap-3 py-3 text-left"
+              className="flex w-full items-center gap-4 py-5 text-left"
               onClick={() => setOpenIndex(openIndex === i ? null : i)}
             >
               <svg
@@ -40,12 +42,10 @@ export function ApartmentFaq({ items }: FaqProps) {
               >
                 <path d="M1 1l4.5 4.5L1 10" />
               </svg>
-              <span className="text-silver text-base font-bold">{item.question}</span>
+              <span className="text-coffee text-body">{item.question}</span>
             </button>
             {openIndex === i && (
-              <p className="text-coffee pb-4 pl-[19px] text-xs font-medium leading-[22px]">
-                {item.answer}
-              </p>
+              <p className="text-ash text-body-sm -mt-1 pb-5 pl-5 leading-[1.6]">{item.answer}</p>
             )}
           </div>
         ))}

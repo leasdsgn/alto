@@ -25,11 +25,16 @@ export function ApartmentCard({
   neighborhood,
 }: ApartmentCardProps) {
   const totalEstimate = Math.round(price * 6.5)
+  const specs = [
+    { icon: 'guests' as const, value: `${guests} p.` },
+    ...(surface > 0 ? [{ icon: 'surface' as const, value: `${surface} m`, sup: '2' }] : []),
+    ...(bedrooms > 0 ? [{ icon: 'bedrooms' as const, value: String(bedrooms) }] : []),
+  ]
 
   return (
     <Link href={`/appartements/${slug}`} className="group block">
       <article className="flex flex-col gap-[9px]">
-        <div className="relative h-[278px] w-full overflow-hidden rounded-lg">
+        <div className="relative h-60 w-full overflow-hidden rounded-lg md:h-[278px]">
           {image ? (
             <Image
               src={image}
@@ -43,14 +48,14 @@ export function ApartmentCard({
           )}
 
           {(city || neighborhood) && (
-            <div className="absolute left-5 top-5 flex items-center gap-[10px]">
+            <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2 md:top-5 md:left-5 md:gap-[10px]">
               {city && (
-                <span className="bg-cream text-ash rounded-xl px-4 py-[2px] text-caption tracking-[0.24px]">
+                <span className="bg-cream text-ash text-caption rounded-xl px-3 py-1 tracking-[0.24px] md:px-4 md:py-[2px]">
                   {city}
                 </span>
               )}
               {neighborhood && (
-                <span className="bg-cream text-ash rounded-xl px-4 py-[2px] text-caption tracking-[0.24px]">
+                <span className="bg-cream text-ash text-caption rounded-xl px-3 py-1 tracking-[0.24px] md:px-4 md:py-[2px]">
                   {neighborhood}
                 </span>
               )}
@@ -59,23 +64,28 @@ export function ApartmentCard({
         </div>
 
         <div className="flex flex-col gap-[9px] pt-1">
-          <div className="flex items-center justify-between">
-            <h3 className="text-coffee w-[170px] truncate text-body-xl font-semibold leading-[1.55]">
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="text-coffee text-body-xl min-w-0 flex-1 leading-[1.55] font-semibold md:w-[170px] md:truncate">
               {name}
             </h3>
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               <StarIcon />
               <span className="text-coffee text-body-sm leading-[1.5]">4,9 (113)</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <SpecBadge icon="guests" value={`${guests} p.`} />
-            <SpecBadge icon="surface" value={`${surface} m`} sup="2" />
-            <SpecBadge icon="bedrooms" value={String(bedrooms)} />
+          <div className="flex flex-wrap items-center gap-3">
+            {specs.map((spec) => (
+              <SpecBadge
+                key={`${spec.icon}-${spec.value}`}
+                icon={spec.icon}
+                value={spec.value}
+                sup={spec.sup}
+              />
+            ))}
           </div>
 
-          <div className="flex items-center gap-[10px]">
+          <div className="flex flex-wrap items-center gap-x-[10px] gap-y-1">
             <span className="text-silver text-body leading-[1.5]">{price}&euro;/nuit</span>
             <span className="text-ash decoration-ash/50 text-body leading-[1.5] underline underline-offset-2">
               {totalEstimate.toLocaleString('fr-FR')}&euro; au total
@@ -87,17 +97,27 @@ export function ApartmentCard({
   )
 }
 
-function SpecBadge({ value, sup, icon }: { value: string; sup?: string; icon: 'guests' | 'surface' | 'bedrooms' }) {
+function SpecBadge({
+  value,
+  sup,
+  icon,
+}: {
+  value: string
+  sup?: string
+  icon: 'guests' | 'surface' | 'bedrooms'
+}) {
   return (
     <div className="flex items-center gap-[10px]">
       <SpecIcon kind={icon} />
-      <span className="text-taupe text-caption font-bold leading-[1.55]">
+      <span className="text-taupe text-overline font-bold">
         {sup ? (
           <>
             {value}
             <sup className="text-[7.74px] tracking-[0.24px]">{sup}</sup>
           </>
-        ) : value}
+        ) : (
+          value
+        )}
       </span>
     </div>
   )
@@ -107,7 +127,17 @@ function SpecIcon({ kind }: { kind: 'guests' | 'surface' | 'bedrooms' }) {
   const common = 'shrink-0 text-silver'
   if (kind === 'guests') {
     return (
-      <svg width="19" height="19" viewBox="0 0 19 19" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={common}>
+      <svg
+        width="19"
+        height="19"
+        viewBox="0 0 19 19"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={common}
+      >
         <circle cx="9.5" cy="6.5" r="3" />
         <path d="M3.5 16c0-3 2.7-5 6-5s6 2 6 5" />
       </svg>
@@ -115,14 +145,34 @@ function SpecIcon({ kind }: { kind: 'guests' | 'surface' | 'bedrooms' }) {
   }
   if (kind === 'surface') {
     return (
-      <svg width="19" height="19" viewBox="0 0 19 19" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={common}>
+      <svg
+        width="19"
+        height="19"
+        viewBox="0 0 19 19"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={common}
+      >
         <rect x="3" y="3" width="13" height="13" rx="0.5" />
         <path d="M5.5 5.5v2M5.5 5.5h2M13.5 13.5v-2M13.5 13.5h-2" />
       </svg>
     )
   }
   return (
-    <svg width="19" height="19" viewBox="0 0 19 19" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className={common}>
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 19 19"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={common}
+    >
       <path d="M2.5 13V6.5M16.5 13V9.5a2 2 0 0 0-2-2H7" />
       <path d="M2.5 11h14" />
       <circle cx="5.5" cy="9" r="1.2" />

@@ -77,7 +77,7 @@
   --spacing-section: 64px;
   --spacing-section-md: 96px;
   --color-divider: #e8e8e2;
-  --container-content: 1212px;
+  --container-content: 1220px;
   --container-site: 1800px;
 }
 
@@ -112,7 +112,9 @@
 body {
   color: var(--color-coffee);
   font-family: var(--font-sans);
-  background-color: var(--color-cream);
+  background-color: var(--Floral-white, #FFFFF8);
+  overflow-x: hidden;
+  isolation: isolate;
 }
 
 @layer utilities {

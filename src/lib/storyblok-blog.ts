@@ -1,7 +1,4 @@
-import {
-  getFallbackBlogArticles,
-  type BlogArticle,
-} from '@/lib/blog-data'
+import { getFallbackBlogArticles, inferBlogSection, type BlogArticle } from '@/lib/blog-data'
 import type { InquiryLocale } from '@/types/inquiry'
 
 interface StoryblokStory {
@@ -24,7 +21,10 @@ export async function getBlogArticles(locale: InquiryLocale): Promise<BlogArticl
   return articles.length > 0 ? articles : getFallbackBlogArticles(locale)
 }
 
-export async function getBlogArticle(slug: string, locale: InquiryLocale): Promise<BlogArticle | null> {
+export async function getBlogArticle(
+  slug: string,
+  locale: InquiryLocale,
+): Promise<BlogArticle | null> {
   const articles = await getBlogArticles(locale)
   return articles.find((article) => article.slug === slug) ?? null
 }
@@ -50,12 +50,15 @@ async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticl
       }).catch(() => null)
 
       if (!response?.ok) return []
-      const data = await response.json() as StoryblokStoriesResponse
+      const data = (await response.json()) as StoryblokStoriesResponse
       return data.stories ?? []
     }),
   )
 
-  return responses.flat().map((story) => mapStoryblokArticle(story, locale)).filter(Boolean) as BlogArticle[]
+  return responses
+    .flat()
+    .map((story) => mapStoryblokArticle(story, locale))
+    .filter(Boolean) as BlogArticle[]
 }
 
 function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): BlogArticle | null {
@@ -70,7 +73,19 @@ function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): Blog
     subtitle: asString(content.subtitle) ?? asString(content.excerpt) ?? '',
     date: formatStoryblokDate(asString(content.date) ?? story.first_published_at ?? null, locale),
     category: asString(content.category) ?? 'Journal',
-    image: assetUrl(content.image) ?? assetUrl(content.cover) ?? assetUrl(content.heroImage) ?? '/images/alto-salon.jpg',
+    image:
+      assetUrl(content.image) ??
+      assetUrl(content.cover) ??
+      assetUrl(content.heroImage) ??
+      '/images/alto-salon.jpg',
+    section: inferBlogSection({
+      section: asString(content.section) ?? asString(content.group),
+      city: asString(content.city),
+      category: asString(content.category),
+      slug,
+      title,
+      subtitle: asString(content.subtitle) ?? asString(content.excerpt),
+    }),
     sections: mapSections(content),
   }
 }

@@ -31,7 +31,8 @@ export default async function RootLayout({
   return (
     <html lang="fr" className={`${manrope.className} h-full antialiased`}>
       <body
-        className="bg-cream text-coffee flex min-h-full flex-col"
+        className="text-coffee flex min-h-full flex-col"
+        style={{ background: 'var(--Floral-white, #FFFFF8)' }}
         suppressHydrationWarning
       >
         <LocaleProvider>
