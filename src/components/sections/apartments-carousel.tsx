@@ -41,7 +41,7 @@ export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProp
           <button
             type="button"
             onClick={() => scroll('right')}
-            className="bg-taupe text-cream flex size-9 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+            className="bg-taupe text-cream hidden size-9 items-center justify-center rounded-full transition-opacity hover:opacity-80 md:flex"
             aria-label="Suivant"
           >
             <ArrowRight />

@@ -42,7 +42,7 @@ export function TestimonialsSection() {
           <p className="text-silver text-overline font-bold uppercase tracking-[0.24px]">Témoignages</p>
 
           <div className="mt-10 flex flex-col gap-6">
-            <blockquote className="text-coffee text-xl leading-[1.5] font-semibold md:min-h-[140px] md:text-2xl md:leading-[1.4]">
+            <blockquote className="text-coffee min-h-[180px] text-xl leading-[1.5] font-semibold md:min-h-[140px] md:text-2xl md:leading-[1.4]">
               &ldquo;{testimonial.quote}&rdquo;
             </blockquote>
 
