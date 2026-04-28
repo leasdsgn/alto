@@ -13,12 +13,18 @@ import { readOAuthCache, writeOAuthCache, writeRateLimit } from './guesty-oauth-
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
 const TOKEN_URL = `${BEAPI_BASE_URL}/oauth2/token`
 const RATE_LIMIT_COOLDOWN_MS = 2 * 60 * 1000
-const TOKEN_SAFETY_MARGIN_MS = 60 * 1000
+const TOKEN_SAFETY_MARGIN_MS = 5 * 60 * 1000
 
 const memoryCache = globalThis as unknown as {
   __guestyToken?: string
   __guestyTokenExpiresAt?: number
   __guestyRateLimitedUntil?: number
+}
+
+async function invalidateAccessToken(): Promise<void> {
+  memoryCache.__guestyToken = undefined
+  memoryCache.__guestyTokenExpiresAt = undefined
+  await writeOAuthCache({ accessToken: '', expiresAt: 0 }).catch(() => {})
 }
 
 async function getAccessToken(): Promise<string> {
@@ -95,6 +101,7 @@ async function getAccessToken(): Promise<string> {
 async function guestyFetch<T>(
   path: string,
   options: RequestInit & { revalidate?: number } = {},
+  isRetry = false,
 ): Promise<T> {
   const token = await getAccessToken()
   const { revalidate, ...fetchOptions } = options
@@ -109,6 +116,11 @@ async function guestyFetch<T>(
     },
     ...(revalidate !== undefined && { next: { revalidate } }),
   })
+
+  if (response.status === 401 && !isRetry) {
+    await invalidateAccessToken()
+    return guestyFetch<T>(path, options, true)
+  }
 
   if (!response.ok) {
     const error = await response.text()
