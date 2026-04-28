@@ -4,29 +4,25 @@ import { useLayoutEffect, useRef } from 'react'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Button } from '@/components/ui/button'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const STEPS = [
+const PANELS = [
   {
     title: 'Arrivée',
-    description: 'Un quartier vivant, une adresse discrète. Votre séjour commence dès la sortie du métro.',
+    description: 'Un quartier vivant, une adresse au cœur des plus beaux quartiers.',
     image: '/images/hero-home.jpg',
   },
   {
-    title: 'Check-in',
-    description: 'Accès autonome, 24h/24. Pas de file d\'attente, pas de comptoir. Juste votre code et votre clé.',
-    image: '/images/blog-1.jpg',
-  },
-  {
-    title: 'Séjour',
-    description: 'Un intérieur pensé pour vivre, pas pour impressionner. Lumière naturelle, linge de qualité, silence.',
+    title: 'Checkin',
+    description: 'Accès autonome et gestionnaire joignable 24h/24 et 7j/7.',
     image: '/images/alto-salon.jpg',
   },
   {
-    title: 'Départ',
-    description: 'Posez les clés, partez. Le ménage, le linge, l\'intendance : on s\'occupe de tout.',
-    image: '/images/blog-2.jpg',
+    title: 'Checkout',
+    description: 'Départ flexible, sans formalités. Laissez les clés, on s’occupe du reste.',
+    image: '/images/blog-3.jpg',
   },
 ]
 
@@ -35,71 +31,95 @@ export function ExperienceSection() {
   const trackRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (window.innerWidth < 768) return
+
     const section = sectionRef.current
     const track = trackRef.current
-    if (!section || !track) return
+    const wrapper = track?.parentElement
+    if (!section || !track || !wrapper) return
 
-    const media = gsap.matchMedia()
+    const ctx = gsap.context(() => {
+      const distance = () => Math.max(0, track.scrollWidth - wrapper.clientWidth)
 
-    media.add('(min-width: 768px)', () => {
       gsap.to(track, {
-        x: () => -(track.scrollWidth - window.innerWidth),
+        x: () => -distance(),
         ease: 'none',
         scrollTrigger: {
           trigger: section,
-          start: 'top top',
-          end: () => `+=${track.scrollWidth - window.innerWidth}`,
+          start: 'center center',
+          end: () => `+=${distance()}`,
           pin: true,
-          scrub: 0.5,
+          pinType: 'transform',
+          scrub: 1,
           invalidateOnRefresh: true,
-          refreshPriority: -1,
+          anticipatePin: 1,
         },
       })
+
+      ScrollTrigger.refresh()
     }, section)
 
-    media.add('(max-width: 767px)', () => {
-      gsap.set(track, { clearProps: 'transform' })
-    }, section)
-
-    return () => media.revert()
+    return () => ctx.revert()
   }, [])
 
   return (
-    <section ref={sectionRef} className="overflow-hidden">
-      <div ref={trackRef} className="experience-track flex flex-col gap-4 px-gutter py-section md:h-screen md:flex-row md:items-center md:gap-0 md:px-0 md:py-0">
-        <div className="flex shrink-0 flex-col justify-center md:w-[35vw] md:px-gutter-md">
-          <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">L'expérience</p>
-          <h2 className="text-coffee mt-4 text-2xl leading-[1.3] font-bold tracking-[-0.48px] md:text-4xl md:tracking-[-0.72px]">
-            Vivre Alto
-          </h2>
-          <p className="text-taupe mt-4 max-w-[300px] text-sm leading-[1.7]">
-            Du premier pas dans le quartier au départ, chaque moment est pensé pour que vous n'ayez à penser à rien.
-          </p>
-        </div>
-
-        {STEPS.map((step, i) => (
-          <div
-            key={step.title}
-            className={`relative flex min-h-[360px] w-full flex-col justify-end overflow-hidden rounded-lg p-8 md:h-[70vh] md:w-[30vw] md:shrink-0 md:p-10 ${i < STEPS.length - 1 ? 'md:mr-4' : ''}`}
-          >
-            <Image
-              src={step.image}
-              alt={step.title}
-              fill
-              className="object-cover"
-              sizes="30vw"
-            />
-            <div className="absolute inset-0 bg-coffee/55" />
-            <div className="relative z-10 flex min-h-[150px] flex-col justify-end md:min-h-[170px]">
-              <p className="text-cream/40 text-xs font-bold tracking-[0.24px]">0{i + 1}</p>
-              <h3 className="text-cream mt-2 text-xl font-bold md:text-2xl">{step.title}</h3>
-              <p className="text-cream/70 mt-3 max-w-[280px] text-sm leading-[1.6]">{step.description}</p>
+    <section ref={sectionRef} className="relative py-section md:h-screen md:overflow-hidden md:py-0">
+      <div className="mx-auto flex max-w-content items-stretch px-4 md:h-full md:items-center md:px-gutter-md">
+        <div
+          ref={trackRef}
+          className="flex w-full flex-col gap-3 md:flex-row md:items-stretch md:gap-4 md:will-change-transform"
+        >
+          <div className="bg-taupe flex h-[420px] w-full shrink-0 flex-col justify-between rounded-xl px-5 py-4 md:h-[598px] md:w-[396px] md:px-6 md:py-5">
+            <p className="text-silver text-overline font-bold uppercase tracking-[0.24px]">
+              À PROPOS
+            </p>
+            <div className="flex flex-col gap-6 md:gap-8">
+              <p className="text-cream text-body-xl leading-[1.5] font-semibold">
+                Chaque espace Alto propose une expérience fluide&nbsp;: un séjour
+                où le confort, la lumière, l&rsquo;autonomie et le soin silencieux
+                se conjuguent naturellement.
+              </p>
+              <Button variant="primary" size="regular" href="/notre-histoire" iconRight={<ArrowOutward />} className="self-start">
+                En savoir plus
+              </Button>
             </div>
           </div>
-        ))}
 
-        <div className="hidden w-[5vw] shrink-0 md:block" />
+          {PANELS.map((panel) => (
+            <div
+              key={panel.title}
+              className="relative h-[420px] w-full shrink-0 overflow-hidden rounded-xl md:h-[598px] md:w-[396px]"
+            >
+              <Image
+                src={panel.image}
+                alt={panel.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 396px"
+                quality={85}
+                className="object-cover"
+              />
+              <div className="bg-taupe/80 absolute inset-0 mix-blend-multiply" />
+              <div className="absolute inset-0 flex flex-col justify-between px-5 py-4 md:px-6 md:py-5">
+                <h3 className="text-[#fffff8] text-h4 font-medium tracking-[-0.24px]">
+                  {panel.title}
+                </h3>
+                <p className="text-[#fffff8] text-body-xl font-semibold leading-[1.5]">
+                  {panel.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
+  )
+}
+
+function ArrowOutward() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11 11 3M11 3H5M11 3v6" />
+    </svg>
   )
 }

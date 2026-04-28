@@ -36,7 +36,7 @@ export function ApartmentView({ apartment, recommendations }: Props) {
 
   return (
     <>
-      <Header variant="dark" />
+      <Header mode="apartment" />
 
       <main className="mx-auto max-w-[1132px] px-6 md:px-12 lg:px-0">
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[716px_1fr] lg:gap-8">

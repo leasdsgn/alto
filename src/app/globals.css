@@ -10,30 +10,63 @@
   --color-silver: #aba39e;
   --color-sand: #f3f3ed;
   --font-sans: 'Manrope', sans-serif;
-  --font-size-display: 81px;
-  --font-size-h1: 54px;
-  --font-size-h2: 36px;
-  --font-size-h3: 29px;
-  --font-size-h4: 24px;
-  --font-size-h5: 22px;
-  --font-size-h6: 18px;
-  --font-size-body-xl: 18px;
-  --font-size-body: 16px;
-  --font-size-body-sm: 14px;
-  --font-size-caption: 12px;
-  --font-size-overline: 12px;
-  --line-height-display: 100%;
-  --line-height-h1: 120%;
-  --line-height-h2: 130%;
-  --line-height-h3: 130%;
-  --line-height-h4: 140%;
-  --line-height-h5: 150%;
-  --line-height-h6: 150%;
-  --line-height-body-xl: 150%;
-  --line-height-body: 150%;
-  --line-height-body-sm: 150%;
-  --line-height-caption: 155%;
-  --line-height-overline: 155%;
+  --font-display: 'Teramo Variable Italic', 'Manrope', serif;
+
+  --text-display: 81px;
+  --text-display--line-height: 100%;
+  --text-display--letter-spacing: -0.07em;
+  --text-display--font-weight: 700;
+
+  --text-h1: 54px;
+  --text-h1--line-height: 120%;
+  --text-h1--letter-spacing: -0.04em;
+  --text-h1--font-weight: 700;
+
+  --text-h2: 36px;
+  --text-h2--line-height: 130%;
+  --text-h2--letter-spacing: -0.06em;
+  --text-h2--font-weight: 700;
+
+  --text-h3: 29px;
+  --text-h3--line-height: 130%;
+  --text-h3--letter-spacing: -0.07em;
+  --text-h3--font-weight: 700;
+
+  --text-h4: 24px;
+  --text-h4--line-height: 140%;
+  --text-h4--letter-spacing: -0.04em;
+  --text-h4--font-weight: 500;
+
+  --text-h5: 22px;
+  --text-h5--line-height: 150%;
+  --text-h5--letter-spacing: -0.09em;
+  --text-h5--font-weight: 700;
+
+  --text-h6: 22px;
+  --text-h6--line-height: 150%;
+  --text-h6--letter-spacing: -0.09em;
+  --text-h6--font-weight: 700;
+
+  --text-body-xl: 18px;
+  --text-body-xl--line-height: 150%;
+  --text-body-xl--font-weight: 600;
+
+  --text-body: 16px;
+  --text-body--line-height: 150%;
+  --text-body--font-weight: 400;
+
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 150%;
+  --text-body-sm--font-weight: 400;
+
+  --text-caption: 12px;
+  --text-caption--line-height: 155%;
+  --text-caption--letter-spacing: 0.02em;
+  --text-caption--font-weight: 500;
+
+  --text-overline: 12px;
+  --text-overline--line-height: 155%;
+  --text-overline--font-weight: 700;
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 12px;
@@ -44,8 +77,8 @@
   --spacing-section: 64px;
   --spacing-section-md: 96px;
   --color-divider: #e8e8e2;
-  --max-width-content: 1800px;
-  --max-width-site: 1800px;
+  --container-content: 1212px;
+  --container-site: 1800px;
 }
 
 :root {
@@ -82,6 +115,17 @@ body {
   background-color: var(--color-cream);
 }
 
+@layer utilities {
+  .text-h6 {
+    text-transform: uppercase;
+  }
+  .text-display,
+  .text-caption {
+    font-family: var(--font-display);
+    font-style: italic;
+  }
+}
+
 @media (pointer: fine) {
   body {
     cursor: none;
@@ -106,17 +150,6 @@ input, textarea, select, [contenteditable] {
   }
 }
 
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
 
 .btn-fill {
   position: relative;

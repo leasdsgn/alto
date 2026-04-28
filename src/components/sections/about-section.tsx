@@ -1,132 +1,161 @@
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
 import Image from 'next/image'
+import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const PILLARS = [
-  {
-    number: '01',
-    title: 'Design',
-    description: 'Des intérieurs pensés, pas décorés. Chaque meuble, chaque lumière a sa raison d\'être.',
-  },
-  {
-    number: '02',
-    title: 'Emplacement',
-    description: 'Au cœur des quartiers les plus vivants de Paris. À pied, tout est accessible.',
-  },
-  {
-    number: '03',
-    title: 'Service',
-    description: 'L\'attention d\'un hôtel, la liberté d\'un chez-soi. Discret, disponible, précis.',
-  },
+const TRAVELER_AVATARS = [
+  '/images/avatars/voyageur-1.png',
+  '/images/avatars/voyageur-2.png',
+  '/images/avatars/voyageur-3.png',
+]
+
+const LOCATION_AVATARS = [
+  '/images/blog-1.jpg',
+  '/images/hero-home.jpg',
+  '/images/blog-3.jpg',
+]
+
+const PLATFORM_LOGOS = [
+  { name: 'Booking', bg: 'bg-[#003580]', label: 'B.' },
+  { name: 'Tripadvisor', bg: 'bg-[#00af87]', label: 'TA' },
+  { name: 'Airbnb', bg: 'bg-[#ff5a5f]', label: 'A' },
 ]
 
 export function AboutSection() {
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const leftRef = useRef<HTMLDivElement>(null)
-  const rightRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+  const quoteRef = useRef<HTMLParagraphElement>(null)
+  const statsRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const section = sectionRef.current
-    const left = leftRef.current
-    const right = rightRef.current
-    if (!section || !left || !right) return
+    const quote = quoteRef.current
+    const stats = statsRef.current
+    if (!quote || !stats) return
 
-    const media = gsap.matchMedia()
+    gsap.fromTo(
+      quote,
+      { opacity: 0, y: 24 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.9,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: quote, start: 'top 82%' },
+      },
+    )
 
-    media.add('(min-width: 768px)', () => {
-      gsap.set(right, { opacity: 0, xPercent: 20 })
-      gsap.set(left, { width: '100%' })
+    gsap.fromTo(
+      stats.children,
+      { opacity: 0, y: 20 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: stats, start: 'top 85%' },
+      },
+    )
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: 'top top',
-          end: '+=150%',
-          pin: true,
-          scrub: 0.6,
-        },
-      })
-
-      tl.to(left, { width: '33%', duration: 1, ease: 'power2.inOut' })
-      tl.to(right, { opacity: 1, xPercent: 0, duration: 1, ease: 'power2.out' }, 0.3)
-    }, section)
-
-    media.add('(max-width: 767px)', () => {
-      gsap.set(left, { clearProps: 'width' })
-      gsap.set(right, { clearProps: 'opacity,transform' })
-    }, section)
-
-    return () => media.revert()
+    return () => ScrollTrigger.getAll().forEach((t) => t.kill())
   }, [])
 
   return (
     <section
       ref={sectionRef}
-      className="flex flex-col justify-center py-section md:min-h-screen md:py-0"
+      className="bg-gradient-to-r from-silver to-taupe py-section md:py-section-md"
     >
-      <div className="mx-auto w-full max-w-content px-gutter md:px-gutter-md">
-        <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">
-          Pourquoi Alto
+      <div className="mx-auto max-w-content px-gutter md:px-gutter-md">
+        <p className="text-cream text-center text-body leading-[1.5]">
+          Alto, c&rsquo;est une nouvelle manière de penser l&rsquo;hospitalité.
         </p>
-        <h2 className="text-coffee mt-3 text-2xl font-bold tracking-[-0.48px] md:text-4xl md:tracking-[-0.72px]">
-          Une autre idée de l'hospitalité
-        </h2>
 
-        <div className="mt-10 flex flex-col gap-6 md:flex-row">
-          <div
-            ref={leftRef}
-            className="bg-coffee flex min-h-[441px] flex-col justify-between overflow-hidden rounded-lg p-8 md:shrink-0 md:p-10"
-          >
-            <div className="flex flex-col gap-8">
-              <div>
-                <p className="text-cream/40 text-xs font-bold">Manifeste</p>
-                <p className="text-cream mt-3 text-base leading-[1.75] md:text-lg">
-                  Un appartement ne devrait pas ressembler à un hôtel. Il devrait ressembler à quelque chose que vous n'avez pas encore trouvé.
-                </p>
-              </div>
-              <div className="flex flex-col gap-6">
-                {PILLARS.map((pillar) => (
-                  <div key={pillar.title} className="flex gap-4">
-                    <span className="text-cream/30 text-base font-bold tabular-nums md:text-lg">{pillar.number}</span>
-                    <div>
-                      <h3 className="text-cream text-sm font-bold">{pillar.title}</h3>
-                      <p className="text-cream/60 mt-1.5 text-xs leading-[1.7]">{pillar.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        <p
+          ref={quoteRef}
+          className="text-cream mt-8 text-center text-xl leading-[1.3] font-bold tracking-[-0.58px] md:text-[29px]"
+        >
+          Nous transformons des espaces singuliers en lieux de vie élégants,
+          bien pensés et confortables. Notre mission&nbsp;: permettre aux
+          voyageurs de vivre des séjours sans frictions aux plus belles adresses.
+        </p>
 
-          <div
-            ref={rightRef}
-            className="relative min-h-[360px] flex-1 overflow-hidden rounded-lg md:min-h-[441px]"
-          >
-            <Image
-              src="/images/alto-salon.jpg"
-              alt="Le Faubourg, Le Marais"
-              fill
-              sizes="(max-width: 768px) 100vw, 67vw"
-              quality={85}
-              className="object-cover"
-            />
-            <div className="bg-coffee/20 absolute inset-0" />
-            <div className="relative flex h-full flex-col justify-end p-8 md:p-10">
-              <p className="text-cream text-caption font-bold uppercase tracking-[1px]">Le Faubourg</p>
-              <p className="text-cream/70 mt-1 text-xs leading-[1.7]">
-                Le Marais, Paris 3e
-              </p>
-            </div>
-          </div>
+        <div
+          ref={statsRef}
+          className="mt-12 flex flex-col items-center gap-3 md:flex-row md:flex-wrap md:justify-center md:gap-4"
+        >
+          <StatCard>
+            <ClusterAvatars>
+              {LOCATION_AVATARS.map((src, i) => (
+                <AvatarImage key={i} src={src} alt="" />
+              ))}
+            </ClusterAvatars>
+            <StatLabel>13 locations</StatLabel>
+          </StatCard>
+
+          <StatCard>
+            <ClusterAvatars>
+              {TRAVELER_AVATARS.map((src, i) => (
+                <AvatarImage key={i} src={src} alt="" />
+              ))}
+            </ClusterAvatars>
+            <StatLabel>4 500+ voyageurs</StatLabel>
+          </StatCard>
+
+          <StatCard>
+            <ClusterAvatars>
+              {PLATFORM_LOGOS.map((p) => (
+                <AvatarCircle key={p.name} bg={p.bg} label={p.label} aria-label={p.name} />
+              ))}
+            </ClusterAvatars>
+            <StatLabel>4,9 de note moyenne</StatLabel>
+          </StatCard>
         </div>
       </div>
     </section>
   )
 }
+
+function StatCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-taupe flex h-[109px] w-[250px] shrink-0 flex-col items-center justify-center gap-3 rounded-xl">
+      {children}
+    </div>
+  )
+}
+
+function StatLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[#fffff8] text-body-xl font-semibold leading-none">
+      {children}
+    </span>
+  )
+}
+
+function ClusterAvatars({ children }: { children: React.ReactNode }) {
+  return <div className="flex -space-x-[18px]">{children}</div>
+}
+
+function AvatarCircle({ bg, label, ...rest }: { bg: string; label: string } & React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      {...rest}
+      className={`${bg} text-cream flex size-[35px] items-center justify-center rounded-full text-[11px] font-bold uppercase`}
+    >
+      {label}
+    </div>
+  )
+}
+
+function AvatarImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="relative size-[35px] overflow-hidden rounded-full">
+      <Image src={src} alt={alt} fill sizes="35px" className="object-cover" />
+    </div>
+  )
+}
+

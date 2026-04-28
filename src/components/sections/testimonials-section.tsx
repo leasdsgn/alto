@@ -36,38 +36,38 @@ export function TestimonialsSection() {
   }, [])
 
   return (
-    <section className="bg-sand">
-      <div className="mx-auto max-w-content px-gutter py-section md:px-gutter-md md:py-section-md">
-        <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">Témoignages</p>
+    <section>
+      <div className="mx-auto max-w-content px-gutter md:px-gutter-md">
+        <div className="border-divider border-b py-section md:py-section-md">
+          <p className="text-silver text-overline font-bold uppercase tracking-[0.24px]">Témoignages</p>
 
-        <div className="mt-10 flex flex-col gap-8 md:flex-row md:items-start md:gap-16">
-          <div className="flex-1">
-            <blockquote className="text-coffee text-xl leading-[1.5] font-semibold md:text-2xl md:leading-[1.4]">
-              "{testimonial.quote}"
+          <div className="mt-10 flex flex-col gap-6">
+            <blockquote className="text-coffee text-xl leading-[1.5] font-semibold md:min-h-[140px] md:text-2xl md:leading-[1.4]">
+              &ldquo;{testimonial.quote}&rdquo;
             </blockquote>
 
-            <div className="mt-6">
-              <p className="text-coffee text-sm font-bold">{testimonial.name}</p>
-              <p className="text-taupe text-xs tracking-[0.24px]">
-                {testimonial.apartment} · {testimonial.stay}
-              </p>
-            </div>
-          </div>
+            <div className="flex items-center justify-between gap-6">
+              <div>
+                <p className="text-coffee text-body-sm font-bold">{testimonial.name}</p>
+                <p className="text-taupe text-overline tracking-[0.24px]">
+                  {testimonial.apartment} · {testimonial.stay}
+                </p>
+              </div>
 
-          <div className="flex items-center gap-3 md:flex-col">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                className={`rounded-full transition-all duration-300 ${
-                  i === current
-                    ? 'bg-coffee size-3'
-                    : 'bg-silver size-2'
-                }`}
-                onClick={() => setCurrent(i)}
-                aria-label={`Témoignage ${i + 1}`}
-              />
-            ))}
+              <div className="flex items-center gap-3">
+                {TESTIMONIALS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`rounded-full transition-all duration-300 ${
+                      i === current ? 'bg-coffee size-2.5' : 'bg-silver size-2'
+                    }`}
+                    onClick={() => setCurrent(i)}
+                    aria-label={`Témoignage ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

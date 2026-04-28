@@ -1,33 +1,88 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  DateRangePicker,
-  DateField,
-  RangeCalendar,
-  Label,
-  Select as HeroUISelect,
-} from '@heroui/react'
+import { Label, Select as HeroUISelect } from '@heroui/react'
 import { ListBox, ListBoxItem } from 'react-aria-components'
-import { today, getLocalTimeZone } from '@internationalized/date'
+import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
-import type { RangeValue } from 'react-aria-components'
 import { useSearchStore } from '@/lib/stores/search'
-import { Button } from '@/components/ui/button'
 
 const CITIES = ['Paris', 'Lyon']
+const MONTH_NAMES = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+const DAY_NAMES = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
-export function SearchBar({ calendarPlacement = 'bottom start' }: { calendarPlacement?: 'bottom start' | 'top start' } = {}) {
+function formatDate(date: DateValue): string {
+  return `${String(date.day).padStart(2, '0')}/${String(date.month).padStart(2, '0')}/${date.year}`
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate()
+}
+
+function firstDayOfWeek(year: number, month: number): number {
+  return (new Date(year, month - 1, 1).getDay() + 6) % 7
+}
+
+export function SearchBar({
+  calendarPlacement = 'bottom start',
+}: {
+  calendarPlacement?: 'bottom start' | 'top start'
+} = {}) {
   const router = useRouter()
   const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
-
   const minDate = today(getLocalTimeZone())
   const [dateOpen, setDateOpen] = useState(false)
+  const [cityOpen, setCityOpen] = useState(false)
+  const [selectingEnd, setSelectingEnd] = useState(false)
+  const [hoverDate, setHoverDate] = useState<CalendarDate | null>(null)
+  const [viewYear, setViewYear] = useState(dates.start.year)
+  const [viewMonth, setViewMonth] = useState(dates.start.month)
+  const calendarRef = useRef<HTMLDivElement>(null)
 
-  function handleDateChange(value: RangeValue<DateValue> | null) {
-    if (value) setDates({ start: value.start, end: value.end })
+  useEffect(() => {
+    if (!dateOpen) return
+    function handleOutside(e: MouseEvent) {
+      if (!calendarRef.current?.contains(e.target as Node)) {
+        setDateOpen(false)
+        setSelectingEnd(false)
+        setHoverDate(null)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [dateOpen])
+
+  function handleDayClick(date: CalendarDate) {
+    if (date.compare(minDate) < 0) return
+    if (!selectingEnd) {
+      setDates({ start: date, end: date })
+      setSelectingEnd(true)
+    } else {
+      if (date.compare(dates.start) < 0) {
+        setDates({ start: date, end: date })
+      } else {
+        setDates({ start: dates.start, end: date })
+        setSelectingEnd(false)
+        setDateOpen(false)
+        setHoverDate(null)
+      }
+    }
   }
+
+  function prevMonth() {
+    if (viewMonth === 1) { setViewMonth(12); setViewYear(y => y - 1) }
+    else setViewMonth(m => m - 1)
+  }
+  function nextMonth() {
+    if (viewMonth === 12) { setViewMonth(1); setViewYear(y => y + 1) }
+    else setViewMonth(m => m + 1)
+  }
+
+  const numDays = daysInMonth(viewYear, viewMonth)
+  const firstDay = firstDayOfWeek(viewYear, viewMonth)
+  const days = Array.from({ length: numDays }, (_, i) => new CalendarDate(viewYear, viewMonth, i + 1))
+  const effectiveEnd = selectingEnd && hoverDate ? hoverDate : dates.end
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -40,117 +95,132 @@ export function SearchBar({ calendarPlacement = 'bottom start' }: { calendarPlac
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex w-full flex-col items-center gap-3 md:flex-row"
-    >
-      <div className="bg-cream flex w-full flex-col rounded-xl md:h-[50px] md:flex-row md:items-center">
-        <div className="flex items-center p-3 md:p-0 md:pl-2">
-          <HeroUISelect
-            aria-label="Ville"
-            selectedKey={city}
-            onSelectionChange={(key) => setCity(key as string)}
-            className="w-auto"
-          >
-            <Label className="sr-only">Ville</Label>
-            <HeroUISelect.Trigger className="bg-ash text-cream flex h-[35px] items-center gap-1.5 rounded-md px-5 text-xs font-bold tracking-[0.24px]">
-              <HeroUISelect.Value>
-                {({ selectedText }) => selectedText}
-              </HeroUISelect.Value>
-              <HeroUISelect.Indicator>
-                <ChevronIcon />
-              </HeroUISelect.Indicator>
-            </HeroUISelect.Trigger>
-            <HeroUISelect.Popover className="bg-cream overflow-hidden rounded-sm border border-divider shadow-none">
-              <ListBox>
-                {CITIES.map((c) => (
-                  <ListBoxItem
-                    key={c}
-                    id={c}
-                    className="text-coffee hover:bg-sand cursor-pointer px-5 py-2 text-xs font-bold tracking-[0.24px] outline-none data-[selected]:bg-sand"
-                  >
-                    {c}
-                  </ListBoxItem>
-                ))}
-              </ListBox>
-            </HeroUISelect.Popover>
-          </HeroUISelect>
-          <Separator className="ml-3 hidden md:block" />
-        </div>
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="bg-cream mx-auto flex h-[50px] w-fit items-center rounded-full px-[7px]">
 
-        <div className="flex flex-col border-t border-t-[#e8e8e2] md:flex-1 md:flex-row md:items-center md:border-t-0">
-          <DateRangePicker
-            value={dates}
-            onChange={handleDateChange}
-            minValue={minDate}
-            startName="checkIn"
-            endName="checkOut"
-            isOpen={dateOpen}
-            onOpenChange={setDateOpen}
-            className="date-picker flex-1 px-3 py-2 md:px-4 md:py-0"
+        {/* City pill */}
+        <HeroUISelect
+          aria-label="Ville"
+          selectedKey={city}
+          onSelectionChange={(key) => setCity(key as string)}
+          isOpen={cityOpen}
+          onOpenChange={setCityOpen}
+          className="shrink-0"
+        >
+          <Label className="sr-only">Ville</Label>
+          <HeroUISelect.Trigger className="bg-coffee text-cream flex h-[35px] items-center gap-1.5 rounded-full px-5 text-overline font-bold tracking-[0.24px]">
+            <HeroUISelect.Value>
+              {({ selectedText }) => selectedText}
+            </HeroUISelect.Value>
+            <ChevronDownIcon open={cityOpen} />
+          </HeroUISelect.Trigger>
+          <HeroUISelect.Popover className="bg-cream overflow-hidden rounded-xl border border-divider shadow-none">
+            <ListBox>
+              {CITIES.map((c) => (
+                <ListBoxItem
+                  key={c}
+                  id={c}
+                  className="text-coffee hover:bg-sand cursor-pointer px-5 py-2.5 text-xs font-bold tracking-[0.24px] outline-none data-[selected]:bg-sand"
+                >
+                  {c}
+                </ListBoxItem>
+              ))}
+            </ListBox>
+          </HeroUISelect.Popover>
+        </HeroUISelect>
+
+        {/* Custom date range */}
+        <div className="relative shrink-0" ref={calendarRef}>
+          <div
+            className="flex w-fit cursor-pointer items-center"
+            onClick={() => setDateOpen(o => !o)}
           >
-            <Label className="sr-only">Dates du séjour</Label>
-            <div className="cursor-pointer" onClick={() => setDateOpen(true)}>
-              <DateField.Group className="pointer-events-none flex items-center gap-0.5" fullWidth>
-                <DateField.Input slot="start" className="flex items-center gap-0.5">
-                  {(segment) => (
-                    <DateField.Segment
-                      segment={segment}
-                      className="text-taupe rounded px-0.5 text-xs font-bold tracking-[0.24px] outline-none"
-                    />
-                  )}
-                </DateField.Input>
-                <span className="text-silver text-xs">—</span>
-                <DateField.Input slot="end" className="flex items-center gap-0.5">
-                  {(segment) => (
-                    <DateField.Segment
-                      segment={segment}
-                      className="text-taupe rounded px-0.5 text-xs font-bold tracking-[0.24px] outline-none"
-                    />
-                  )}
-                </DateField.Input>
-                <span className="mr-3"><CalendarIcon /></span>
-              </DateField.Group>
+            <div className="flex items-center gap-1.5 px-[15px]">
+              <CalendarIcon />
+              <span className="text-taupe text-[12px] font-bold leading-[1.55] tracking-[0.24px]">
+                {formatDate(dates.start)}
+              </span>
             </div>
-            <DateRangePicker.Popover className="bg-cream rounded-lg border border-divider p-5 shadow-none" placement={calendarPlacement}>
-              <RangeCalendar aria-label="Dates du séjour" minValue={minDate}>
-                <RangeCalendar.Header>
-                  <RangeCalendar.Heading className="text-coffee text-sm font-bold" />
-                  <RangeCalendar.NavButton slot="previous" />
-                  <RangeCalendar.NavButton slot="next" />
-                </RangeCalendar.Header>
-                <RangeCalendar.Grid className="w-full">
-                  <RangeCalendar.GridHeader>
-                    {(day) => (
-                      <RangeCalendar.HeaderCell className="text-taupe text-xs font-bold">
-                        {day}
-                      </RangeCalendar.HeaderCell>
-                    )}
-                  </RangeCalendar.GridHeader>
-                  <RangeCalendar.GridBody>
-                    {(date) => (
-                      <RangeCalendar.Cell
-                        date={date}
-                        className="text-coffee flex size-8 items-center justify-center rounded-sm text-xs outline-none hover:bg-sand data-[selected]:bg-coffee/10 data-[selection-start]:bg-coffee data-[selection-start]:text-cream data-[selection-end]:bg-coffee data-[selection-end]:text-cream data-[unavailable]:text-silver data-[unavailable]:line-through"
-                      />
-                    )}
-                  </RangeCalendar.GridBody>
-                </RangeCalendar.Grid>
-              </RangeCalendar>
-            </DateRangePicker.Popover>
-          </DateRangePicker>
-
-          <Separator className="hidden md:block" />
-
-          <div className="border-t border-t-[#e8e8e2] md:border-t-0">
-            <Stepper value={guests} onChange={setGuests} min={1} max={10} />
+            <Separator />
+            <div className="flex items-center gap-1.5 px-[15px]">
+              <CalendarIcon />
+              <span className="text-taupe text-[12px] font-bold leading-[1.55] tracking-[0.24px]">
+                {formatDate(dates.end)}
+              </span>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <Button type="submit" className="h-[50px] w-full shrink-0 rounded-xl px-8 md:w-auto">
-        Rechercher
-      </Button>
+          {dateOpen && (
+            <div className={`bg-cream absolute z-50 min-w-[280px] rounded-xl border border-divider p-5 ${calendarPlacement === 'top start' ? 'bottom-[calc(100%+8px)] left-0' : 'left-0 top-[calc(100%+8px)]'}`}>
+              <div className="mb-4 flex items-center justify-between">
+                <button type="button" onClick={prevMonth} className="text-taupe hover:text-coffee p-1">
+                  <ChevronLeftIcon />
+                </button>
+                <span className="text-coffee text-sm font-bold">
+                  {MONTH_NAMES[viewMonth - 1]} {viewYear}
+                </span>
+                <button type="button" onClick={nextMonth} className="text-taupe hover:text-coffee p-1">
+                  <ChevronRightIcon />
+                </button>
+              </div>
+
+              <div className="mb-1 grid grid-cols-7">
+                {DAY_NAMES.map((d, i) => (
+                  <div key={i} className="text-taupe flex size-8 items-center justify-center text-[10px] font-bold">
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7">
+                {Array.from({ length: firstDay }).map((_, i) => (
+                  <div key={`e${i}`} className="size-8" />
+                ))}
+                {days.map((date) => {
+                  const isStart = date.compare(dates.start) === 0
+                  const isEnd = date.compare(effectiveEnd) === 0
+                  const inRange = date.compare(dates.start) > 0 && date.compare(effectiveEnd) < 0
+                  const disabled = date.compare(minDate) < 0
+                  return (
+                    <button
+                      key={date.day}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => handleDayClick(date)}
+                      onMouseEnter={() => selectingEnd && setHoverDate(date)}
+                      onMouseLeave={() => setHoverDate(null)}
+                      className={[
+                        'flex size-8 items-center justify-center rounded-sm text-xs outline-none',
+                        disabled ? 'cursor-not-allowed text-silver' : 'cursor-pointer',
+                        isStart || isEnd ? 'bg-coffee text-cream' : '',
+                        inRange ? 'bg-coffee/10 text-coffee' : '',
+                        !isStart && !isEnd && !inRange && !disabled ? 'text-coffee hover:bg-sand' : '',
+                      ].join(' ')}
+                    >
+                      {date.day}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Voyageurs */}
+        <Stepper value={guests} onChange={setGuests} min={1} max={10} />
+
+        {/* Search button */}
+        <button
+          type="submit"
+          aria-label="Rechercher"
+          className="bg-coffee ml-[7px] flex size-[35px] shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+        >
+          <SearchIcon />
+        </button>
+
+      </div>
     </form>
   )
 }
@@ -167,76 +237,105 @@ function Stepper({
   max: number
 }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-0">
-      <span className="text-taupe text-xs font-bold tracking-[0.24px]">Voyageurs</span>
+    <div className="flex items-center gap-2 px-[15px]">
+      <span className="text-taupe text-overline font-bold tracking-[0.24px]">Voyageurs</span>
       <div className="flex items-center gap-1">
         <button
           type="button"
-          className="text-taupe flex size-7 items-center justify-center rounded-full outline-none disabled:opacity-30"
+          className="text-taupe flex size-7 items-center justify-center outline-none transition-opacity hover:opacity-70 disabled:opacity-30"
           aria-label="Retirer un voyageur"
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
         >
-          <MinusIcon />
+          <MinusCircleIcon />
         </button>
-        <span className="text-coffee w-4 text-center text-xs font-bold tabular-nums">{value}</span>
+        <span className="text-taupe w-4 text-center text-overline font-bold tabular-nums tracking-[0.24px]">
+          {value}
+        </span>
         <button
           type="button"
-          className="text-taupe flex size-7 items-center justify-center rounded-full outline-none disabled:opacity-30"
+          className="text-taupe flex size-7 items-center justify-center outline-none transition-opacity hover:opacity-70 disabled:opacity-30"
           aria-label="Ajouter un voyageur"
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
         >
-          <PlusIcon />
+          <PlusCircleIcon />
         </button>
       </div>
     </div>
   )
 }
 
-function Separator({ className }: { className?: string }) {
-  return <div className={`bg-silver/40 h-[30px] w-px shrink-0 ${className ?? ''}`} />
-}
-
-function PlusIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M8 5v6M5 8h6" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-  )
-}
-
-function MinusIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M5 8h6" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-  )
+function Separator() {
+  return <div className="bg-silver/40 h-[30px] w-px shrink-0" />
 }
 
 function CalendarIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-coffee">
-      <g clipPath="url(#cal-clip)">
-        <path d="M3.6 3V0.6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M8.4 3V0.6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M10.2 1.8H1.8C1.482 1.8 1.176 1.926 0.951 2.151C0.726 2.377 0.6 2.682 0.6 3V10.2C0.6 10.518 0.726 10.824 0.951 11.049C1.176 11.274 1.482 11.4 1.8 11.4H10.2C10.518 11.4 10.824 11.274 11.049 11.049C11.274 10.824 11.4 10.518 11.4 10.2V3C11.4 2.682 11.274 2.377 11.049 2.151C10.824 1.926 10.518 1.8 10.2 1.8Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-      </g>
-      <defs>
-        <clipPath id="cal-clip">
-          <rect width="12" height="12" fill="white" />
-        </clipPath>
-      </defs>
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 text-taupe">
+      <rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1" />
+      <path d="M4 1v2M8 1v2M1 5h10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     </svg>
   )
 }
 
-function ChevronIcon() {
+function PlusCircleIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
-      <path d="M2.5 3.5L5 6.5L7.5 3.5" />
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <circle cx="9" cy="9" r="8.4" stroke="currentColor" strokeWidth="1" />
+      <path d="M9 5.5v7M5.5 9h7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function MinusCircleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <circle cx="9" cy="9" r="8.4" stroke="currentColor" strokeWidth="1" />
+      <path d="M5.5 9h7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function SearchIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#fffff8" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="6" cy="6" r="4" />
+      <path d="M10 10l2.5 2.5" />
+    </svg>
+  )
+}
+
+function ChevronDownIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+    >
+      <path d="M2 3.5l3 3 3-3" />
+    </svg>
+  )
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 3L5 8l5 5" />
+    </svg>
+  )
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 3l5 5-5 5" />
     </svg>
   )
 }
