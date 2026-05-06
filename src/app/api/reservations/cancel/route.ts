@@ -2,12 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyOpenApi, type GuestyOpenApiReservation } from '@/lib/guesty-openapi'
 import { findInquiryByReservation, updateInquiry } from '@/lib/inquiries-repository'
-import { sendEmail } from '@/lib/resend-client'
-import { translate } from '@/lib/i18n/email-dictionary'
 import { calculateRefundAmountCents } from '@/lib/cancellation-policy'
-import { formatCurrency } from '@/lib/formatters'
-import CancellationConfirmedEmail from '@/emails/cancellation-confirmed'
-import { type InquiryRow } from '@/types/inquiry'
 import { verifyCancellationToken } from '@/lib/cancel-token'
 
 const schema = z.object({
@@ -72,9 +67,9 @@ export async function POST(request: NextRequest) {
       } else {
         console.error('[cancel] no refundable payment found', { reservationId: inquiry.guesty_reservation_id })
       }
-    } else {
-      await sendCancellationEmail(inquiry, null)
     }
+
+    // Envoi de l'email d'annulation temporairement désactivé.
 
     return NextResponse.json({
       ok: true,
@@ -112,25 +107,4 @@ function findRefundablePaymentId(reservation: GuestyOpenApiReservation): string 
   }
 
   return null
-}
-
-async function sendCancellationEmail(
-  inquiry: InquiryRow,
-  refundAmountCents: number | null,
-) {
-  await sendEmail({
-    to: inquiry.guest.email,
-    subject: translate(inquiry.locale, 'cancellation.subject'),
-    react: CancellationConfirmedEmail({
-      locale: inquiry.locale,
-      guest: { firstName: inquiry.guest.firstName },
-      listing: { title: inquiry.listing_title },
-      refund:
-        refundAmountCents && refundAmountCents > 0
-          ? {
-              amount: formatCurrency(refundAmountCents, inquiry.currency, inquiry.locale),
-            }
-          : null,
-    }),
-  })
 }

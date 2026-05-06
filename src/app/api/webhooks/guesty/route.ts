@@ -6,17 +6,6 @@ import {
   updateInquiry,
 } from '@/lib/inquiries-repository'
 import { verifyGuestySignature } from '@/lib/guesty-webhook'
-import { sendEmail } from '@/lib/resend-client'
-import { translate } from '@/lib/i18n/email-dictionary'
-import { calculateRefundAmountCents } from '@/lib/cancellation-policy'
-import { formatCurrency, formatDate, nightsBetween } from '@/lib/formatters'
-import BookingConfirmationEmail from '@/emails/booking-confirmation'
-import InquiryRefusedEmail from '@/emails/inquiry-refused'
-import CancellationConfirmedEmail from '@/emails/cancellation-confirmed'
-import { type InquiryRow } from '@/types/inquiry'
-import { generateCancellationToken } from '@/lib/cancel-token'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
 
 const payloadSchema = z
   .object({
@@ -114,7 +103,7 @@ async function handlePaymentReceived(reservationId: string) {
   if (!inquiry || inquiry.status === 'confirmed' || inquiry.status === 'refunded') return
 
   await updateInquiry(inquiry.id, { status: 'confirmed' })
-  await sendBookingConfirmation(inquiry)
+  // Envoi de l'email de confirmation temporairement désactivé.
 }
 
 async function handleReservationUpdated(reservationId: string, status: string | null) {
@@ -125,7 +114,7 @@ async function handleReservationUpdated(reservationId: string, status: string | 
 
   if (inquiry.status === 'pending') {
     await updateInquiry(inquiry.id, { status: 'refused' })
-    await sendInquiryRefused(inquiry)
+    // Envoi de l'email de refus temporairement désactivé.
     return
   }
 
@@ -139,79 +128,11 @@ async function handleReservationUpdated(reservationId: string, status: string | 
 
 async function handlePaymentRefunded(
   reservationId: string,
-  refundedAmount: number | null,
+  _refundedAmount: number | null,
 ) {
   const inquiry = await findInquiryByReservation(reservationId)
   if (!inquiry || inquiry.status === 'refunded') return
 
   await updateInquiry(inquiry.id, { status: 'refunded' })
-  await sendCancellationEmail(inquiry, refundedAmount)
-}
-
-async function sendBookingConfirmation(inquiry: InquiryRow) {
-  const total = formatCurrency(inquiry.amount_cents, inquiry.currency, inquiry.locale)
-  const checkIn = formatDate(inquiry.check_in, inquiry.locale)
-  const checkOut = formatDate(inquiry.check_out, inquiry.locale)
-  const nights = nightsBetween(inquiry.check_in, inquiry.check_out)
-
-  await sendEmail({
-    to: inquiry.guest.email,
-    subject: translate(inquiry.locale, 'confirmation.subject'),
-    react: BookingConfirmationEmail({
-      locale: inquiry.locale,
-      guest: { firstName: inquiry.guest.firstName },
-      listing: { title: inquiry.listing_title },
-      reservation: {
-        checkIn,
-        checkOut,
-        guests: inquiry.guests_count,
-        nights,
-        total,
-      },
-      cancelUrl: buildCancellationUrl(inquiry.guesty_reservation_id, inquiry.guest.email),
-    }),
-  })
-}
-
-async function sendInquiryRefused(inquiry: InquiryRow) {
-  await sendEmail({
-    to: inquiry.guest.email,
-    subject: translate(inquiry.locale, 'inquiryRefused.subject'),
-    react: InquiryRefusedEmail({
-      locale: inquiry.locale,
-      guest: { firstName: inquiry.guest.firstName },
-      listing: { title: inquiry.listing_title },
-    }),
-  })
-}
-
-async function sendCancellationEmail(
-  inquiry: InquiryRow,
-  refundedAmount: number | null,
-) {
-  const refundAmountCents =
-    refundedAmount !== null
-      ? Math.round(refundedAmount * 100)
-      : calculateRefundAmountCents(inquiry.amount_cents, inquiry.check_in)
-
-  await sendEmail({
-    to: inquiry.guest.email,
-    subject: translate(inquiry.locale, 'cancellation.subject'),
-    react: CancellationConfirmedEmail({
-      locale: inquiry.locale,
-      guest: { firstName: inquiry.guest.firstName },
-      listing: { title: inquiry.listing_title },
-      refund:
-        refundAmountCents > 0
-          ? {
-              amount: formatCurrency(refundAmountCents, inquiry.currency, inquiry.locale),
-            }
-          : null,
-    }),
-  })
-}
-
-function buildCancellationUrl(reservationId: string, email: string): string {
-  const token = generateCancellationToken({ reservationId, email })
-  return `${SITE_URL}/annulation?token=${encodeURIComponent(token)}`
+  // Envoi de l'email d'annulation temporairement désactivé.
 }

@@ -2,10 +2,6 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
 import { insertInquiry } from '@/lib/inquiries-repository'
-import { sendEmail } from '@/lib/resend-client'
-import { translate } from '@/lib/i18n/email-dictionary'
-import { formatCurrency, formatDate } from '@/lib/formatters'
-import InquiryReceivedEmail from '@/emails/inquiry-received'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
 import type { GuestyReservationRequest } from '@/types/guesty'
@@ -73,9 +69,6 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data
     locale = data.preferredLanguage
-    const formattedTotal = formatCurrency(data.amountCents, data.currency, locale)
-    const formattedCheckIn = formatDate(data.checkIn, locale)
-    const formattedCheckOut = formatDate(data.checkOut, locale)
 
     const nowIso = new Date().toISOString()
     const guestyPolicy: GuestyReservationRequest['policy'] = {
@@ -110,23 +103,7 @@ export async function POST(request: NextRequest) {
       mode: 'inquiry',
     })
 
-    await trySendEmail(() =>
-      sendEmail({
-        to: data.guest.email,
-        subject: translate(locale, 'inquiryReceived.subject'),
-        react: InquiryReceivedEmail({
-          locale,
-          guest: { firstName: data.guest.firstName },
-          listing: { title: data.listingTitle },
-          reservation: {
-            checkIn: formattedCheckIn,
-            checkOut: formattedCheckOut,
-            guests: data.guestsCount,
-            estimatedTotal: formattedTotal,
-          },
-        }),
-      }),
-    )
+    // Envoi de l'email "inquiry received" temporairement désactivé.
 
     return NextResponse.json(inquiry)
   } catch (error) {
@@ -136,13 +113,5 @@ export async function POST(request: NextRequest) {
       rawMessage: error instanceof Error ? error.message : String(error),
     })
     return NextResponse.json(body, { status })
-  }
-}
-
-async function trySendEmail(send: () => Promise<unknown>) {
-  try {
-    await send()
-  } catch (error) {
-    console.error('[reservation route] email send failed', error)
   }
 }

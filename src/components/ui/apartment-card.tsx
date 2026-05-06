@@ -50,14 +50,10 @@ export function ApartmentCard({
           {(city || neighborhood) && (
             <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2 md:top-5 md:left-5 md:gap-[10px]">
               {city && (
-                <span className="bg-cream text-ash text-caption rounded-xl px-3 py-1 tracking-[0.24px] md:px-4 md:py-[2px]">
-                  {city}
-                </span>
+                <LocationBadge>{city}</LocationBadge>
               )}
               {neighborhood && (
-                <span className="bg-cream text-ash text-caption rounded-xl px-3 py-1 tracking-[0.24px] md:px-4 md:py-[2px]">
-                  {neighborhood}
-                </span>
+                <LocationBadge>{neighborhood}</LocationBadge>
               )}
             </div>
           )}
@@ -94,6 +90,14 @@ export function ApartmentCard({
         </div>
       </article>
     </Link>
+  )
+}
+
+function LocationBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="bg-cream text-ash rounded-xl px-3 py-1 font-sans text-xs leading-[155%] font-light tracking-[0.24px] md:px-4 md:py-[2px]">
+      {children}
+    </span>
   )
 }
 

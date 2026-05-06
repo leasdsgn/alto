@@ -7,6 +7,7 @@ import { ApartmentGallery } from '@/components/apartment/gallery'
 import { ApartmentFaq } from '@/components/apartment/faq'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { Button } from '@/components/ui/button'
+import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { type Apartment } from '@/types/apartment'
 
 interface Props {
@@ -32,28 +33,6 @@ const BASE_FAQ = [
   'Quelle est la durée minimum du séjour ?',
   'Que comprend le prix affiché ?',
 ]
-
-const NEIGHBORHOOD_BY_SLUG: Record<string, string> = {
-  'le-faubourg': 'Le Marais',
-  'l-opera': '9e arr.',
-  'le-saint-germain': '6e arr.',
-  'le-marais': 'Le Marais',
-  'le-bellecour': "Presqu'île",
-  'les-terreaux': 'Terreaux',
-  'le-vieux-lyon': 'Vieux-Lyon',
-  'la-croix-rousse': 'Croix-Rousse',
-  'voltaire-i': 'République',
-  'voltaire-ii': 'République',
-  'voltaire-iii': 'République',
-  capucine: 'Opéra',
-  'terreaux-i': 'Terreaux',
-  'terreaux-ii': 'Terreaux',
-  'terreaux-iii': 'Terreaux',
-  'terreaux-iv': 'Terreaux',
-  'constantine-i': 'Bellecour',
-  'constantine-ii': 'Bellecour',
-  'constantine-i-et-ii': 'Bellecour',
-}
 
 const FEATURE_LIBRARY = [
   {
@@ -419,7 +398,7 @@ function getCityName(apartment: Apartment) {
 }
 
 function getNeighborhoodName(apartment: Apartment) {
-  const mapped = NEIGHBORHOOD_BY_SLUG[apartment.slug]
+  const mapped = getNeighborhoodBySlug(apartment.slug)
   if (mapped) return mapped
 
   const raw = apartment.address ?? ''

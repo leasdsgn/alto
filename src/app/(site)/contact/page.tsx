@@ -1,13 +1,16 @@
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { getSiteImages } from '@/lib/storyblok-site-images'
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const siteImages = await getSiteImages()
+
   return (
     <>
       <div className="relative h-[442px] overflow-hidden">
         <Image
-          src="/images/alto-salon.jpg"
+          src={siteImages.pages.contactHero}
           alt="Contactez-nous"
           fill
           sizes="100vw"

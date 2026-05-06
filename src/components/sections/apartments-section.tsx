@@ -1,4 +1,5 @@
 import { guestyClient } from '@/lib/guesty-client'
+import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { type GuestyListing } from '@/types/guesty'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 
@@ -11,22 +12,11 @@ function slugify(title: string): string {
     .replace(/(^-|-$)/g, '')
 }
 
-const NEIGHBORHOOD_BY_SLUG: Record<string, string> = {
-  'le-faubourg': 'Le Marais',
-  'l-opera': '9e arr.',
-  'le-saint-germain': '6e arr.',
-  'le-marais': 'Le Marais',
-  'le-bellecour': "Presqu'île",
-  'les-terreaux': "Presqu'île",
-  'le-vieux-lyon': 'Vieux-Lyon',
-  'la-croix-rousse': 'Croix-Rousse',
-}
-
 function mapListing(listing: GuestyListing) {
   const address = listing.address?.full
   const city = listing.address?.city
   const slug = slugify(listing.nickname || listing.title)
-  const neighborhoodLabel = NEIGHBORHOOD_BY_SLUG[slug] ?? ''
+  const neighborhoodLabel = getNeighborhoodBySlug(slug)
   return {
     id: listing._id,
     name: listing.title,

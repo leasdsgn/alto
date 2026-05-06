@@ -5,43 +5,17 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import type { getApartmentsForSearch } from '@/components/sections/apartments-section'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const LYON_APARTMENTS = [
-  {
-    id: 'bellecour',
-    name: 'Bellecour',
-    arrondissement: '2e arr.',
-    price: 280,
-    guests: 4,
-    surface: 80,
-    image: '/images/lyon/apt-bellecour.jpg',
-    slug: 'constantine-i',
-  },
-  {
-    id: 'vieux-lyon',
-    name: 'Vieux Lyon',
-    arrondissement: '5e arr.',
-    price: 210,
-    guests: 2,
-    surface: 45,
-    image: '/images/lyon/apt-vieux-lyon.jpg',
-    slug: 'terreaux-i',
-  },
-  {
-    id: 'terreaux',
-    name: 'Terreaux',
-    arrondissement: '1e arr.',
-    price: 240,
-    guests: 2,
-    surface: 55,
-    image: '/images/lyon/apt-terreaux.jpg',
-    slug: 'terreaux-ii',
-  },
-]
+type LyonApartment = Awaited<ReturnType<typeof getApartmentsForSearch>>[number]
 
-export function LyonApartmentsSection() {
+interface LyonApartmentsSectionProps {
+  apartments: LyonApartment[]
+}
+
+export function LyonApartmentsSection({ apartments }: LyonApartmentsSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const cardsRef = useRef<HTMLDivElement>(null)
 
@@ -81,11 +55,11 @@ export function LyonApartmentsSection() {
       <h2 className="text-coffee mt-1 text-base font-medium">Nos appartements à Lyon</h2>
 
       <div ref={cardsRef} className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-        {LYON_APARTMENTS.map((apt) => (
+        {apartments.map((apt) => (
           <div key={apt.id} className="group">
             <div className="relative aspect-[304/331] overflow-hidden rounded-lg">
               <Image
-                src={apt.image}
+                src={apt.images[0] || '/images/lyon/apt-bellecour.jpg'}
                 alt={apt.name}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
@@ -96,7 +70,7 @@ export function LyonApartmentsSection() {
             <div className="mt-4 flex items-start justify-between">
               <div>
                 <h3 className="text-coffee text-base font-bold">{apt.name}</h3>
-                <p className="text-coffee text-xs font-medium">{apt.arrondissement}</p>
+                <p className="text-coffee text-xs font-medium">{getLocationLabel(apt)}</p>
               </div>
               <p className="text-silver text-xs font-bold uppercase">{apt.price}€/nuit</p>
             </div>
@@ -114,7 +88,7 @@ export function LyonApartmentsSection() {
                   <rect x="1" y="1" width="11" height="11" rx="1" stroke="currentColor" strokeWidth="1.2"/>
                   <path d="M1 5H12M5 1V12" stroke="currentColor" strokeWidth="1.2"/>
                 </svg>
-                {apt.surface}m²
+                {getSecondaryMetric(apt)}
               </span>
             </div>
 
@@ -129,4 +103,21 @@ export function LyonApartmentsSection() {
       </div>
     </section>
   )
+}
+
+function getLocationLabel(apartment: LyonApartment) {
+  const neighborhood = apartment.neighborhoodLabel
+  if (neighborhood) return neighborhood
+
+  const addressStart = apartment.address?.split(',')[0]?.trim()
+  if (addressStart) return addressStart
+
+  return apartment.city || 'Lyon'
+}
+
+function getSecondaryMetric(apartment: LyonApartment) {
+  if (apartment.surface > 0) return `${apartment.surface}m²`
+  if (apartment.bedrooms > 0) return `${apartment.bedrooms} ch.`
+  if (apartment.bathrooms > 0) return `${apartment.bathrooms} sdb`
+  return 'Alto'
 }

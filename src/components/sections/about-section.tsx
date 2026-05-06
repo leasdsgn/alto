@@ -7,25 +7,18 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const TRAVELER_AVATARS = [
-  '/images/avatars/voyageur-1.png',
-  '/images/avatars/voyageur-2.png',
-  '/images/avatars/voyageur-3.png',
-]
-
-const LOCATION_AVATARS = [
-  '/images/blog-1.jpg',
-  '/images/hero-home.jpg',
-  '/images/blog-3.jpg',
-]
-
 const PLATFORM_LOGOS = [
   { name: 'Booking', bg: 'bg-[#003580]', label: 'B.' },
   { name: 'Tripadvisor', bg: 'bg-[#00af87]', label: 'TA' },
   { name: 'Airbnb', bg: 'bg-[#ff5a5f]', label: 'A' },
 ]
 
-export function AboutSection() {
+interface AboutSectionProps {
+  locationAvatars: readonly string[]
+  travelerAvatars: readonly string[]
+}
+
+export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const quoteRef = useRef<HTMLParagraphElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
@@ -90,7 +83,7 @@ export function AboutSection() {
         >
           <StatCard>
             <ClusterAvatars>
-              {LOCATION_AVATARS.map((src, i) => (
+              {locationAvatars.map((src, i) => (
                 <AvatarImage key={i} src={src} alt="" />
               ))}
             </ClusterAvatars>
@@ -99,7 +92,7 @@ export function AboutSection() {
 
           <StatCard>
             <ClusterAvatars>
-              {TRAVELER_AVATARS.map((src, i) => (
+              {travelerAvatars.map((src, i) => (
                 <AvatarImage key={i} src={src} alt="" />
               ))}
             </ClusterAvatars>
@@ -158,4 +151,3 @@ function AvatarImage({ src, alt }: { src: string; alt: string }) {
     </div>
   )
 }
-

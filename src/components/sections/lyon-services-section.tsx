@@ -15,6 +15,10 @@ const SERVICES = [
   { icon: 'calendar', label: 'Réservation sans frais' },
 ]
 
+interface LyonServicesSectionProps {
+  image: string
+}
+
 function ServiceIcon({ type }: { type: string }) {
   switch (type) {
     case 'construction':
@@ -49,7 +53,7 @@ function ServiceIcon({ type }: { type: string }) {
   }
 }
 
-export function LyonServicesSection() {
+export function LyonServicesSection({ image }: LyonServicesSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
   const itemsRef = useRef<HTMLLIElement[]>([])
@@ -94,7 +98,7 @@ export function LyonServicesSection() {
           className="relative aspect-[304/412] overflow-hidden rounded-lg"
         >
           <Image
-            src="/images/lyon/services-image.jpg"
+            src={image}
             alt="Intérieur Alto"
             fill
             sizes="(max-width: 768px) 100vw, 304px"

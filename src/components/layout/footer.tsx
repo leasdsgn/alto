@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { getSiteImages } from '@/lib/storyblok-site-images'
 
 const COL1 = [
   { label: 'Paris', href: '/appartements?city=paris' },
@@ -21,7 +22,8 @@ interface FooterProps {
   reserveStickyCtaSpace?: boolean | 'mobile'
 }
 
-export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
+export async function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
+  const siteImages = await getSiteImages()
   const bottomPadding = reserveStickyCtaSpace === true
     ? 'pb-56 md:pb-40'
     : reserveStickyCtaSpace === 'mobile'
@@ -32,7 +34,7 @@ export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
     <footer className="relative overflow-hidden">
       <div className="absolute inset-0">
         <Image
-          src="/images/footer-gradient.jpg"
+          src={siteImages.footerBackground}
           alt=""
           fill
           sizes="100vw"

@@ -10,7 +10,11 @@ import { SearchBarMobile } from '@/components/ui/search-bar-mobile'
 
 gsap.registerPlugin(ScrollTrigger)
 
-export function LyonHeroSection() {
+interface LyonHeroSectionProps {
+  backgroundImage: string
+}
+
+export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
 
@@ -49,7 +53,7 @@ export function LyonHeroSection() {
         className="absolute inset-0 -top-[10%] bottom-0 h-[120%]"
       >
         <Image
-          src="/images/lyon/hero-lyon.jpg"
+          src={backgroundImage}
           alt="Vue de Lyon"
           fill
           sizes="100vw"

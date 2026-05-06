@@ -8,35 +8,43 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const LYON_QUARTIERS = [
-  {
-    id: 'bellecour',
-    name: 'Bellecour',
-    arrondissement: '2e arr.',
-    image: '/images/lyon/apt-bellecour.jpg',
-  },
-  {
-    id: 'vieux-lyon',
-    name: 'Vieux Lyon',
-    arrondissement: '5e arr.',
-    image: '/images/lyon/apt-vieux-lyon.jpg',
-  },
-  {
-    id: 'terreaux',
-    name: 'Terreaux',
-    arrondissement: '1e arr.',
-    image: '/images/lyon/apt-terreaux.jpg',
-  },
-]
-
 const TESTIMONIAL = {
   quote: '"Le Terreaux est vibrant et raffiné à la fois. Tout se fait à pied, entre culture, gastronomie et lumière dorée en fin de journée."',
   author: 'Camille & Arthur - Bruxelles',
 }
 
-export function LyonQuartiersSection() {
+interface LyonQuartiersSectionProps {
+  images: {
+    bellecour: string
+    vieuxLyon: string
+    terreaux: string
+  }
+}
+
+export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const [activeIndex, setActiveIndex] = useState(1)
+
+  const lyonQuartiers = [
+    {
+      id: 'bellecour',
+      name: 'Bellecour',
+      arrondissement: '2e arr.',
+      image: images.bellecour,
+    },
+    {
+      id: 'vieux-lyon',
+      name: 'Vieux Lyon',
+      arrondissement: '5e arr.',
+      image: images.vieuxLyon,
+    },
+    {
+      id: 'terreaux',
+      name: 'Terreaux',
+      arrondissement: '1e arr.',
+      image: images.terreaux,
+    },
+  ]
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -68,11 +76,11 @@ export function LyonQuartiersSection() {
   }, [])
 
   const goToPrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? LYON_QUARTIERS.length - 1 : prev - 1))
+    setActiveIndex((prev) => (prev === 0 ? lyonQuartiers.length - 1 : prev - 1))
   }
 
   const goToNext = () => {
-    setActiveIndex((prev) => (prev === LYON_QUARTIERS.length - 1 ? 0 : prev + 1))
+    setActiveIndex((prev) => (prev === lyonQuartiers.length - 1 ? 0 : prev + 1))
   }
 
   return (
@@ -82,7 +90,7 @@ export function LyonQuartiersSection() {
 
       {/* Desktop: 3 cards */}
       <div className="mt-10 hidden gap-4 md:flex">
-        {LYON_QUARTIERS.map((quartier, index) => (
+        {lyonQuartiers.map((quartier, index) => (
           <Link
             key={quartier.id}
             href="/appartements?city=lyon"
@@ -119,16 +127,16 @@ export function LyonQuartiersSection() {
       <div className="mt-10 md:hidden">
         <div className="relative aspect-[275/331] overflow-hidden rounded-lg">
           <Image
-            src={LYON_QUARTIERS[activeIndex].image}
-            alt={LYON_QUARTIERS[activeIndex].name}
+            src={lyonQuartiers[activeIndex].image}
+            alt={lyonQuartiers[activeIndex].name}
             fill
             sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-coffee/80 to-transparent" />
           <div className="text-cream absolute bottom-4 left-4">
-            <h3 className="text-base font-bold">{LYON_QUARTIERS[activeIndex].name}</h3>
-            <p className="text-xs font-medium">{LYON_QUARTIERS[activeIndex].arrondissement}</p>
+            <h3 className="text-base font-bold">{lyonQuartiers[activeIndex].name}</h3>
+            <p className="text-xs font-medium">{lyonQuartiers[activeIndex].arrondissement}</p>
           </div>
         </div>
 
@@ -147,7 +155,7 @@ export function LyonQuartiersSection() {
 
           {/* Dots */}
           <div className="flex gap-2">
-            {LYON_QUARTIERS.map((_, i) => (
+            {lyonQuartiers.map((_, i) => (
               <button
                 key={i}
                 type="button"

@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { FaqSection } from '@/components/sections/faq-section'
 import { Button } from '@/components/ui/button'
+import { getSiteImages } from '@/lib/storyblok-site-images'
 
 const MODEL_POINTS = [
   {
@@ -19,13 +20,15 @@ const MODEL_POINTS = [
   },
 ]
 
-export default function InvestirPage() {
+export default async function InvestirPage() {
+  const siteImages = await getSiteImages()
+
   return (
     <>
       {/* Hero */}
       <div className="relative h-[442px] overflow-hidden">
         <Image
-          src="/images/alto-salon.jpg"
+          src={siteImages.pages.investHero}
           alt="Investir avec Alto"
           fill
           sizes="100vw"
@@ -76,7 +79,7 @@ export default function InvestirPage() {
           <div className="mx-auto grid max-w-content grid-cols-1 gap-12 px-gutter py-section md:px-gutter-md lg:grid-cols-[304px_1fr]">
             <div className="relative h-[350px] overflow-hidden rounded-lg lg:h-[468px]">
               <Image
-                src="/images/alto-salon.jpg"
+                src={siteImages.pages.investModel}
                 alt="Intérieur Alto"
                 fill
                 sizes="304px"

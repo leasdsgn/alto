@@ -5,34 +5,15 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import type { BlogArticle } from '@/lib/blog-data'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const BLOG_POSTS = [
-  {
-    id: 1,
-    title: 'Le Marais à hauteur de regard',
-    date: 'Le 12 mars 2026',
-    image: '/images/lyon/blog-terreaux.jpg',
-    slug: 'le-marais-a-hauteur-de-regard',
-  },
-  {
-    id: 2,
-    title: 'Un week-end à Saint-Germain',
-    date: 'Le 12 mars 2026',
-    image: '/images/lyon/apt-vieux-lyon.jpg',
-    slug: 'un-week-end-a-saint-germain',
-  },
-  {
-    id: 3,
-    title: 'Autour de l\'Opéra',
-    date: 'Le 12 mars 2026',
-    image: '/images/lyon/apt-bellecour.jpg',
-    slug: 'autour-de-l-opera',
-  },
-]
+interface LyonBlogSectionProps {
+  articles: BlogArticle[]
+}
 
-export function LyonBlogSection() {
+export function LyonBlogSection({ articles }: LyonBlogSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -84,9 +65,9 @@ export function LyonBlogSection() {
 
           {/* Right column: blog cards */}
           <div className="flex flex-col gap-4">
-            {BLOG_POSTS.map((post) => (
+            {articles.slice(0, 3).map((post) => (
               <Link
-                key={post.id}
+                key={post.slug}
                 href={`/blog/${post.slug}`}
                 className="blog-card group relative h-40 overflow-hidden rounded-lg"
               >

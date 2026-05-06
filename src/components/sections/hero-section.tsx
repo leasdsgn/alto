@@ -10,7 +10,12 @@ import { SearchBarMobile } from '@/components/ui/search-bar-mobile'
 
 gsap.registerPlugin(ScrollTrigger)
 
-export function HeroSection() {
+interface HeroSectionProps {
+  backgroundImage: string
+  overlayImage: string
+}
+
+export function HeroSection({ backgroundImage, overlayImage }: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
 
@@ -21,11 +26,11 @@ export function HeroSection() {
     const bg = bgRef.current
     if (!section || !bg) return
 
-    gsap.set(bg, { scale: 1.15 })
+    gsap.set(bg, { scale: 1.04 })
 
     gsap.to(bg, {
       scale: 1,
-      yPercent: 10,
+      yPercent: 4,
       ease: 'none',
       scrollTrigger: {
         trigger: section,
@@ -46,10 +51,10 @@ export function HeroSection() {
     <section ref={sectionRef} className="relative h-svh overflow-hidden">
       <div
         ref={bgRef}
-        className="absolute inset-0 -top-[10%] bottom-0 h-[120%]"
+        className="absolute inset-0"
       >
         <Image
-          src="/images/hero-home.jpg"
+          src={backgroundImage}
           alt=""
           fill
           sizes="100vw"
@@ -57,15 +62,30 @@ export function HeroSection() {
           priority
           className="object-cover"
         />
+        <div className="absolute inset-0 opacity-60 mix-blend-multiply">
+          <Image
+            src={overlayImage}
+            alt=""
+            fill
+            sizes="100vw"
+            quality={85}
+            priority
+            className="object-cover"
+          />
+        </div>
       </div>
-      <div className="bg-coffee/60 absolute inset-0 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-black/25" />
 
       <Header />
 
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6">
-        <div className="w-full max-w-[800px]">
-          <h1 className="text-cream text-center text-3xl leading-[1.25] font-bold tracking-[-0.6px] md:text-[54px] md:tracking-[-1.08px]">
-            Lifted Mindful Home
+        <div className="w-full max-w-[1212px]">
+          <h1 className="text-cream flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-center text-2xl leading-none font-medium tracking-[0.12em] uppercase md:gap-x-8 md:text-h1 md:tracking-[0.16em]">
+            <span>LIFTED</span>
+            <span aria-hidden="true" className="bg-cream size-2 rounded-full md:size-2.5" />
+            <span>MINDFUL</span>
+            <span aria-hidden="true" className="bg-cream size-2 rounded-full md:size-2.5" />
+            <span>HOME</span>
           </h1>
         </div>
 

@@ -8,27 +8,35 @@ import { Button } from '@/components/ui/button'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const PANELS = [
-  {
-    title: 'Arrivée',
-    description: 'Un quartier vivant, une adresse au cœur des plus beaux quartiers.',
-    image: '/images/hero-home.jpg',
-  },
-  {
-    title: 'Checkin',
-    description: 'Accès autonome et gestionnaire joignable 24h/24 et 7j/7.',
-    image: '/images/alto-salon.jpg',
-  },
-  {
-    title: 'Checkout',
-    description: 'Départ flexible, sans formalités. Laissez les clés, on s’occupe du reste.',
-    image: '/images/blog-3.jpg',
-  },
-]
+interface ExperienceSectionProps {
+  panelImages: {
+    arrival: string
+    checkin: string
+    checkout: string
+  }
+}
 
-export function ExperienceSection() {
+export function ExperienceSection({ panelImages }: ExperienceSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
+
+  const panels = [
+    {
+      title: 'Arrivée',
+      description: 'Un quartier vivant, une adresse au cœur des plus beaux quartiers.',
+      image: panelImages.arrival,
+    },
+    {
+      title: 'Checkin',
+      description: 'Accès autonome et gestionnaire joignable 24h/24 et 7j/7.',
+      image: panelImages.checkin,
+    },
+    {
+      title: 'Checkout',
+      description: 'Départ flexible, sans formalités. Laissez les clés, on s’occupe du reste.',
+      image: panelImages.checkout,
+    },
+  ]
 
   useLayoutEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -86,7 +94,7 @@ export function ExperienceSection() {
             </div>
           </div>
 
-          {PANELS.map((panel) => (
+          {panels.map((panel) => (
             <div
               key={panel.title}
               className="relative h-[420px] w-full shrink-0 overflow-hidden rounded-xl md:h-[598px] md:w-[396px]"

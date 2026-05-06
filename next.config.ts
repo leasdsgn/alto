@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.cloudinary.com',
       },
+      {
+        protocol: 'https',
+        hostname: '**.storyblok.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 's3.amazonaws.com',
+        pathname: '/a.storyblok.com/**',
+      },
     ],
   },
 }

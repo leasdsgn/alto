@@ -2,13 +2,14 @@
 
 import { useRef } from 'react'
 import Image from 'next/image'
-import { BLOG_ARTICLES, type BlogArticle } from '@/lib/blog-data'
+import type { BlogArticle } from '@/lib/blog-data'
 import { Button } from '@/components/ui/button'
 
-// TODO: replace with Storyblok fetch (storyblokApi.getStories(...))
-const ARTICLES: BlogArticle[] = BLOG_ARTICLES.slice(0, 5)
+interface BlogSectionProps {
+  articles: BlogArticle[]
+}
 
-export function BlogSection() {
+export function BlogSection({ articles }: BlogSectionProps) {
   const trackRef = useRef<HTMLDivElement>(null)
 
   function scroll(direction: 'left' | 'right') {
@@ -61,7 +62,7 @@ export function BlogSection() {
             </div>
           </div>
 
-          {ARTICLES.map((article) => (
+          {articles.slice(0, 5).map((article) => (
             <div
               key={article.slug}
               data-card

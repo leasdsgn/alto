@@ -7,7 +7,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-export function StatsSection() {
+interface StatsSectionProps {
+  pressLogo: string
+  monocleLogo: string
+}
+
+export function StatsSection({ pressLogo, monocleLogo }: StatsSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
 
@@ -58,7 +63,7 @@ export function StatsSection() {
           <p className="text-cream/60 text-xs">Vu sur :</p>
           <div className="border-cream/20 h-6 w-px border-l" />
           <Image
-            src="/images/lyon/press-logo.png"
+            src={pressLogo}
             alt="Presse"
             width={30}
             height={29}
@@ -66,7 +71,7 @@ export function StatsSection() {
           />
           <div className="border-cream/20 h-6 w-px border-l" />
           <Image
-            src="/images/lyon/monocle-logo.png"
+            src={monocleLogo}
             alt="Monocle"
             width={135}
             height={84}

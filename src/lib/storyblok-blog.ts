@@ -30,7 +30,7 @@ export async function getBlogArticle(
 }
 
 async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticle[]> {
-  const token = process.env.NEXT_PUBLIC_STORYBLOK_TOKEN
+  const token = getStoryblokToken()
   if (!token) return []
 
   const responses = await Promise.all(
@@ -59,6 +59,15 @@ async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticl
     .flat()
     .map((story) => mapStoryblokArticle(story, locale))
     .filter(Boolean) as BlogArticle[]
+}
+
+function getStoryblokToken() {
+  return process.env.NODE_ENV === 'production'
+    ? process.env.NEXT_PUBLIC_STORYBLOK_TOKEN || ''
+    : process.env.STORYBLOK_PREVIEW_TOKEN
+        || process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN
+        || process.env.NEXT_PUBLIC_STORYBLOK_TOKEN
+        || ''
 }
 
 function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): BlogArticle | null {
@@ -118,9 +127,18 @@ function mapSections(content: Record<string, unknown>): BlogArticle['sections'] 
 }
 
 function assetUrl(value: unknown): string | null {
-  if (typeof value === 'string') return value || null
+  if (typeof value === 'string') return normalizeAssetUrl(value)
   if (!isRecord(value)) return null
-  return asString(value.filename) ?? asString(value.url)
+  return normalizeAssetUrl(asString(value.filename) ?? asString(value.url))
+}
+
+function normalizeAssetUrl(value: string | null): string | null {
+  if (!value) return null
+  if (value.startsWith('//')) return `https:${value}`
+  if (value.startsWith('https://s3.amazonaws.com/a.storyblok.com/')) {
+    return value.replace('https://s3.amazonaws.com/a.storyblok.com/', 'https://a.storyblok.com/')
+  }
+  return value
 }
 
 function asString(value: unknown): string | null {

@@ -22,14 +22,14 @@ interface ApartmentsCarouselProps {
 
 export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null)
+  const showControls = apartments.length > 4
 
   function scroll(direction: 'left' | 'right') {
     const track = trackRef.current
     if (!track) return
-    const cardWidth = track.querySelector('[data-card]')?.clientWidth ?? 300
-    const gap = 12
+    const scrollAmount = track.clientWidth
     track.scrollBy({
-      left: direction === 'right' ? cardWidth + gap : -(cardWidth + gap),
+      left: direction === 'right' ? scrollAmount : -scrollAmount,
       behavior: 'smooth',
     })
   }
@@ -38,7 +38,7 @@ export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProp
     <div className="flex flex-col gap-7">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-coffee text-h4 font-medium tracking-[-0.24px]">{title}</h2>
-        <div className="hidden items-center gap-2 md:flex xl:hidden">
+        <div className={`hidden items-center gap-2 md:flex ${showControls ? '' : 'md:invisible'}`}>
           <button
             type="button"
             onClick={() => scroll('left')}
@@ -67,10 +67,10 @@ export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProp
       <div className="relative hidden md:block">
         <div
           ref={trackRef}
-          className="scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden xl:grid xl:grid-cols-4 xl:overflow-visible"
+          className="scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden"
         >
           {apartments.map((apt) => (
-            <div key={apt.slug} data-card className="w-[294px] shrink-0 snap-start xl:w-auto">
+            <div key={apt.slug} data-card className="w-[294px] shrink-0 snap-start">
               <ApartmentCard {...apt} neighborhood={apt.neighborhoodLabel} />
             </div>
           ))}

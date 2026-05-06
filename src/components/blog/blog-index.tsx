@@ -11,9 +11,18 @@ import type { BlogEditorialSection, BlogPageCopy } from '@/lib/blog-page'
 interface BlogIndexProps {
   copy: BlogPageCopy
   sections: BlogEditorialSection[]
+  locationAvatars: readonly string[]
+  travelerAvatars: readonly string[]
+  storyCardImages: readonly [string, string]
 }
 
-export function BlogIndex({ copy, sections }: BlogIndexProps) {
+export function BlogIndex({
+  copy,
+  sections,
+  locationAvatars,
+  travelerAvatars,
+  storyCardImages,
+}: BlogIndexProps) {
   const trackRefs = useRef<Record<BlogSectionKey, HTMLDivElement | null>>({
     paris: null,
     lyon: null,
@@ -57,7 +66,14 @@ export function BlogIndex({ copy, sections }: BlogIndexProps) {
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {copy.stats.map((stat) => (
-              <StatCard key={stat.value} label={stat.label} value={stat.value} kind={stat.kind} />
+              <StatCard
+                key={stat.value}
+                label={stat.label}
+                value={stat.value}
+                kind={stat.kind}
+                locationAvatars={locationAvatars}
+                travelerAvatars={travelerAvatars}
+              />
             ))}
           </div>
         </div>
@@ -184,31 +200,35 @@ export function BlogIndex({ copy, sections }: BlogIndexProps) {
                 </div>
               </div>
 
-              {copy.storyCards.slice(1).map((card) => (
-                <div
-                  key={card.title}
-                  className="group relative min-h-[360px] overflow-hidden rounded-lg md:min-h-[598px]"
-                >
-                  {card.image && (
-                    <Image
-                      src={card.image}
-                      alt={card.title}
-                      fill
-                      sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 379px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  )}
-                  <div className="bg-taupe/80 absolute inset-0 mix-blend-multiply" />
-                  <div className="relative flex h-full flex-col justify-between p-5 md:p-6">
-                    <p className="text-cream text-overline font-bold uppercase">{card.eyebrow}</p>
+              {copy.storyCards.slice(1).map((card, index) => {
+                const imageSrc = storyCardImages[index] ?? card.image
 
-                    <div className="space-y-4">
-                      <h3 className="text-cream text-h4 font-medium">{card.title}</h3>
-                      <p className="text-cream text-body-xl font-semibold">{card.body}</p>
+                return (
+                  <div
+                    key={card.title}
+                    className="group relative min-h-[360px] overflow-hidden rounded-lg md:min-h-[598px]"
+                  >
+                    {imageSrc && (
+                      <Image
+                        src={imageSrc}
+                        alt={card.title}
+                        fill
+                        sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 379px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
+                    <div className="bg-taupe/80 absolute inset-0 mix-blend-multiply" />
+                    <div className="relative flex h-full flex-col justify-between p-5 md:p-6">
+                      <p className="text-cream text-overline font-bold uppercase">{card.eyebrow}</p>
+
+                      <div className="space-y-4">
+                        <h3 className="text-cream text-h4 font-medium">{card.title}</h3>
+                        <p className="text-cream text-body-xl font-semibold">{card.body}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
               <div className="hidden rounded-lg bg-[#deddd9] xl:block" />
             </div>
@@ -250,21 +270,37 @@ function StatCard({
   kind,
   label,
   value,
+  locationAvatars,
+  travelerAvatars,
 }: {
   kind: 'avatars' | 'guest-badges' | 'review-badges'
   label: string
   value: string
+  locationAvatars: readonly string[]
+  travelerAvatars: readonly string[]
 }) {
   return (
     <div className="bg-taupe/95 flex min-h-[109px] flex-col items-center justify-center rounded-lg px-5 py-4 text-center shadow-[0_8px_24px_rgba(48,26,10,0.08)]">
-      <HeroStatVisual kind={kind} />
+      <HeroStatVisual
+        kind={kind}
+        locationAvatars={locationAvatars}
+        travelerAvatars={travelerAvatars}
+      />
       <p className="text-cream text-body-xl mt-4 font-semibold">{value}</p>
       <span className="sr-only">{label}</span>
     </div>
   )
 }
 
-function HeroStatVisual({ kind }: { kind: 'avatars' | 'guest-badges' | 'review-badges' }) {
+function HeroStatVisual({
+  kind,
+  locationAvatars,
+  travelerAvatars,
+}: {
+  kind: 'avatars' | 'guest-badges' | 'review-badges'
+  locationAvatars: readonly string[]
+  travelerAvatars: readonly string[]
+}) {
   if (kind === 'review-badges') {
     return (
       <div className="flex items-center">
@@ -281,13 +317,11 @@ function HeroStatVisual({ kind }: { kind: 'avatars' | 'guest-badges' | 'review-b
     )
   }
 
+  const avatars = kind === 'avatars' ? locationAvatars : travelerAvatars
+
   return (
     <div className="flex items-center">
-      {[
-        '/images/avatars/voyageur-1.png',
-        '/images/avatars/voyageur-2.png',
-        '/images/avatars/voyageur-3.png',
-      ].map((src, index) => (
+      {avatars.map((src, index) => (
         <div
           key={src}
           className={`${index === 0 ? '' : '-ml-2.5'} border-cream relative z-[1] size-9 overflow-hidden rounded-full border`}

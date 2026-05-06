@@ -8,20 +8,34 @@ import { BlogSection } from '@/components/sections/blog-section'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
 import { GuestySearchWidget } from '@/components/ui/guesty-search-widget'
+import { getBlogArticles } from '@/lib/storyblok-blog'
+import { getSiteImages } from '@/lib/storyblok-site-images'
 
 export default async function Home() {
-  const apartments = await getApartments()
+  const [apartments, blogArticles, siteImages] = await Promise.all([
+    getApartments(),
+    getBlogArticles('fr'),
+    getSiteImages(),
+  ])
 
   return (
     <>
       <main>
-        <HeroSection />
-        <AboutSection />
+        <HeroSection
+          backgroundImage={siteImages.home.heroBackground}
+          overlayImage={siteImages.home.heroOverlay}
+        />
+        <AboutSection
+          locationAvatars={siteImages.shared.locationAvatars}
+          travelerAvatars={siteImages.shared.travelerAvatars}
+        />
         <ApartmentsSection apartments={apartments} />
-        <ExperienceSection />
+        <ExperienceSection
+          panelImages={siteImages.home.experience}
+        />
         <TestimonialsSection />
         <ServicesSection />
-        <BlogSection />
+        <BlogSection articles={blogArticles} />
         <GuestySearchWidget />
       </main>
       <Footer reserveStickyCtaSpace />

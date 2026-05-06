@@ -1,35 +1,6 @@
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
-
-const HERO_STATS = [
-  {
-    label: '13 locations',
-    type: 'images' as const,
-    items: [
-      { src: '/images/blog-1.jpg', alt: 'Appartement Alto à Paris' },
-      { src: '/images/hero-home.jpg', alt: 'Appartement Alto à Lyon' },
-      { src: '/images/blog-3.jpg', alt: 'Séjour Alto' },
-    ],
-  },
-  {
-    label: '4500+ voyageurs',
-    type: 'images' as const,
-    items: [
-      { src: '/images/avatars/voyageur-1.png', alt: 'Voyageuse Alto' },
-      { src: '/images/avatars/voyageur-2.png', alt: 'Voyageur Alto' },
-      { src: '/images/avatars/voyageur-3.png', alt: 'Cliente Alto' },
-    ],
-  },
-  {
-    label: '4,9 de note moyenne',
-    type: 'badges' as const,
-    items: [
-      { label: 'B', bgClass: 'bg-[#003580]', textClass: 'text-cream' },
-      { label: 'TA', bgClass: 'bg-[#00af87]', textClass: 'text-cream' },
-      { label: 'A', bgClass: 'bg-[#ff5a5f]', textClass: 'text-cream' },
-    ],
-  },
-]
+import type { SiteImages } from '@/lib/storyblok-site-images'
 
 const SERVICE_CARDS = [
   {
@@ -73,28 +44,62 @@ const HOUSING_CRITERIA = [
   },
 ]
 
-const FOUNDERS = [
-  {
-    name: 'Paul Borie',
-    role: 'Head of Design & Co-Founder',
-    image: '/images/about/founder-paul.jpg',
-    alt: 'Portrait de Paul Borie',
-  },
-  {
-    name: 'Mayeul Desombre',
-    role: 'COO & Co-Founder',
-    image: '/images/about/founder-mayeul.jpg',
-    alt: 'Portrait de Mayeul Desombre',
-  },
-  {
-    name: 'Benjamin Farhi',
-    role: 'CEO & Co-Founder',
-    image: '/images/about/founder-benjamin.jpg',
-    alt: 'Portrait de Benjamin Farhi',
-  },
-]
+interface AboutViewProps {
+  siteImages: SiteImages
+}
 
-export function AboutView() {
+export function AboutView({ siteImages }: AboutViewProps) {
+  const heroStats = [
+    {
+      label: '13 locations',
+      type: 'images' as const,
+      items: [
+        { src: siteImages.shared.locationAvatars[0], alt: 'Appartement Alto à Paris' },
+        { src: siteImages.shared.locationAvatars[1], alt: 'Appartement Alto à Lyon' },
+        { src: siteImages.shared.locationAvatars[2], alt: 'Séjour Alto' },
+      ],
+    },
+    {
+      label: '4500+ voyageurs',
+      type: 'images' as const,
+      items: [
+        { src: siteImages.shared.travelerAvatars[0], alt: 'Voyageuse Alto' },
+        { src: siteImages.shared.travelerAvatars[1], alt: 'Voyageur Alto' },
+        { src: siteImages.shared.travelerAvatars[2], alt: 'Cliente Alto' },
+      ],
+    },
+    {
+      label: '4,9 de note moyenne',
+      type: 'badges' as const,
+      items: [
+        { label: 'B', bgClass: 'bg-[#003580]', textClass: 'text-cream' },
+        { label: 'TA', bgClass: 'bg-[#00af87]', textClass: 'text-cream' },
+        { label: 'A', bgClass: 'bg-[#ff5a5f]', textClass: 'text-cream' },
+      ],
+    },
+  ]
+
+  const founders = [
+    {
+      name: 'Paul Borie',
+      role: 'Head of Design & Co-Founder',
+      image: siteImages.about.founders.paul,
+      alt: 'Portrait de Paul Borie',
+    },
+    {
+      name: 'Mayeul Desombre',
+      role: 'COO & Co-Founder',
+      image: siteImages.about.founders.mayeul,
+      alt: 'Portrait de Mayeul Desombre',
+    },
+    {
+      name: 'Benjamin Farhi',
+      role: 'CEO & Co-Founder',
+      image: siteImages.about.founders.benjamin,
+      alt: 'Portrait de Benjamin Farhi',
+    },
+  ]
+
   return (
     <>
       <section className="from-silver to-taupe relative overflow-hidden bg-gradient-to-r pt-28 pb-14 md:pt-36 md:pb-20 lg:pt-40 lg:pb-24">
@@ -113,7 +118,7 @@ export function AboutView() {
           </div>
 
           <div className="mx-auto mt-10 grid max-w-[780px] gap-3 md:grid-cols-3 md:gap-4">
-            {HERO_STATS.map((stat) => (
+            {heroStats.map((stat) => (
               <div
                 key={stat.label}
                 className="bg-taupe flex min-h-[109px] flex-col items-center justify-center gap-3 rounded-lg px-6 py-5 text-center"
@@ -179,12 +184,12 @@ export function AboutView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <ImageHighlightCard
-                  image="/images/about/concept-lounge.jpg"
+                  image={siteImages.about.conceptLounge}
                   alt="Salle à manger lumineuse Alto"
                   caption="Propreté, confort et intelligence de conception."
                 />
                 <ImageHighlightCard
-                  image="/images/about/concept-corridor.jpg"
+                  image={siteImages.about.conceptCorridor}
                   alt="Couloir d’un appartement Alto"
                   caption="Check-in et check-out autonome et flexible. Tranquillité et discrétion."
                 />
@@ -205,11 +210,11 @@ export function AboutView() {
               <div className="grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
                 <div className="order-2 grid gap-4 sm:grid-cols-2 lg:order-1">
                   <SimpleImageCard
-                    image="/images/about/concept-lounge.jpg"
+                    image={siteImages.about.conceptLounge}
                     alt="Détail d’un intérieur Alto"
                   />
                   <SimpleImageCard
-                    image="/images/about/concept-corridor.jpg"
+                    image={siteImages.about.conceptCorridor}
                     alt="Circulation intérieure Alto"
                   />
                 </div>
@@ -308,7 +313,7 @@ export function AboutView() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
-                {FOUNDERS.map((founder) => (
+                {founders.map((founder) => (
                   <div key={founder.name} className="space-y-4">
                     <div className="bg-cream/10 relative aspect-[229/299] overflow-hidden rounded-lg">
                       <Image

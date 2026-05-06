@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/footer'
 import { AppartementsGrid } from '@/components/sections/appartements-grid'
 import { getApartmentsForSearch } from '@/components/sections/apartments-section'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
+import { getSiteImages } from '@/lib/storyblok-site-images'
 
 interface PageProps {
   searchParams: Promise<{
@@ -19,12 +20,15 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
   const sp = await searchParams
   const guestsCount = sp.guests ? Number(sp.guests) : undefined
 
-  const apartments = await getApartmentsForSearch({
-    city: sp.city,
-    checkIn: sp.checkIn,
-    checkOut: sp.checkOut,
-    guests: guestsCount,
-  })
+  const [apartments, siteImages] = await Promise.all([
+    getApartmentsForSearch({
+      city: sp.city,
+      checkIn: sp.checkIn,
+      checkOut: sp.checkOut,
+      guests: guestsCount,
+    }),
+    getSiteImages(),
+  ])
 
   const cityLabel = sp.city ? formatCityLabel(sp.city) : null
 
@@ -35,7 +39,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       </Suspense>
       <div className="relative h-[422px] overflow-hidden">
         <Image
-          src="/images/alto-salon.jpg"
+          src={siteImages.pages.apartmentsHero}
           alt="Nos appartements"
           fill
           sizes="100vw"
