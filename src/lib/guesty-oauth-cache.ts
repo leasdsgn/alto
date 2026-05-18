@@ -11,7 +11,7 @@ export interface RateLimitState {
   rateLimitedUntil: number | null
 }
 
-type RedisCommandArg = string | number
+export type RedisCommandArg = string | number
 
 interface UpstashResponse<T> {
   result?: T
@@ -26,7 +26,11 @@ function getRedisConfig() {
   return { url, token }
 }
 
-async function redisCommand<T>(command: RedisCommandArg[]): Promise<T | null> {
+export function hasRedisConfig() {
+  return Boolean(getRedisConfig())
+}
+
+export async function redisCommand<T>(command: RedisCommandArg[]): Promise<T | null> {
   const config = getRedisConfig()
   if (!config) return null
 
@@ -97,7 +101,7 @@ export async function writeRateLimit(rateLimitedUntil: number): Promise<void> {
 
 export async function acquireOAuthLock(owner: string, ttlMs: number): Promise<boolean | null> {
   try {
-    if (!getRedisConfig()) return null
+    if (!hasRedisConfig()) return null
     const result = await redisCommand<string>(['SET', TOKEN_LOCK_KEY, owner, 'NX', 'PX', ttlMs])
     return result === 'OK'
   } catch (error) {

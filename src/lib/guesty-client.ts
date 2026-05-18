@@ -15,6 +15,7 @@ import {
   writeOAuthCache,
   writeRateLimit,
 } from './guesty-oauth-cache'
+import { withGuestyRateLimit, writeApiRateLimit } from './guesty-rate-limit'
 
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
 const TOKEN_URL = `${BEAPI_BASE_URL}/oauth2/token`
@@ -208,20 +209,31 @@ async function guestyFetch<T>(
   const token = await getAccessToken()
   const { revalidate, ...fetchOptions } = options
 
-  const response = await fetch(`${BEAPI_BASE_URL}/api${path}`, {
-    ...fetchOptions,
-    headers: {
-      Accept: 'application/json; charset=utf-8',
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...fetchOptions.headers,
-    },
-    ...(revalidate !== undefined && { next: { revalidate } }),
-  })
+  const response = await withGuestyRateLimit(() =>
+    fetch(`${BEAPI_BASE_URL}/api${path}`, {
+      ...fetchOptions,
+      headers: {
+        Accept: 'application/json; charset=utf-8',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...fetchOptions.headers,
+      },
+      ...(revalidate !== undefined && { next: { revalidate } }),
+    }),
+  )
 
   if (response.status === 401 && !isRetry) {
     await invalidateAccessToken()
     return guestyFetch<T>(path, options, true)
+  }
+
+  if (response.status === 429) {
+    const rateLimitedUntil = Date.now() + getRetryAfterMs(response)
+    await writeApiRateLimit(rateLimitedUntil)
+    throw new Error(
+      'Guesty rate limited, retry apres ' +
+        new Date(rateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
   }
 
   if (!response.ok) {
