@@ -146,12 +146,10 @@ async function getApartments() {
   try {
     const { results } = await guestyClient.getListings()
     if (results.length > 0) return results.map(mapListing)
-    if (canUseFallbackApartments()) return FALLBACK_APARTMENTS
-    return []
-  } catch (error) {
-    if (canUseFallbackApartments()) return FALLBACK_APARTMENTS
-    throw error
+  } catch {
+    // fall through to fallback
   }
+  return FALLBACK_APARTMENTS
 }
 
 export interface SearchCriteria {
@@ -184,16 +182,9 @@ async function getApartmentsForSearch(criteria: SearchCriteria) {
 
     const { results } = await guestyClient.getListings()
     return city ? applyCityFilter(results.map(mapListing), city) : results.map(mapListing)
-  } catch (error) {
-    if (canUseFallbackApartments()) {
-      return city ? applyCityFilter(FALLBACK_APARTMENTS, city) : FALLBACK_APARTMENTS
-    }
-    throw error
+  } catch {
+    return city ? applyCityFilter(FALLBACK_APARTMENTS, city) : FALLBACK_APARTMENTS
   }
-}
-
-function canUseFallbackApartments() {
-  return process.env.NODE_ENV !== 'production' || process.env.GUESTY_MOCK === 'true'
 }
 
 async function withQuotePrices<T extends { id: string; price: number }>(

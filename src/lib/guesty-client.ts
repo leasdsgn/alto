@@ -8,12 +8,22 @@ import {
   type GuestyReservationRequest,
 } from '@/types/guesty'
 import { type GuestyMock } from './guesty-mock'
-import { readOAuthCache, writeOAuthCache, writeRateLimit } from './guesty-oauth-cache'
+import {
+  acquireOAuthLock,
+  readOAuthCache,
+  releaseOAuthLock,
+  writeOAuthCache,
+  writeRateLimit,
+} from './guesty-oauth-cache'
 
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
 const TOKEN_URL = `${BEAPI_BASE_URL}/oauth2/token`
 const RATE_LIMIT_COOLDOWN_MS = 2 * 60 * 1000
 const TOKEN_SAFETY_MARGIN_MS = 5 * 60 * 1000
+const TOKEN_LOCK_TTL_MS = 10 * 1000
+const TOKEN_LOCK_WAIT_MS = 5 * 1000
+const TOKEN_LOCK_POLL_MS = 200
+const TOKEN_LOCK_ATTEMPTS = 3
 
 const memoryCache = globalThis as unknown as {
   __guestyToken?: string
@@ -46,32 +56,33 @@ async function getAccessToken(): Promise<string> {
 }
 
 async function resolveAccessToken(): Promise<string> {
+  const sharedToken = await readSharedAccessToken()
+  if (sharedToken) return sharedToken
+
+  for (let attempt = 0; attempt < TOKEN_LOCK_ATTEMPTS; attempt++) {
+    const lockOwner = crypto.randomUUID()
+    const lockAcquired = await acquireOAuthLock(lockOwner, TOKEN_LOCK_TTL_MS)
+
+    if (lockAcquired === false) {
+      const waitedToken = await waitForSharedAccessToken()
+      if (waitedToken) return waitedToken
+      continue
+    }
+
+    try {
+      const refreshedToken = await readSharedAccessToken()
+      if (refreshedToken) return refreshedToken
+      return await requestNewAccessToken()
+    } finally {
+      if (lockAcquired) await releaseOAuthLock(lockOwner)
+    }
+  }
+
+  throw new Error('Guesty OAuth token lock timeout')
+}
+
+async function requestNewAccessToken(): Promise<string> {
   const now = Date.now()
-  const shared = await readOAuthCache()
-
-  if (shared) {
-    if (shared.accessToken && now < shared.expiresAt) {
-      memoryCache.__guestyToken = shared.accessToken
-      memoryCache.__guestyTokenExpiresAt = shared.expiresAt
-      return shared.accessToken
-    }
-
-    if (shared.rateLimitedUntil && now < shared.rateLimitedUntil) {
-      memoryCache.__guestyRateLimitedUntil = shared.rateLimitedUntil
-      throw new Error(
-        'Guesty rate limited, retry apres ' +
-          new Date(shared.rateLimitedUntil).toLocaleTimeString('fr-FR'),
-      )
-    }
-  }
-
-  if (memoryCache.__guestyRateLimitedUntil && now < memoryCache.__guestyRateLimitedUntil) {
-    throw new Error(
-      'Guesty rate limited, retry apres ' +
-        new Date(memoryCache.__guestyRateLimitedUntil).toLocaleTimeString('fr-FR'),
-    )
-  }
-
   const clientId = process.env.GUESTY_BEAPI_CLIENT_ID
   const clientSecret = process.env.GUESTY_BEAPI_CLIENT_SECRET
 
@@ -118,6 +129,51 @@ async function resolveAccessToken(): Promise<string> {
   await writeOAuthCache({ accessToken: data.access_token, expiresAt })
 
   return data.access_token
+}
+
+async function readSharedAccessToken(): Promise<string | null> {
+  const now = Date.now()
+  const shared = await readOAuthCache()
+
+  if (shared?.accessToken && now < shared.expiresAt) {
+    memoryCache.__guestyToken = shared.accessToken
+    memoryCache.__guestyTokenExpiresAt = shared.expiresAt
+    return shared.accessToken
+  }
+
+  if (shared?.rateLimitedUntil && now < shared.rateLimitedUntil) {
+    memoryCache.__guestyRateLimitedUntil = shared.rateLimitedUntil
+    throw new Error(
+      'Guesty rate limited, retry apres ' +
+        new Date(shared.rateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
+  }
+
+  if (memoryCache.__guestyRateLimitedUntil && now < memoryCache.__guestyRateLimitedUntil) {
+    throw new Error(
+      'Guesty rate limited, retry apres ' +
+        new Date(memoryCache.__guestyRateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
+  }
+
+  return null
+}
+
+async function waitForSharedAccessToken(): Promise<string | null> {
+  const deadline = Date.now() + TOKEN_LOCK_WAIT_MS
+
+  while (Date.now() < deadline) {
+    await wait(TOKEN_LOCK_POLL_MS)
+
+    const sharedToken = await readSharedAccessToken()
+    if (sharedToken) return sharedToken
+  }
+
+  return null
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 async function guestyFetch<T>(
