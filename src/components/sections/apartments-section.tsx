@@ -30,8 +30,12 @@ function mapListing(listing: GuestyListing) {
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
     slug,
-    image: listing.pictures?.[0]?.original,
-    images: listing.pictures?.map((p) => p.original) ?? [],
+    image: normalizeGuestyImageUrl(listing.pictures?.[0]?.original),
+    images: listing.pictures
+      ?.flatMap((picture) => {
+        const url = normalizeGuestyImageUrl(picture.original || picture.thumbnail)
+        return url ? [url] : []
+      }) ?? [],
     lat: listing.address?.lat,
     lng: listing.address?.lng,
     address,
@@ -45,6 +49,15 @@ function mapListing(listing: GuestyListing) {
     minNights: listing.minNights,
     maxNights: listing.maxNights,
   }
+}
+
+function normalizeGuestyImageUrl(value: string | null | undefined) {
+  if (!value) return undefined
+
+  if (value.startsWith('//')) return `https:${value}`
+  if (value.startsWith('http://')) return value.replace('http://', 'https://')
+
+  return value
 }
 
 const getCachedSearchQuote = unstable_cache(

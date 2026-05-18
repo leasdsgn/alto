@@ -21,6 +21,8 @@ const memoryCache = globalThis as unknown as {
   __guestyRateLimitedUntil?: number
 }
 
+let accessTokenRequest: Promise<string> | null = null
+
 async function invalidateAccessToken(): Promise<void> {
   memoryCache.__guestyToken = undefined
   memoryCache.__guestyTokenExpiresAt = undefined
@@ -34,21 +36,32 @@ async function getAccessToken(): Promise<string> {
     return memoryCache.__guestyToken
   }
 
+  if (accessTokenRequest) return accessTokenRequest
+
+  accessTokenRequest = resolveAccessToken().finally(() => {
+    accessTokenRequest = null
+  })
+
+  return accessTokenRequest
+}
+
+async function resolveAccessToken(): Promise<string> {
+  const now = Date.now()
   const shared = await readOAuthCache()
 
   if (shared) {
+    if (shared.accessToken && now < shared.expiresAt) {
+      memoryCache.__guestyToken = shared.accessToken
+      memoryCache.__guestyTokenExpiresAt = shared.expiresAt
+      return shared.accessToken
+    }
+
     if (shared.rateLimitedUntil && now < shared.rateLimitedUntil) {
       memoryCache.__guestyRateLimitedUntil = shared.rateLimitedUntil
       throw new Error(
         'Guesty rate limited, retry apres ' +
           new Date(shared.rateLimitedUntil).toLocaleTimeString('fr-FR'),
       )
-    }
-
-    if (shared.accessToken && now < shared.expiresAt) {
-      memoryCache.__guestyToken = shared.accessToken
-      memoryCache.__guestyTokenExpiresAt = shared.expiresAt
-      return shared.accessToken
     }
   }
 
@@ -77,6 +90,15 @@ async function getAccessToken(): Promise<string> {
   })
 
   if (response.status === 429) {
+    const refreshed = await readOAuthCache()
+    const refreshedAt = Date.now()
+
+    if (refreshed?.accessToken && refreshedAt < refreshed.expiresAt) {
+      memoryCache.__guestyToken = refreshed.accessToken
+      memoryCache.__guestyTokenExpiresAt = refreshed.expiresAt
+      return refreshed.accessToken
+    }
+
     const rateLimitedUntil = now + RATE_LIMIT_COOLDOWN_MS
     memoryCache.__guestyRateLimitedUntil = rateLimitedUntil
     await writeRateLimit(rateLimitedUntil)
