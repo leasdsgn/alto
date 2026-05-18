@@ -11,7 +11,21 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**guesty-listing-images.s3.amazonaws.com',
+        hostname: 'guesty-listing-images.s3.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 's3.amazonaws.com',
+        pathname: '/guesty-listing-images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.amazonaws.com',
+        pathname: '/guesty-listing-images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.cloudfront.net',
       },
       {
         protocol: 'https',
