@@ -97,6 +97,7 @@ export async function writeRateLimit(rateLimitedUntil: number): Promise<void> {
 
 export async function acquireOAuthLock(owner: string, ttlMs: number): Promise<boolean | null> {
   try {
+    if (!getRedisConfig()) return null
     const result = await redisCommand<string>(['SET', TOKEN_LOCK_KEY, owner, 'NX', 'PX', ttlMs])
     return result === 'OK'
   } catch (error) {

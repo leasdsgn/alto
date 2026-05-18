@@ -63,6 +63,10 @@ async function resolveAccessToken(): Promise<string> {
     const lockOwner = crypto.randomUUID()
     const lockAcquired = await acquireOAuthLock(lockOwner, TOKEN_LOCK_TTL_MS)
 
+    if (lockAcquired === null && process.env.NODE_ENV === 'production') {
+      throw new Error('Guesty OAuth cache unavailable')
+    }
+
     if (lockAcquired === false) {
       const waitedToken = await waitForSharedAccessToken()
       if (waitedToken) return waitedToken
@@ -110,10 +114,13 @@ async function requestNewAccessToken(): Promise<string> {
       return refreshed.accessToken
     }
 
-    const rateLimitedUntil = now + RATE_LIMIT_COOLDOWN_MS
+    const rateLimitedUntil = now + getRetryAfterMs(response)
     memoryCache.__guestyRateLimitedUntil = rateLimitedUntil
     await writeRateLimit(rateLimitedUntil)
-    throw new Error('Guesty rate limited, pause 2 min')
+    throw new Error(
+      'Guesty rate limited, retry apres ' +
+        new Date(rateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
   }
 
   if (!response.ok) {
@@ -174,6 +181,23 @@ async function waitForSharedAccessToken(): Promise<string | null> {
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function getRetryAfterMs(response: Response) {
+  const retryAfter = response.headers?.get('retry-after')
+  if (!retryAfter) return RATE_LIMIT_COOLDOWN_MS
+
+  const retryAfterSeconds = Number(retryAfter)
+  if (Number.isFinite(retryAfterSeconds)) {
+    return Math.max(1000, retryAfterSeconds * 1000)
+  }
+
+  const retryAfterDate = Date.parse(retryAfter)
+  if (Number.isFinite(retryAfterDate)) {
+    return Math.max(1000, retryAfterDate - Date.now())
+  }
+
+  return RATE_LIMIT_COOLDOWN_MS
 }
 
 async function guestyFetch<T>(
