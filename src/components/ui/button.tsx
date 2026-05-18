@@ -5,13 +5,13 @@ import Link from 'next/link'
 import { tv, type VariantProps } from 'tailwind-variants'
 
 const button = tv({
-  base: 'group/btn relative inline-flex min-w-[100px] shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full px-8 outline-none transition-colors duration-200 focus-visible:border-2 focus-visible:border-taupe disabled:pointer-events-none disabled:opacity-50',
+  base: 'group/btn relative inline-flex min-w-[100px] shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full px-8 outline-none transition-colors duration-200 focus-visible:border-2 focus-visible:border-taupe disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50',
   variants: {
     variant: {
       primary:
-        'bg-coffee text-[#fffff8] hover:bg-taupe disabled:bg-silver active:bg-coffee active:shadow-[inset_0_2px_5px_0_rgba(48,26,10,0.5)]',
+        'bg-coffee text-[#fffff8] hover:bg-taupe disabled:bg-silver aria-disabled:bg-silver active:bg-coffee active:shadow-[inset_0_2px_5px_0_rgba(48,26,10,0.5)]',
       secondary:
-        'bg-transparent text-[#301a0a] border border-coffee hover:bg-silver hover:text-[#fffff8] hover:border-silver disabled:border-silver disabled:text-[#aba39e] disabled:bg-transparent active:bg-cream active:text-[#301a0a] active:shadow-[inset_0_2px_5px_0_rgba(48,26,10,0.5)]',
+        'bg-transparent text-[#301a0a] border border-coffee hover:bg-silver hover:text-[#fffff8] hover:border-silver disabled:border-silver disabled:text-[#aba39e] disabled:bg-transparent aria-disabled:border-silver aria-disabled:bg-transparent aria-disabled:text-[#aba39e] active:bg-cream active:text-[#301a0a] active:shadow-[inset_0_2px_5px_0_rgba(48,26,10,0.5)]',
     },
     size: {
       regular: 'h-[50px] text-[14px] leading-[1.5] font-normal',

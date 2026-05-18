@@ -6,11 +6,36 @@ import { Label, Select as HeroUISelect } from '@heroui/react'
 import { ListBox, ListBoxItem } from 'react-aria-components'
 import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
+import { useLocale } from '@/components/providers/locale-provider'
 import { useSearchStore } from '@/lib/stores/search'
+import { useSearchDateAvailability } from '@/lib/use-search-date-availability'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const CITIES = ['Paris', 'Lyon']
-const MONTH_NAMES = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
-const DAY_NAMES = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+const DATE_COPY = {
+  fr: {
+    city: 'Ville',
+    guests: 'Voyageurs',
+    search: 'Rechercher',
+    availabilityLoading: 'Vérification des dates',
+    availabilityError: 'Disponibilités momentanément indisponibles',
+    removeGuest: 'Retirer un voyageur',
+    addGuest: 'Ajouter un voyageur',
+    months: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+    days: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
+  },
+  en: {
+    city: 'City',
+    guests: 'Guests',
+    search: 'Search',
+    availabilityLoading: 'Checking dates',
+    availabilityError: 'Availability temporarily unavailable',
+    removeGuest: 'Remove one guest',
+    addGuest: 'Add one guest',
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    days: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+  },
+} as const
 
 function formatDate(date: DateValue): string {
   return `${String(date.day).padStart(2, '0')}/${String(date.month).padStart(2, '0')}/${date.year}`
@@ -26,10 +51,14 @@ function firstDayOfWeek(year: number, month: number): number {
 
 export function SearchBar({
   calendarPlacement = 'bottom start',
+  align = 'center',
 }: {
   calendarPlacement?: 'bottom start' | 'top start'
+  align?: 'center' | 'start'
 } = {}) {
   const router = useRouter()
+  const locale = useLocale()
+  const copy = DATE_COPY[locale]
   const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
   const minDate = today(getLocalTimeZone())
   const [dateOpen, setDateOpen] = useState(false)
@@ -39,6 +68,14 @@ export function SearchBar({
   const [viewYear, setViewYear] = useState(dates.start.year)
   const [viewMonth, setViewMonth] = useState(dates.start.month)
   const calendarRef = useRef<HTMLDivElement>(null)
+  const searchAvailability = useSearchDateAvailability({
+    city,
+    guests,
+    dates,
+    viewYear,
+    viewMonth,
+    enabled: dateOpen,
+  })
 
   useEffect(() => {
     if (!dateOpen) return
@@ -55,6 +92,7 @@ export function SearchBar({
 
   function handleDayClick(date: CalendarDate) {
     if (date.compare(minDate) < 0) return
+    if (!selectingEnd && searchAvailability.isDateUnavailable(date)) return
     if (!selectingEnd) {
       setDates({ start: date, end: date })
       setSelectingEnd(true)
@@ -96,18 +134,22 @@ export function SearchBar({
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="bg-cream mx-auto flex h-[50px] w-fit items-center rounded-full px-[7px]">
+      <div
+        className={`bg-cream flex h-[50px] w-fit items-center rounded-full px-[7px] ${
+          align === 'center' ? 'mx-auto' : ''
+        }`}
+      >
 
         {/* City pill */}
         <HeroUISelect
-          aria-label="Ville"
+          aria-label={copy.city}
           selectedKey={city}
           onSelectionChange={(key) => setCity(key as string)}
           isOpen={cityOpen}
           onOpenChange={setCityOpen}
           className="shrink-0"
         >
-          <Label className="sr-only">Ville</Label>
+          <Label className="sr-only">{copy.city}</Label>
           <HeroUISelect.Trigger className="bg-coffee text-cream flex h-[35px] items-center gap-1.5 rounded-full px-5 text-overline font-bold tracking-[0.24px]">
             <HeroUISelect.Value>
               {({ selectedText }) => selectedText}
@@ -151,13 +193,13 @@ export function SearchBar({
           </div>
 
           {dateOpen && (
-            <div className={`bg-cream absolute z-50 min-w-[280px] rounded-xl border border-divider p-5 ${calendarPlacement === 'top start' ? 'bottom-[calc(100%+8px)] left-0' : 'left-0 top-[calc(100%+8px)]'}`}>
+            <div className={`bg-cream absolute z-[1000] min-w-[280px] rounded-xl border border-divider p-5 ${calendarPlacement === 'top start' ? 'bottom-[calc(100%+8px)] left-0' : 'left-0 top-[calc(100%+8px)]'}`}>
               <div className="mb-4 flex items-center justify-between">
                 <button type="button" onClick={prevMonth} className="text-taupe hover:text-coffee p-1">
                   <ChevronLeftIcon />
                 </button>
                 <span className="text-coffee text-sm font-bold">
-                  {MONTH_NAMES[viewMonth - 1]} {viewYear}
+                  {copy.months[viewMonth - 1]} {viewYear}
                 </span>
                 <button type="button" onClick={nextMonth} className="text-taupe hover:text-coffee p-1">
                   <ChevronRightIcon />
@@ -165,14 +207,14 @@ export function SearchBar({
               </div>
 
               <div className="mb-1 grid grid-cols-7">
-                {DAY_NAMES.map((d, i) => (
+                {copy.days.map((d, i) => (
                   <div key={i} className="text-taupe flex size-8 items-center justify-center text-[10px] font-bold">
                     {d}
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7">
+              <div className="relative grid grid-cols-7" aria-busy={searchAvailability.isLoading}>
                 {Array.from({ length: firstDay }).map((_, i) => (
                   <div key={`e${i}`} className="size-8" />
                 ))}
@@ -180,7 +222,8 @@ export function SearchBar({
                   const isStart = date.compare(dates.start) === 0
                   const isEnd = date.compare(effectiveEnd) === 0
                   const inRange = date.compare(dates.start) > 0 && date.compare(effectiveEnd) < 0
-                  const disabled = date.compare(minDate) < 0
+                  const unavailable = searchAvailability.isDateUnavailable(date)
+                  const disabled = date.compare(minDate) < 0 || (!selectingEnd && unavailable)
                   return (
                     <button
                       key={date.day}
@@ -191,7 +234,7 @@ export function SearchBar({
                       onMouseLeave={() => setHoverDate(null)}
                       className={[
                         'flex size-8 items-center justify-center rounded-sm text-xs outline-none',
-                        disabled ? 'cursor-not-allowed text-silver' : 'cursor-pointer',
+                        disabled ? 'cursor-not-allowed text-silver line-through' : 'cursor-pointer',
                         isStart || isEnd ? 'bg-coffee text-cream' : '',
                         inRange ? 'bg-coffee/10 text-coffee' : '',
                         !isStart && !isEnd && !inRange && !disabled ? 'text-coffee hover:bg-sand' : '',
@@ -201,7 +244,17 @@ export function SearchBar({
                     </button>
                   )
                 })}
+                {searchAvailability.isLoading && (
+                  <div className="bg-cream/85 absolute inset-0 flex items-center justify-center rounded-sm">
+                    <LoadingSpinner label={copy.availabilityLoading} />
+                  </div>
+                )}
               </div>
+              {searchAvailability.hasError && (
+                <p className="text-taupe mt-3 text-[11px] font-bold tracking-[0.24px]">
+                  {copy.availabilityError}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -209,12 +262,20 @@ export function SearchBar({
         <Separator />
 
         {/* Voyageurs */}
-        <Stepper value={guests} onChange={setGuests} min={1} max={10} />
+        <Stepper
+          value={guests}
+          onChange={setGuests}
+          min={1}
+          max={10}
+          label={copy.guests}
+          removeLabel={copy.removeGuest}
+          addLabel={copy.addGuest}
+        />
 
         {/* Search button */}
         <button
           type="submit"
-          aria-label="Rechercher"
+          aria-label={copy.search}
           className="bg-coffee ml-[7px] flex size-[35px] shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80"
         >
           <SearchIcon />
@@ -230,20 +291,26 @@ function Stepper({
   onChange,
   min,
   max,
+  label,
+  removeLabel,
+  addLabel,
 }: {
   value: number
   onChange: (v: number) => void
   min: number
   max: number
+  label: string
+  removeLabel: string
+  addLabel: string
 }) {
   return (
     <div className="flex items-center gap-2 px-[15px]">
-      <span className="text-taupe text-overline font-bold tracking-[0.24px]">Voyageurs</span>
+      <span className="text-taupe text-overline font-bold tracking-[0.24px]">{label}</span>
       <div className="flex items-center gap-1">
         <button
           type="button"
           className="text-taupe flex size-7 items-center justify-center outline-none transition-opacity hover:opacity-70 disabled:opacity-30"
-          aria-label="Retirer un voyageur"
+          aria-label={removeLabel}
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
         >
@@ -255,7 +322,7 @@ function Stepper({
         <button
           type="button"
           className="text-taupe flex size-7 items-center justify-center outline-none transition-opacity hover:opacity-70 disabled:opacity-30"
-          aria-label="Ajouter un voyageur"
+          aria-label={addLabel}
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
         >

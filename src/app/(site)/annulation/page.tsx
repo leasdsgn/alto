@@ -4,6 +4,7 @@ import { CancelReservationCard } from '@/components/booking/cancel-reservation-c
 import { findInquiryByReservation } from '@/lib/inquiries-repository'
 import { verifyCancellationToken } from '@/lib/cancel-token'
 import { formatDate } from '@/lib/formatters'
+import { getServerLocale } from '@/lib/i18n/server'
 
 interface PageProps {
   searchParams: Promise<{ token?: string }>
@@ -11,6 +12,8 @@ interface PageProps {
 
 export default async function AnnulationPage({ searchParams }: PageProps) {
   const search = await searchParams
+  const locale = await getServerLocale()
+  const copy = CANCELLATION_COPY[locale]
 
   let state:
     | { type: 'valid'; token: string; listingTitle: string; checkIn: string; checkOut: string; status: string }
@@ -19,8 +22,8 @@ export default async function AnnulationPage({ searchParams }: PageProps) {
   if (!search.token) {
     state = {
       type: 'error',
-      title: 'Lien invalide',
-      body: 'Le lien d’annulation est incomplet. Utilisez le lien présent dans votre email de confirmation.',
+      title: copy.invalidTitle,
+      body: copy.incompleteBody,
     }
   } else {
     try {
@@ -30,8 +33,8 @@ export default async function AnnulationPage({ searchParams }: PageProps) {
       if (!inquiry || inquiry.guest.email.toLowerCase() !== payload.email.toLowerCase()) {
         state = {
           type: 'error',
-          title: 'Réservation introuvable',
-          body: 'Nous n’avons pas retrouvé de réservation correspondant à ce lien.',
+          title: copy.notFoundTitle,
+          body: copy.notFoundBody,
         }
       } else {
         state = {
@@ -49,13 +52,13 @@ export default async function AnnulationPage({ searchParams }: PageProps) {
         message === 'expired_token'
           ? {
               type: 'error',
-              title: 'Lien expiré',
-              body: 'Le lien d’annulation a expiré. Contactez Alto si vous devez encore annuler votre séjour.',
+              title: copy.expiredTitle,
+              body: copy.expiredBody,
             }
           : {
               type: 'error',
-              title: 'Lien invalide',
-              body: 'Ce lien d’annulation n’est plus valide.',
+              title: copy.invalidTitle,
+              body: copy.invalidBody,
             }
     }
   }
@@ -85,3 +88,27 @@ export default async function AnnulationPage({ searchParams }: PageProps) {
     </>
   )
 }
+
+const CANCELLATION_COPY = {
+  fr: {
+    invalidTitle: 'Lien invalide',
+    incompleteBody:
+      'Le lien d’annulation est incomplet. Utilisez le lien présent dans votre email de confirmation.',
+    notFoundTitle: 'Réservation introuvable',
+    notFoundBody: 'Nous n’avons pas retrouvé de réservation correspondant à ce lien.',
+    expiredTitle: 'Lien expiré',
+    expiredBody:
+      'Le lien d’annulation a expiré. Contactez Alto si vous devez encore annuler votre séjour.',
+    invalidBody: 'Ce lien d’annulation n’est plus valide.',
+  },
+  en: {
+    invalidTitle: 'Invalid link',
+    incompleteBody: 'The cancellation link is incomplete. Use the link in your confirmation email.',
+    notFoundTitle: 'Booking not found',
+    notFoundBody: 'We could not find a booking matching this link.',
+    expiredTitle: 'Expired link',
+    expiredBody:
+      'The cancellation link has expired. Contact Alto if you still need to cancel your stay.',
+    invalidBody: 'This cancellation link is no longer valid.',
+  },
+} as const

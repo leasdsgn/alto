@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { ApartmentCard } from '@/components/ui/apartment-card'
+import { useLocale } from '@/components/providers/locale-provider'
 
 interface Apartment {
   name: string
@@ -21,8 +22,10 @@ interface ApartmentsCarouselProps {
 }
 
 export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProps) {
+  const locale = useLocale()
+  const copy = CAROUSEL_COPY[locale]
   const trackRef = useRef<HTMLDivElement>(null)
-  const showControls = apartments.length > 4
+  const showControls = apartments.length > 3
 
   function scroll(direction: 'left' | 'right') {
     const track = trackRef.current
@@ -42,16 +45,16 @@ export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProp
           <button
             type="button"
             onClick={() => scroll('left')}
-            className="flex size-9 items-center justify-center rounded-full border border-[#301a0a] bg-[#fffff8] text-[#301a0a] transition-opacity hover:opacity-70"
-            aria-label="Précédent"
+            className="bg-sand text-coffee flex size-9 items-center justify-center rounded-full border border-sand transition-colors hover:bg-sand/80"
+            aria-label={copy.previous}
           >
             <ArrowLeft />
           </button>
           <button
             type="button"
             onClick={() => scroll('right')}
-            className="flex size-9 items-center justify-center rounded-full border border-[#301a0a] bg-[#fffff8] text-[#301a0a] transition-opacity hover:opacity-70"
-            aria-label="Suivant"
+            className="bg-sand text-coffee flex size-9 items-center justify-center rounded-full border border-sand transition-colors hover:bg-sand/80"
+            aria-label={copy.next}
           >
             <ArrowRight />
           </button>
@@ -79,6 +82,17 @@ export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProp
     </div>
   )
 }
+
+const CAROUSEL_COPY = {
+  fr: {
+    previous: 'Précédent',
+    next: 'Suivant',
+  },
+  en: {
+    previous: 'Previous',
+    next: 'Next',
+  },
+} as const
 
 function ArrowLeft() {
   return (

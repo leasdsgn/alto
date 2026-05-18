@@ -48,6 +48,31 @@ export async function findInquiryByReservation(reservationId: string): Promise<I
   return (data as InquiryRow | null) ?? null
 }
 
+export async function findActiveInquiryByStay(args: {
+  listingId: string
+  email: string
+  checkIn: string
+  checkOut: string
+}): Promise<InquiryRow | null> {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('inquiries')
+    .select('*')
+    .eq('guesty_listing_id', args.listingId)
+    .eq('check_in', args.checkIn)
+    .eq('check_out', args.checkOut)
+    .in('status', ['pending', 'confirmed'])
+
+  if (error) throw new Error(`findActiveInquiryByStay failed: ${error.message}`)
+
+  const normalizedEmail = args.email.toLowerCase()
+  return (
+    ((data as InquiryRow[] | null) ?? []).find(
+      (inquiry) => inquiry.guest.email.toLowerCase() === normalizedEmail,
+    ) ?? null
+  )
+}
+
 export async function updateInquiryByReservation(
   reservationId: string,
   patch: InquiryUpdate,

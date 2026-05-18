@@ -1,17 +1,20 @@
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 
 export default async function ContactPage() {
-  const siteImages = await getSiteImages()
+  const locale = await getServerLocale()
+  const copy = CONTACT_COPY[locale]
+  const siteImages = await getSiteImages(locale)
 
   return (
     <>
       <div className="relative h-[442px] overflow-hidden">
         <Image
           src={siteImages.pages.contactHero}
-          alt="Contactez-nous"
+          alt={copy.imageAlt}
           fill
           sizes="100vw"
           className="object-cover"
@@ -26,7 +29,7 @@ export default async function ContactPage() {
           <div className="mx-auto w-full max-w-content px-gutter pb-10 md:px-gutter-md">
             <h1 className="text-cream text-base font-bold leading-[18px]">Contact</h1>
             <p className="text-cream/80 mt-3 max-w-[505px] text-xs font-medium leading-[20px]">
-              Une question, un projet d'investissement, une réservation ? Écrivez-nous.
+              {copy.heroText}
             </p>
           </div>
         </div>
@@ -35,14 +38,14 @@ export default async function ContactPage() {
       <main className="mx-auto max-w-content px-gutter py-section md:px-gutter-md">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1fr_304px]">
           <div>
-            <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Formulaire</p>
-            <h2 className="text-coffee mt-1 text-base font-medium leading-[24px]">Envoyez-nous un message</h2>
+            <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.formEyebrow}</p>
+            <h2 className="text-coffee mt-1 text-base font-medium leading-[24px]">{copy.formTitle}</h2>
 
             <form className="mt-8 space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label htmlFor="firstName" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                    Prénom
+                    {copy.firstName}
                   </label>
                   <input
                     id="firstName"
@@ -54,7 +57,7 @@ export default async function ContactPage() {
                 </div>
                 <div>
                   <label htmlFor="lastName" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                    Nom
+                    {copy.lastName}
                   </label>
                   <input
                     id="lastName"
@@ -80,24 +83,24 @@ export default async function ContactPage() {
               </div>
 
               <div>
-                <label htmlFor="subject" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                  Sujet
+                  <label htmlFor="subject" className="text-coffee text-xs font-bold tracking-[0.24px]">
+                  {copy.subject}
                 </label>
                 <select
                   id="subject"
                   name="subject"
                   className="border-divider text-coffee mt-2 block w-full rounded-sm border bg-transparent px-4 py-3 text-xs font-medium outline-none focus:border-coffee"
                 >
-                  <option value="reservation">Réservation</option>
-                  <option value="investissement">Investissement</option>
-                  <option value="partenariat">Partenariat</option>
-                  <option value="autre">Autre</option>
+                  <option value="reservation">{copy.subjectReservation}</option>
+                  <option value="investissement">{copy.subjectInvestment}</option>
+                  <option value="partenariat">{copy.subjectPartnership}</option>
+                  <option value="autre">{copy.subjectOther}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="message" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                  Message
+                  {copy.message}
                 </label>
                 <textarea
                   id="message"
@@ -112,7 +115,7 @@ export default async function ContactPage() {
                 type="submit"
                 className="bg-coffee text-cream btn-fill rounded-sm px-8 py-3 text-xs font-bold tracking-[0.24px]"
               >
-                Envoyer
+                {copy.submit}
               </button>
             </form>
           </div>
@@ -126,21 +129,21 @@ export default async function ContactPage() {
             </div>
 
             <div>
-              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Telephone</p>
+              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.phone}</p>
               <a href="tel:+33100000000" className="text-coffee mt-2 block text-sm font-medium">
                 +33 1 00 00 00 00
               </a>
             </div>
 
             <div>
-              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Adresse</p>
+              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.address}</p>
               <p className="text-coffee mt-2 text-sm font-medium leading-[1.6]">
                 Paris, France
               </p>
             </div>
 
             <div>
-              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Reseaux</p>
+              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.socials}</p>
               <div className="mt-3 flex gap-4">
                 <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-coffee">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -164,3 +167,42 @@ export default async function ContactPage() {
     </>
   )
 }
+
+const CONTACT_COPY = {
+  fr: {
+    imageAlt: 'Contactez-nous',
+    heroText: 'Une question, un projet d’investissement, une réservation ? Écrivez-nous.',
+    formEyebrow: 'Formulaire',
+    formTitle: 'Envoyez-nous un message',
+    firstName: 'Prénom',
+    lastName: 'Nom',
+    subject: 'Sujet',
+    subjectReservation: 'Réservation',
+    subjectInvestment: 'Investissement',
+    subjectPartnership: 'Partenariat',
+    subjectOther: 'Autre',
+    message: 'Message',
+    submit: 'Envoyer',
+    phone: 'Téléphone',
+    address: 'Adresse',
+    socials: 'Réseaux',
+  },
+  en: {
+    imageAlt: 'Contact us',
+    heroText: 'A question, an investment project, a booking? Write to us.',
+    formEyebrow: 'Form',
+    formTitle: 'Send us a message',
+    firstName: 'First name',
+    lastName: 'Last name',
+    subject: 'Subject',
+    subjectReservation: 'Booking',
+    subjectInvestment: 'Investment',
+    subjectPartnership: 'Partnership',
+    subjectOther: 'Other',
+    message: 'Message',
+    submit: 'Send',
+    phone: 'Phone',
+    address: 'Address',
+    socials: 'Social',
+  },
+} as const

@@ -6,6 +6,9 @@ export type GuestyErrorCode =
   | 'INVALID_CC_TOKEN'
   | 'PAYMENT_FAILED'
   | 'RATE_PLAN_NOT_APPLICABLE'
+  | 'GUESTS_EXCEED_CAPACITY'
+  | 'MIN_NIGHTS_NOT_MET'
+  | 'MAX_NIGHTS_EXCEEDED'
   | 'RATE_LIMITED'
   | 'VALIDATION_FAILED'
   | 'UNKNOWN'
@@ -31,6 +34,21 @@ const ERROR_MAP: Record<
     httpStatus: 409,
     titleKey: 'errorDatesUnavailableTitle',
     descriptionKey: 'errorDatesUnavailableDesc',
+  },
+  GUESTS_EXCEED_CAPACITY: {
+    httpStatus: 400,
+    titleKey: 'errorValidationTitle',
+    descriptionKey: 'errorValidationDesc',
+  },
+  MIN_NIGHTS_NOT_MET: {
+    httpStatus: 400,
+    titleKey: 'errorValidationTitle',
+    descriptionKey: 'errorValidationDesc',
+  },
+  MAX_NIGHTS_EXCEEDED: {
+    httpStatus: 400,
+    titleKey: 'errorValidationTitle',
+    descriptionKey: 'errorValidationDesc',
   },
   INVALID_CC_TOKEN: {
     httpStatus: 402,

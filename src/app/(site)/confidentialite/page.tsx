@@ -1,12 +1,16 @@
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { getServerLocale } from '@/lib/i18n/server'
 
 export const metadata = {
   title: 'Politique de confidentialité - Alto',
   description: 'Politique de confidentialité Alto.',
 }
 
-export default function ConfidentialitePage() {
+export default async function ConfidentialitePage() {
+  const locale = await getServerLocale()
+  const copy = PRIVACY_COPY[locale]
+
   return (
     <>
       <Header variant="dark" />
@@ -14,18 +18,12 @@ export default function ConfidentialitePage() {
         <div className="max-w-[720px]">
           <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Alto</p>
           <h1 className="text-coffee mt-3 text-2xl font-bold md:text-4xl">
-            Politique de confidentialité
+            {copy.title}
           </h1>
           <div className="text-coffee mt-10 space-y-6 text-sm leading-[1.8]">
-            <p>
-              Alto collecte uniquement les informations nécessaires au traitement des demandes de séjour, des réservations et des échanges avec les voyageurs.
-            </p>
-            <p>
-              Les données peuvent inclure les informations de contact, les dates de séjour, les préférences liées à la réservation et les informations strictement utiles au suivi client.
-            </p>
-            <p>
-              Pour toute demande d'accès, de correction ou de suppression des données, contactez Alto à l'adresse contact@alto-paris.com.
-            </p>
+            {copy.body.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </div>
         </div>
       </main>
@@ -33,3 +31,22 @@ export default function ConfidentialitePage() {
     </>
   )
 }
+
+const PRIVACY_COPY = {
+  fr: {
+    title: 'Politique de confidentialité',
+    body: [
+      'Alto collecte uniquement les informations nécessaires au traitement des demandes de séjour, des réservations et des échanges avec les voyageurs.',
+      'Les données peuvent inclure les informations de contact, les dates de séjour, les préférences liées à la réservation et les informations strictement utiles au suivi client.',
+      'Pour toute demande d’accès, de correction ou de suppression des données, contactez Alto à l’adresse contact@alto-paris.com.',
+    ],
+  },
+  en: {
+    title: 'Privacy policy',
+    body: [
+      'Alto only collects the information required to process stay requests, bookings, and guest conversations.',
+      'This data may include contact details, stay dates, booking preferences, and the information strictly needed for customer support.',
+      'For any request to access, correct, or delete data, contact Alto at contact@alto-paris.com.',
+    ],
+  },
+} as const

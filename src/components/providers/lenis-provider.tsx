@@ -2,13 +2,10 @@
 
 import { useEffect, useRef } from 'react'
 import Lenis from 'lenis'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null)
+  const frameRef = useRef<number | null>(null)
 
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
@@ -19,26 +16,26 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const lenis = new Lenis({
-      lerp: 0.18,
-      duration: 0.8,
+      lerp: 0.08,
       wheelMultiplier: 1.1,
       touchMultiplier: 1.8,
       smoothWheel: true,
       syncTouch: false,
+      allowNestedScroll: true,
     })
     lenisRef.current = lenis
 
-    lenis.on('scroll', ScrollTrigger.update)
-    ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: false })
-
-    gsap.ticker.lagSmoothing(0)
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000)
-    })
+    const raf = (time: number) => {
+      lenis.raf(time)
+      frameRef.current = requestAnimationFrame(raf)
+    }
+    frameRef.current = requestAnimationFrame(raf)
 
     return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current)
       lenis.destroy()
       lenisRef.current = null
+      frameRef.current = null
     }
   }, [])
 

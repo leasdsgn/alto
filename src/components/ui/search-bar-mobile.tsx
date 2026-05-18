@@ -13,15 +13,50 @@ import { ListBox, ListBoxItem } from 'react-aria-components'
 import { today, getLocalTimeZone } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
+import { useLocale } from '@/components/providers/locale-provider'
 import { useSearchStore } from '@/lib/stores/search'
+import { useSearchDateAvailability } from '@/lib/use-search-date-availability'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const CITIES = ['Paris', 'Lyon']
+const MOBILE_SEARCH_COPY = {
+  fr: {
+    city: 'Ville',
+    stayDates: 'Dates du séjour',
+    search: 'Rechercher',
+    availabilityLoading: 'Vérification des dates',
+    guest: 'voyageur',
+    guests: 'voyageurs',
+    removeGuest: 'Retirer un voyageur',
+    addGuest: 'Ajouter un voyageur',
+  },
+  en: {
+    city: 'City',
+    stayDates: 'Stay dates',
+    search: 'Search',
+    availabilityLoading: 'Checking dates',
+    guest: 'guest',
+    guests: 'guests',
+    removeGuest: 'Remove one guest',
+    addGuest: 'Add one guest',
+  },
+} as const
 
 export function SearchBarMobile() {
   const router = useRouter()
+  const locale = useLocale()
+  const copy = MOBILE_SEARCH_COPY[locale]
   const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
   const [dateOpen, setDateOpen] = useState(false)
+  const searchAvailability = useSearchDateAvailability({
+    city,
+    guests,
+    dates,
+    viewYear: dates.start.year,
+    viewMonth: dates.start.month,
+    enabled: dateOpen,
+  })
 
   const minDate = today(getLocalTimeZone())
 
@@ -44,12 +79,12 @@ export function SearchBarMobile() {
       <div className="bg-cream flex flex-col rounded-xl">
         <div className="flex items-center justify-between border-b border-divider px-4 py-3">
           <HeroUISelect
-            aria-label="Ville"
+            aria-label={copy.city}
             selectedKey={city}
             onSelectionChange={(key) => setCity(key as string)}
             className="w-auto"
           >
-            <Label className="sr-only">Ville</Label>
+            <Label className="sr-only">{copy.city}</Label>
             <HeroUISelect.Trigger className="bg-ash text-cream flex h-[44px] items-center gap-1.5 rounded-md px-5 text-xs font-bold tracking-[0.24px]">
               <HeroUISelect.Value>
                 {({ selectedText }) => selectedText}
@@ -74,13 +109,15 @@ export function SearchBarMobile() {
           </HeroUISelect>
 
           <div className="flex items-center gap-2">
-            <span className="text-taupe text-xs font-bold">{guests} voyageur{guests > 1 ? 's' : ''}</span>
+            <span className="text-taupe text-xs font-bold">
+              {guests} {guests > 1 ? copy.guests : copy.guest}
+            </span>
             <button
               type="button"
               className="text-taupe flex size-10 items-center justify-center disabled:opacity-30"
               disabled={guests <= 1}
               onClick={() => setGuests(Math.max(1, guests - 1))}
-              aria-label="Retirer un voyageur"
+              aria-label={copy.removeGuest}
             >
               <MinusIcon />
             </button>
@@ -89,7 +126,7 @@ export function SearchBarMobile() {
               className="text-taupe flex size-10 items-center justify-center disabled:opacity-30"
               disabled={guests >= 10}
               onClick={() => setGuests(Math.min(10, guests + 1))}
-              aria-label="Ajouter un voyageur"
+              aria-label={copy.addGuest}
             >
               <PlusIcon />
             </button>
@@ -105,8 +142,9 @@ export function SearchBarMobile() {
           isOpen={dateOpen}
           onOpenChange={setDateOpen}
           className="date-picker"
+          isDateUnavailable={searchAvailability.isDateUnavailable}
         >
-          <Label className="sr-only">Dates du séjour</Label>
+          <Label className="sr-only">{copy.stayDates}</Label>
           <div
             className="cursor-pointer px-4 py-4"
             onClick={() => setDateOpen(true)}
@@ -135,36 +173,47 @@ export function SearchBarMobile() {
             </DateField.Group>
           </div>
           <DateRangePicker.Popover className="bg-cream rounded-lg border border-divider p-5 shadow-none" placement="bottom start">
-            <RangeCalendar aria-label="Dates du séjour" minValue={minDate}>
-              <RangeCalendar.Header>
-                <RangeCalendar.Heading className="text-coffee text-sm font-bold" />
-                <RangeCalendar.NavButton slot="previous" />
-                <RangeCalendar.NavButton slot="next" />
-              </RangeCalendar.Header>
-              <RangeCalendar.Grid className="w-full">
-                <RangeCalendar.GridHeader>
-                  {(day) => (
-                    <RangeCalendar.HeaderCell className="text-taupe text-xs font-bold">
-                      {day}
-                    </RangeCalendar.HeaderCell>
-                  )}
-                </RangeCalendar.GridHeader>
-                <RangeCalendar.GridBody>
-                  {(date) => (
-                    <RangeCalendar.Cell
-                      date={date}
-                      className="text-coffee flex size-9 items-center justify-center rounded-sm text-xs outline-none hover:bg-sand data-[selected]:bg-coffee/10 data-[selection-start]:bg-coffee data-[selection-start]:text-cream data-[selection-end]:bg-coffee data-[selection-end]:text-cream data-[unavailable]:text-silver data-[unavailable]:line-through"
-                    />
-                  )}
-                </RangeCalendar.GridBody>
-              </RangeCalendar.Grid>
-            </RangeCalendar>
+            <div className="relative" aria-busy={searchAvailability.isLoading}>
+              <RangeCalendar
+                aria-label={copy.stayDates}
+                minValue={minDate}
+                isDateUnavailable={searchAvailability.isDateUnavailable}
+              >
+                <RangeCalendar.Header>
+                  <RangeCalendar.Heading className="text-coffee text-sm font-bold" />
+                  <RangeCalendar.NavButton slot="previous" />
+                  <RangeCalendar.NavButton slot="next" />
+                </RangeCalendar.Header>
+                <RangeCalendar.Grid className="w-full">
+                  <RangeCalendar.GridHeader>
+                    {(day) => (
+                      <RangeCalendar.HeaderCell className="text-taupe text-xs font-bold">
+                        {day}
+                      </RangeCalendar.HeaderCell>
+                    )}
+                  </RangeCalendar.GridHeader>
+                  <RangeCalendar.GridBody>
+                    {(date) => (
+                      <RangeCalendar.Cell
+                        date={date}
+                        className="text-coffee flex size-9 items-center justify-center rounded-sm text-xs outline-none hover:bg-sand data-[selected]:bg-coffee/10 data-[selection-start]:bg-coffee data-[selection-start]:text-cream data-[selection-end]:bg-coffee data-[selection-end]:text-cream data-[unavailable]:text-silver data-[unavailable]:line-through"
+                      />
+                    )}
+                  </RangeCalendar.GridBody>
+                </RangeCalendar.Grid>
+              </RangeCalendar>
+              {searchAvailability.isLoading && (
+                <div className="bg-cream/85 absolute inset-0 flex items-center justify-center rounded-sm">
+                  <LoadingSpinner label={copy.availabilityLoading} />
+                </div>
+              )}
+            </div>
           </DateRangePicker.Popover>
         </DateRangePicker>
       </div>
 
       <Button type="submit" className="h-[50px] w-full rounded-xl">
-        Rechercher
+        {copy.search}
       </Button>
     </form>
   )

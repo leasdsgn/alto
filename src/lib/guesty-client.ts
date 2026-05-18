@@ -132,6 +132,14 @@ async function guestyFetch<T>(
 
 const USE_MOCK = process.env.GUESTY_MOCK === 'true'
 
+type GuestyCalendarResponse = { days: GuestyCalendarDay[] }
+type GuestyCalendarPayload = GuestyCalendarResponse | GuestyCalendarDay[]
+
+function normalizeCalendar(payload: GuestyCalendarPayload): GuestyCalendarResponse {
+  if (Array.isArray(payload)) return { days: payload }
+  return { days: Array.isArray(payload.days) ? payload.days : [] }
+}
+
 async function mock<K extends keyof GuestyMock>(method: K): Promise<GuestyMock[K]> {
   const { guestyMock } = await import('./guesty-mock')
   return guestyMock[method]
@@ -151,8 +159,8 @@ export const guestyClient = {
   getListingCalendar(listingId: string, from: string, to: string) {
     if (USE_MOCK) return mock('getListingCalendar').then((fn) => fn(listingId, from, to))
     const params = new URLSearchParams({ from, to })
-    return guestyFetch<{ days: GuestyCalendarDay[] }>(
-      `/listings/${listingId}/calendar?${params}`,
+    return guestyFetch<GuestyCalendarPayload>(`/listings/${listingId}/calendar?${params}`).then(
+      normalizeCalendar,
     )
   },
 

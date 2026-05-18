@@ -4,12 +4,15 @@ import { useRef } from 'react'
 import Image from 'next/image'
 import type { BlogArticle } from '@/lib/blog-data'
 import { Button } from '@/components/ui/button'
+import { useLocale } from '@/components/providers/locale-provider'
 
 interface BlogSectionProps {
   articles: BlogArticle[]
 }
 
 export function BlogSection({ articles }: BlogSectionProps) {
+  const locale = useLocale()
+  const copy = BLOG_SECTION_COPY[locale]
   const trackRef = useRef<HTMLDivElement>(null)
 
   function scroll(direction: 'left' | 'right') {
@@ -29,7 +32,7 @@ export function BlogSection({ articles }: BlogSectionProps) {
             type="button"
             onClick={() => scroll('left')}
             className="bg-[#fffff8] text-[#301a0a] border-[#301a0a] flex size-9 items-center justify-center rounded-full border transition-opacity hover:opacity-70"
-            aria-label="Précédent"
+            aria-label={copy.previous}
           >
             <ArrowLeft />
           </button>
@@ -37,7 +40,7 @@ export function BlogSection({ articles }: BlogSectionProps) {
             type="button"
             onClick={() => scroll('right')}
             className="bg-[#fffff8] text-[#301a0a] border-[#301a0a] flex size-9 items-center justify-center rounded-full border transition-opacity hover:opacity-70"
-            aria-label="Suivant"
+            aria-label={copy.next}
           >
             <ArrowRight />
           </button>
@@ -53,11 +56,10 @@ export function BlogSection({ articles }: BlogSectionProps) {
             </p>
             <div className="flex flex-col gap-8">
               <p className="text-cream text-body-xl leading-[1.5] font-semibold">
-                Depuis 2017, nous accompagnons les voyageurs pour qu&rsquo;ils
-                vivent des expériences inoubliables aux plus belles adresses.
+                {copy.description}
               </p>
               <Button variant="primary" size="regular" href="/blog" iconRight={<ArrowOutward />} className="self-start">
-                Tous nos conseils
+                {copy.button}
               </Button>
             </div>
           </div>
@@ -83,12 +85,12 @@ export function BlogSection({ articles }: BlogSectionProps) {
                     {article.title}
                   </h3>
                   <p className="text-[#fffff8] text-body-xl font-semibold leading-[1.5]">
-                    {article.subtitle ?? 'Un quartier vivant, une adresse au cœur des plus beaux quartiers.'}
+                    {article.subtitle ?? copy.fallbackSubtitle}
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[#aba39e] text-overline font-bold uppercase tracking-[0.24px]">
-                    5 min de lecture
+                    {copy.readingTime}
                   </p>
                   <span className="bg-taupe text-cream flex size-9 shrink-0 items-center justify-center rounded-full transition-opacity group-hover:opacity-80">
                     <ArrowOutward />
@@ -102,6 +104,27 @@ export function BlogSection({ articles }: BlogSectionProps) {
     </section>
   )
 }
+
+const BLOG_SECTION_COPY = {
+  fr: {
+    previous: 'Précédent',
+    next: 'Suivant',
+    description:
+      'Depuis 2017, nous accompagnons les voyageurs pour qu’ils vivent des expériences inoubliables aux plus belles adresses.',
+    button: 'Tous nos conseils',
+    fallbackSubtitle: 'Un quartier vivant, une adresse au cœur des plus beaux quartiers.',
+    readingTime: '5 min de lecture',
+  },
+  en: {
+    previous: 'Previous',
+    next: 'Next',
+    description:
+      'Since 2017, we have helped travelers enjoy memorable stays at carefully selected addresses.',
+    button: 'All our guides',
+    fallbackSubtitle: 'A lively neighborhood, an address in one of the city’s finest areas.',
+    readingTime: '5 min read',
+  },
+} as const
 
 function ArrowLeft() {
   return (

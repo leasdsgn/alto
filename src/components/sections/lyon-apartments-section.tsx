@@ -72,7 +72,7 @@ export function LyonApartmentsSection({ apartments }: LyonApartmentsSectionProps
                 <h3 className="text-coffee text-base font-bold">{apt.name}</h3>
                 <p className="text-coffee text-xs font-medium">{getLocationLabel(apt)}</p>
               </div>
-              <p className="text-silver text-xs font-bold uppercase">{apt.price}€/nuit</p>
+              <p className="text-silver text-xs font-bold uppercase">Dès {apt.price}€/nuit</p>
             </div>
 
             <div className="text-ash mt-2 flex items-center gap-4 text-xs font-extrabold">

@@ -20,6 +20,8 @@ const API = `https://mapi.storyblok.com/v1/spaces/${SPACE_ID}`
 const ASSET_FOLDER_NAME = 'alto-site-images'
 const STORY_SLUG = 'site-images'
 const PUBLIC_DIR = path.resolve(process.cwd(), 'public')
+const STORYBLOK_ABOUT_CONCEPT_CHAIR_URL =
+  'https://a.storyblok.com/f/291441851126938/da52da72c6/images-about-concept-chair.jpg'
 
 if (!TOKEN) {
   console.error('STORYBLOK_PERSONAL_TOKEN requis')
@@ -35,38 +37,208 @@ const jsonHeaders = {
   'Content-Type': 'application/json',
 }
 
-const SITE_IMAGE_FIELDS = [
-  { field: 'footer_background', label: 'Footer background', localPath: 'images/footer-gradient.jpg' },
-  { field: 'shared_location_avatar_1', label: 'Shared location avatar 1', localPath: 'images/blog-1.jpg' },
-  { field: 'shared_location_avatar_2', label: 'Shared location avatar 2', localPath: 'images/hero-home.jpg' },
-  { field: 'shared_location_avatar_3', label: 'Shared location avatar 3', localPath: 'images/blog-3.jpg' },
-  { field: 'shared_traveler_avatar_1', label: 'Shared traveler avatar 1', localPath: 'images/avatars/voyageur-1.png' },
-  { field: 'shared_traveler_avatar_2', label: 'Shared traveler avatar 2', localPath: 'images/avatars/voyageur-2.png' },
-  { field: 'shared_traveler_avatar_3', label: 'Shared traveler avatar 3', localPath: 'images/avatars/voyageur-3.png' },
-  { field: 'home_hero_background', label: 'Home hero background', localPath: 'images/hero-room.png' },
-  { field: 'home_hero_overlay', label: 'Home hero overlay', localPath: 'images/hero-overlay.png' },
-  { field: 'home_experience_arrival', label: 'Home experience arrival', localPath: 'images/hero-home.jpg' },
-  { field: 'home_experience_checkin', label: 'Home experience checkin', localPath: 'images/alto-salon.jpg' },
-  { field: 'home_experience_checkout', label: 'Home experience checkout', localPath: 'images/blog-3.jpg' },
-  { field: 'about_concept_lounge', label: 'About concept lounge', localPath: 'images/about/concept-lounge.jpg' },
-  { field: 'about_concept_corridor', label: 'About concept corridor', localPath: 'images/about/concept-corridor.jpg' },
-  { field: 'about_founder_paul', label: 'About founder Paul', localPath: 'images/about/founder-paul.jpg' },
-  { field: 'about_founder_mayeul', label: 'About founder Mayeul', localPath: 'images/about/founder-mayeul.jpg' },
-  { field: 'about_founder_benjamin', label: 'About founder Benjamin', localPath: 'images/about/founder-benjamin.jpg' },
-  { field: 'blog_story_arrival', label: 'Blog story arrival', localPath: 'images/alto-salon.jpg' },
-  { field: 'blog_story_checkin', label: 'Blog story checkin', localPath: 'images/blog-3.jpg' },
-  { field: 'lyon_hero_background', label: 'Lyon hero background', localPath: 'images/lyon/hero-lyon.jpg' },
-  { field: 'lyon_bellecour', label: 'Lyon Bellecour', localPath: 'images/lyon/apt-bellecour.jpg' },
-  { field: 'lyon_vieux_lyon', label: 'Lyon Vieux Lyon', localPath: 'images/lyon/apt-vieux-lyon.jpg' },
-  { field: 'lyon_terreaux', label: 'Lyon Terreaux', localPath: 'images/lyon/apt-terreaux.jpg' },
-  { field: 'lyon_services', label: 'Lyon services', localPath: 'images/lyon/services-image.jpg' },
-  { field: 'lyon_press_logo', label: 'Lyon press logo', localPath: 'images/lyon/press-logo.png' },
-  { field: 'lyon_monocle_logo', label: 'Lyon Monocle logo', localPath: 'images/lyon/monocle-logo.png' },
-  { field: 'page_contact_hero', label: 'Contact hero', localPath: 'images/alto-salon.jpg' },
-  { field: 'page_apartments_hero', label: 'Apartments hero', localPath: 'images/alto-salon.jpg' },
-  { field: 'page_invest_hero', label: 'Invest hero', localPath: 'images/alto-salon.jpg' },
-  { field: 'page_invest_model', label: 'Invest model', localPath: 'images/alto-salon.jpg' },
-] as const
+type SiteImageField =
+  | {
+      source: 'local'
+      field: string
+      label: string
+      localPath: string
+    }
+  | {
+      source: 'storyblok'
+      field: string
+      label: string
+      storyblokUrl: string
+    }
+
+const SITE_IMAGE_FIELDS: SiteImageField[] = [
+  {
+    source: 'local',
+    field: 'footer_background',
+    label: 'Footer background',
+    localPath: 'images/footer-gradient.jpg',
+  },
+  {
+    source: 'local',
+    field: 'shared_location_avatar_1',
+    label: 'Shared location avatar 1',
+    localPath: 'images/blog-1.jpg',
+  },
+  {
+    source: 'local',
+    field: 'shared_location_avatar_2',
+    label: 'Shared location avatar 2',
+    localPath: 'images/hero-home.jpg',
+  },
+  {
+    source: 'local',
+    field: 'shared_location_avatar_3',
+    label: 'Shared location avatar 3',
+    localPath: 'images/blog-3.jpg',
+  },
+  {
+    source: 'local',
+    field: 'shared_traveler_avatar_1',
+    label: 'Shared traveler avatar 1',
+    localPath: 'images/avatars/voyageur-1.png',
+  },
+  {
+    source: 'local',
+    field: 'shared_traveler_avatar_2',
+    label: 'Shared traveler avatar 2',
+    localPath: 'images/avatars/voyageur-2.png',
+  },
+  {
+    source: 'local',
+    field: 'shared_traveler_avatar_3',
+    label: 'Shared traveler avatar 3',
+    localPath: 'images/avatars/voyageur-3.png',
+  },
+  {
+    source: 'local',
+    field: 'home_hero_background',
+    label: 'Home hero background',
+    localPath: 'images/hero-room.png',
+  },
+  {
+    source: 'local',
+    field: 'home_hero_overlay',
+    label: 'Home hero overlay',
+    localPath: 'images/hero-overlay.png',
+  },
+  {
+    source: 'local',
+    field: 'home_experience_arrival',
+    label: 'Home experience arrival',
+    localPath: 'images/experience-espaces.png',
+  },
+  {
+    source: 'local',
+    field: 'home_experience_checkin',
+    label: 'Home experience checkin',
+    localPath: 'images/experience-localisation.png',
+  },
+  {
+    source: 'local',
+    field: 'home_experience_checkout',
+    label: 'Home experience checkout',
+    localPath: 'images/blog-3.jpg',
+  },
+  {
+    source: 'local',
+    field: 'about_concept_lounge',
+    label: 'About concept lounge',
+    localPath: 'images/about/concept-lounge.jpg',
+  },
+  {
+    source: 'local',
+    field: 'about_concept_corridor',
+    label: 'About concept corridor',
+    localPath: 'images/about/concept-corridor.jpg',
+  },
+  {
+    source: 'storyblok',
+    field: 'about_concept_chair',
+    label: 'About concept chair',
+    storyblokUrl: STORYBLOK_ABOUT_CONCEPT_CHAIR_URL,
+  },
+  {
+    source: 'local',
+    field: 'about_founder_paul',
+    label: 'About founder Paul',
+    localPath: 'images/about/founder-paul.jpg',
+  },
+  {
+    source: 'local',
+    field: 'about_founder_mayeul',
+    label: 'About founder Mayeul',
+    localPath: 'images/about/founder-mayeul.jpg',
+  },
+  {
+    source: 'local',
+    field: 'about_founder_benjamin',
+    label: 'About founder Benjamin',
+    localPath: 'images/about/founder-benjamin.jpg',
+  },
+  {
+    source: 'local',
+    field: 'blog_story_arrival',
+    label: 'Blog story arrival',
+    localPath: 'images/alto-salon.jpg',
+  },
+  {
+    source: 'local',
+    field: 'blog_story_checkin',
+    label: 'Blog story checkin',
+    localPath: 'images/blog-3.jpg',
+  },
+  {
+    source: 'local',
+    field: 'lyon_hero_background',
+    label: 'Lyon hero background',
+    localPath: 'images/lyon/hero-lyon.jpg',
+  },
+  {
+    source: 'local',
+    field: 'lyon_bellecour',
+    label: 'Lyon Bellecour',
+    localPath: 'images/lyon/apt-bellecour.jpg',
+  },
+  {
+    source: 'local',
+    field: 'lyon_vieux_lyon',
+    label: 'Lyon Vieux Lyon',
+    localPath: 'images/lyon/apt-vieux-lyon.jpg',
+  },
+  {
+    source: 'local',
+    field: 'lyon_terreaux',
+    label: 'Lyon Terreaux',
+    localPath: 'images/lyon/apt-terreaux.jpg',
+  },
+  {
+    source: 'local',
+    field: 'lyon_services',
+    label: 'Lyon services',
+    localPath: 'images/lyon/services-image.jpg',
+  },
+  {
+    source: 'local',
+    field: 'lyon_press_logo',
+    label: 'Lyon press logo',
+    localPath: 'images/lyon/press-logo.png',
+  },
+  {
+    source: 'local',
+    field: 'lyon_monocle_logo',
+    label: 'Lyon Monocle logo',
+    localPath: 'images/lyon/monocle-logo.png',
+  },
+  {
+    source: 'local',
+    field: 'page_contact_hero',
+    label: 'Contact hero',
+    localPath: 'images/alto-salon.jpg',
+  },
+  {
+    source: 'local',
+    field: 'page_apartments_hero',
+    label: 'Apartments hero',
+    localPath: 'images/alto-salon.jpg',
+  },
+  {
+    source: 'local',
+    field: 'page_invest_hero',
+    label: 'Invest hero',
+    localPath: 'images/alto-salon.jpg',
+  },
+  {
+    source: 'local',
+    field: 'page_invest_model',
+    label: 'Invest model',
+    localPath: 'images/alto-salon.jpg',
+  },
+]
 
 interface StoryblokAssetFolder {
   id: number
@@ -111,6 +283,7 @@ async function main() {
   const uploadedByLocalPath = new Map<string, StoryblokAsset>()
 
   for (const imageField of SITE_IMAGE_FIELDS) {
+    if (imageField.source !== 'local') continue
     if (uploadedByLocalPath.has(imageField.localPath)) continue
 
     const asset = await ensureAsset(imageField.localPath, folder.id, existingAssets)
@@ -125,6 +298,16 @@ async function main() {
   } as Record<string, unknown>
 
   for (const imageField of SITE_IMAGE_FIELDS) {
+    if (imageField.source === 'storyblok') {
+      if (!hasStoryAssetUrl(nextContent[imageField.field])) {
+        nextContent[imageField.field] = toRemoteStoryAssetObject(
+          imageField.storyblokUrl,
+          imageField.label,
+        )
+      }
+      continue
+    }
+
     const asset = uploadedByLocalPath.get(imageField.localPath)
     if (!asset) {
       throw new Error(`Asset introuvable pour ${imageField.localPath}`)
@@ -152,7 +335,8 @@ async function ensureAssetFolder() {
 
   const data = (await response.json()) as { asset_folders?: StoryblokAssetFolder[] }
   const existing = (data.asset_folders ?? []).find(
-    (folder) => folder.name === ASSET_FOLDER_NAME && (folder.parent_id === 0 || folder.parent_id == null),
+    (folder) =>
+      folder.name === ASSET_FOLDER_NAME && (folder.parent_id === 0 || folder.parent_id == null),
   )
 
   if (existing) return existing
@@ -177,9 +361,12 @@ async function ensureAssetFolder() {
 }
 
 async function getAssetsByFilename(folderId: number) {
-  const response = await fetch(`${API}/assets/?in_folder=${folderId}&sort_by=short_filename:asc&per_page=100`, {
-    headers,
-  })
+  const response = await fetch(
+    `${API}/assets/?in_folder=${folderId}&sort_by=short_filename:asc&per_page=100`,
+    {
+      headers,
+    },
+  )
 
   if (!response.ok) {
     throw new Error(`Impossible de lister les assets: ${await response.text()}`)
@@ -229,13 +416,14 @@ async function ensureAsset(
     throw new Error(`Upload S3 échoué pour ${shortFilename}: ${await uploadResponse.text()}`)
   }
 
-  const finishResponse = await fetch(
-    `${API}/assets/${signedResponse.id}/finish_upload`,
-    { headers },
-  )
+  const finishResponse = await fetch(`${API}/assets/${signedResponse.id}/finish_upload`, {
+    headers,
+  })
 
   if (!finishResponse.ok) {
-    throw new Error(`Validation upload échouée pour ${shortFilename}: ${await finishResponse.text()}`)
+    throw new Error(
+      `Validation upload échouée pour ${shortFilename}: ${await finishResponse.text()}`,
+    )
   }
 
   await finishResponse.json().catch(() => null)
@@ -260,7 +448,7 @@ async function getSignedResponse(filename: string, folderId: number) {
     throw new Error(`Impossible de signer l'upload ${filename}: ${await response.text()}`)
   }
 
-  const data = await response.json() as Record<string, unknown>
+  const data = (await response.json()) as Record<string, unknown>
 
   if (isSignedResponse(data)) return data
   if (isSignedResponse(data.signed_response)) return data.signed_response
@@ -329,7 +517,7 @@ async function getAssetById(assetId: number) {
     throw new Error(`Impossible de récupérer l'asset ${assetId}: ${await response.text()}`)
   }
 
-  const data = await response.json() as StoryblokAsset | { asset: StoryblokAsset }
+  const data = (await response.json()) as StoryblokAsset | { asset: StoryblokAsset }
   return 'asset' in data ? data.asset : data
 }
 
@@ -350,13 +538,40 @@ function toStoryAssetObject(asset: StoryblokAsset, alt: string) {
   }
 }
 
+function toRemoteStoryAssetObject(filename: string, alt: string) {
+  return {
+    alt,
+    title: null,
+    copyright: null,
+    fieldtype: 'asset',
+    filename,
+    focus: null,
+    name: '',
+  }
+}
+
+function hasStoryAssetUrl(value: unknown) {
+  if (typeof value === 'string') return value.length > 0
+  if (!value || typeof value !== 'object') return false
+
+  const filename = (value as { filename?: unknown; url?: unknown }).filename
+  const url = (value as { filename?: unknown; url?: unknown }).url
+
+  return (
+    (typeof filename === 'string' && filename.length > 0) ||
+    (typeof url === 'string' && url.length > 0)
+  )
+}
+
 function isSignedResponse(value: unknown): value is SignedResponse {
   if (!value || typeof value !== 'object') return false
   const candidate = value as SignedResponse
-  return typeof candidate.id === 'number'
-    && typeof candidate.post_url === 'string'
-    && typeof candidate.fields === 'object'
-    && candidate.fields !== null
+  return (
+    typeof candidate.id === 'number' &&
+    typeof candidate.post_url === 'string' &&
+    typeof candidate.fields === 'object' &&
+    candidate.fields !== null
+  )
 }
 
 main().catch((error) => {

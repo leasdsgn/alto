@@ -1,27 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-
-const FAQ_ITEMS = [
-  { question: 'Comment fonctionne le check-in ?', answer: 'Accès autonome 24h/24 avec un code personnel envoyé par SMS la veille de votre arrivée.' },
-  { question: 'Y a-t-il un ménage inclus ?', answer: 'Oui, le ménage complet est inclus à chaque séjour.' },
-  { question: 'Puis-je réserver sans passer par Airbnb ?', answer: 'Oui, la réservation directe est possible et sans frais de plateforme.' },
-  { question: 'Quelle est la différence avec un hôtel ?', answer: "Plus d'espace, plus d'intimité, un vrai quartier à vivre. Avec le même niveau de service." },
-  { question: 'Que comprend le prix affiché ?', answer: 'Le prix inclut le logement, le ménage, le linge de lit et de bain, et le wifi.' },
-]
+import { useLocale } from '@/components/providers/locale-provider'
 
 export function FaqSection() {
+  const locale = useLocale()
+  const copy = FAQ_COPY[locale]
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
     <section className="mx-auto max-w-content px-gutter pb-[60px] pt-[100px] md:px-gutter-md">
       <div>
         <p className="text-silver text-xs font-bold uppercase leading-[24px] tracking-[0.24px]">FAQ</p>
-        <p className="text-coffee text-base font-medium leading-[24px]">Questions fréquentes</p>
+        <p className="text-coffee text-base font-medium leading-[24px]">{copy.title}</p>
       </div>
 
       <div className="mt-6">
-        {FAQ_ITEMS.map((item, i) => (
+        {copy.items.map((item, i) => (
           <div key={i} className="border-t border-divider">
             <button
               type="button"
@@ -51,3 +46,26 @@ export function FaqSection() {
     </section>
   )
 }
+
+const FAQ_COPY = {
+  fr: {
+    title: 'Questions fréquentes',
+    items: [
+      { question: 'Comment fonctionne le check-in ?', answer: 'Accès autonome 24h/24 avec un code personnel envoyé par SMS la veille de votre arrivée.' },
+      { question: 'Y a-t-il un ménage inclus ?', answer: 'Oui, le ménage complet est inclus à chaque séjour.' },
+      { question: 'Puis-je réserver sans passer par Airbnb ?', answer: 'Oui, la réservation directe est possible et sans frais de plateforme.' },
+      { question: 'Quelle est la différence avec un hôtel ?', answer: 'Plus d’espace, plus d’intimité, un vrai quartier à vivre. Avec le même niveau de service.' },
+      { question: 'Que comprend le prix affiché ?', answer: 'Le prix inclut le logement, le ménage, le linge de lit et de bain, et le wifi.' },
+    ],
+  },
+  en: {
+    title: 'Frequently asked questions',
+    items: [
+      { question: 'How does check-in work?', answer: 'Self check-in is available 24/7 with a personal code sent by SMS the day before arrival.' },
+      { question: 'Is cleaning included?', answer: 'Yes, full cleaning is included with every stay.' },
+      { question: 'Can I book without using Airbnb?', answer: 'Yes, direct booking is available with no platform fees.' },
+      { question: 'How is this different from a hotel?', answer: 'More space, more privacy, and a real neighborhood to live in, with a comparable level of service.' },
+      { question: 'What is included in the displayed price?', answer: 'The price includes the apartment, cleaning, bed and bath linen, and wifi.' },
+    ],
+  },
+} as const

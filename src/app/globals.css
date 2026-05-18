@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@heroui/styles';
+@import 'lenis/dist/lenis.css';
 @import 'mapbox-gl/dist/mapbox-gl.css';
 
 @theme inline {
@@ -9,42 +10,43 @@
   --color-taupe: #82756b;
   --color-silver: #aba39e;
   --color-sand: #f3f3ed;
+  --color-signal: #78ff47;
   --font-sans: 'Manrope', sans-serif;
   --font-display: 'Teramo Variable Italic', 'Manrope', serif;
 
   --text-display: 81px;
   --text-display--line-height: 100%;
-  --text-display--letter-spacing: -0.07em;
+  --text-display--letter-spacing: -0.03em;
   --text-display--font-weight: 700;
 
   --text-h1: 54px;
   --text-h1--line-height: 120%;
-  --text-h1--letter-spacing: -0.04em;
+  --text-h1--letter-spacing: -0.02em;
   --text-h1--font-weight: 700;
 
   --text-h2: 36px;
   --text-h2--line-height: 130%;
-  --text-h2--letter-spacing: -0.06em;
+  --text-h2--letter-spacing: -0.02em;
   --text-h2--font-weight: 700;
 
   --text-h3: 29px;
   --text-h3--line-height: 130%;
-  --text-h3--letter-spacing: -0.07em;
+  --text-h3--letter-spacing: -0.02em;
   --text-h3--font-weight: 700;
 
   --text-h4: 24px;
   --text-h4--line-height: 140%;
-  --text-h4--letter-spacing: -0.04em;
+  --text-h4--letter-spacing: -0.01em;
   --text-h4--font-weight: 500;
 
   --text-h5: 22px;
   --text-h5--line-height: 150%;
-  --text-h5--letter-spacing: -0.09em;
+  --text-h5--letter-spacing: -0.02em;
   --text-h5--font-weight: 700;
 
   --text-h6: 22px;
   --text-h6--line-height: 150%;
-  --text-h6--letter-spacing: -0.09em;
+  --text-h6--letter-spacing: -0.02em;
   --text-h6--font-weight: 700;
 
   --text-body-xl: 18px;
@@ -68,12 +70,19 @@
   --text-overline--line-height: 155%;
   --text-overline--font-weight: 700;
   --radius-sm: 8px;
+  --radius-filter-button: 8px;
+  --radius-result-card: 5px;
   --radius-md: 10px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --spacing-gutter: 24px;
   --spacing-gutter-md: 48px;
   --spacing-gutter-lg: 64px;
+  --spacing-apartments-hero: 512px;
+  --spacing-apartment-location-map: 360px;
+  --spacing-apartment-location-map-md: 420px;
+  --spacing-search-frame: 90px;
+  --spacing-results-panel: min(560px, calc(100svh - 220px));
   --spacing-section: 64px;
   --spacing-section-md: 96px;
   --color-divider: #e8e8e2;
@@ -112,12 +121,42 @@
 body {
   color: var(--color-coffee);
   font-family: var(--font-sans);
-  background-color: var(--Floral-white, #FFFFF8);
+  background-color: var(--Floral-white, #fffff8);
   overflow-x: hidden;
   isolation: isolate;
 }
 
 @layer utilities {
+  .min-h-search-frame {
+    min-height: var(--spacing-search-frame);
+  }
+
+  .rounded-result-card {
+    border-radius: var(--radius-result-card);
+  }
+
+  .h-results-panel {
+    height: var(--spacing-results-panel);
+  }
+
+  .min-h-results-panel {
+    min-height: var(--spacing-results-panel);
+  }
+
+  .alto-results-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(130, 117, 107, 0.45) transparent;
+  }
+
+  .alto-results-list::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .alto-results-list::-webkit-scrollbar-thumb {
+    background: rgba(130, 117, 107, 0.45);
+    border-radius: 999px;
+  }
+
   .text-h6 {
     text-transform: uppercase;
   }
@@ -134,7 +173,10 @@ body {
   }
 }
 
-input, textarea, select, [contenteditable] {
+input,
+textarea,
+select,
+[contenteditable] {
   cursor: auto;
 }
 
@@ -151,7 +193,6 @@ input, textarea, select, [contenteditable] {
     min-width: 160vw;
   }
 }
-
 
 .btn-fill {
   position: relative;
@@ -188,7 +229,9 @@ input, textarea, select, [contenteditable] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
