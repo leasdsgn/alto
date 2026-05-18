@@ -7,6 +7,10 @@ describe('guesty-client', () => {
     vi.stubGlobal('__guestyToken', undefined)
     vi.stubGlobal('__guestyTokenExpiresAt', undefined)
     vi.stubGlobal('__guestyRateLimitedUntil', undefined)
+    delete process.env.UPSTASH_REDIS_REST_URL
+    delete process.env.UPSTASH_REDIS_REST_TOKEN
+    delete process.env.KV_REST_API_URL
+    delete process.env.KV_REST_API_TOKEN
   })
 
   it('lance une erreur si les credentials sont absentes', async () => {
