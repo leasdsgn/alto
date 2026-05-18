@@ -1,5 +1,6 @@
 const TOKEN_KEY = 'guesty:beapi:token'
 const RATE_LIMIT_KEY = 'guesty:beapi:rate_limited_until'
+const TOKEN_LOCK_KEY = 'guesty:beapi:token_lock'
 
 export interface CachedToken {
   accessToken: string
@@ -91,6 +92,25 @@ export async function writeRateLimit(rateLimitedUntil: number): Promise<void> {
     await redisCommand<string>(['SET', RATE_LIMIT_KEY, String(rateLimitedUntil), 'EX', ttl])
   } catch (error) {
     console.error('[guesty-oauth-cache] rate limit write failed', error)
+  }
+}
+
+export async function acquireOAuthLock(owner: string, ttlMs: number): Promise<boolean | null> {
+  try {
+    const result = await redisCommand<string>(['SET', TOKEN_LOCK_KEY, owner, 'NX', 'PX', ttlMs])
+    return result === 'OK'
+  } catch (error) {
+    console.error('[guesty-oauth-cache] lock acquire failed', error)
+    return null
+  }
+}
+
+export async function releaseOAuthLock(owner: string): Promise<void> {
+  try {
+    const currentOwner = await redisCommand<string>(['GET', TOKEN_LOCK_KEY])
+    if (currentOwner === owner) await redisCommand<number>(['DEL', TOKEN_LOCK_KEY])
+  } catch (error) {
+    console.error('[guesty-oauth-cache] lock release failed', error)
   }
 }
 
