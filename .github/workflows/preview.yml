@@ -6,6 +6,7 @@ on:
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
 jobs:
   preview:
@@ -16,18 +17,33 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - run: bun install --global vercel@latest
+      - name: Check Vercel credentials
+        id: vercel-credentials
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping custom Vercel Preview workflow because Vercel GitHub secrets are missing."
+          fi
 
-      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - if: steps.vercel-credentials.outputs.configured == 'true'
+        run: bun install --global vercel@latest
 
-      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - if: steps.vercel-credentials.outputs.configured == 'true'
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - if: steps.vercel-credentials.outputs.configured == 'true'
+        run: vercel build --token="$VERCEL_TOKEN"
 
       - id: deploy
+        if: steps.vercel-credentials.outputs.configured == 'true'
         run: |
-          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - uses: actions/github-script@v7
+        if: steps.vercel-credentials.outputs.configured == 'true'
         with:
           script: |
             github.rest.issues.createComment({
