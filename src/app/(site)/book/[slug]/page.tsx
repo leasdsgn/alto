@@ -1,6 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
-import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { getApartments } from '@/components/sections/apartments-section'
 import { BookingFlow } from '@/components/booking/booking-flow'
@@ -9,7 +8,8 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { parseGuestyError } from '@/lib/guesty-errors'
 import { t } from '@/lib/i18n/booking-dictionary'
-import { LOCALE_COOKIE, resolveLocale } from '@/lib/i18n/locale'
+import { getServerLocale } from '@/lib/i18n/server'
+import { calculateNights } from '@/lib/reservation-validation'
 import type { InquiryLocale } from '@/types/inquiry'
 import type { GuestyQuote } from '@/types/guesty'
 
@@ -39,9 +39,28 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
   const apartment = apartments.find((a) => a.slug === slug)
   if (!apartment) notFound()
 
-  const cookieStore = await cookies()
-  const locale = normalizeLocale(cookieStore.get(LOCALE_COOKIE)?.value)
+  const locale = await getServerLocale()
   const guestsCount = Number(search.guests ?? 1)
+  const validationError = validateBookingSearch({
+    checkIn: search.check_in,
+    checkOut: search.check_out,
+    guestsCount,
+    minNights: apartment.minNights,
+    maxNights: apartment.maxNights,
+    capacity: apartment.guests,
+  })
+
+  if (validationError) {
+    return (
+      <QuoteErrorView
+        slug={slug}
+        apartmentName={apartment.name}
+        error={validationError}
+        locale={locale}
+      />
+    )
+  }
+
   let availabilityError: Error | null = null
 
   try {
@@ -94,7 +113,7 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
     <>
       <Header variant="dark" />
 
-      <main className="mx-auto max-w-[1132px] px-6 py-16 md:px-12 lg:px-0">
+      <main className="mx-auto max-w-[1132px] px-6 pt-32 pb-16 md:px-12 lg:px-0">
         <h1 className="text-coffee mb-10 text-3xl font-semibold md:text-4xl">
           {locale === 'en' ? `Request to book ${apartment.name}` : `Demander à réserver ${apartment.name}`}
         </h1>
@@ -118,8 +137,42 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
   )
 }
 
-function normalizeLocale(raw: string | undefined): InquiryLocale {
-  return resolveLocale(raw ?? '')
+function validateBookingSearch({
+  checkIn,
+  checkOut,
+  guestsCount,
+  minNights,
+  maxNights,
+  capacity,
+}: {
+  checkIn: string
+  checkOut: string
+  guestsCount: number
+  minNights?: number
+  maxNights?: number
+  capacity: number
+}): Error | null {
+  if (!Number.isInteger(guestsCount) || guestsCount <= 0) {
+    return new Error('{"error":{"code":"VALIDATION_FAILED"}}')
+  }
+
+  if (guestsCount > capacity) {
+    return new Error('{"error":{"code":"GUESTS_EXCEED_CAPACITY"}}')
+  }
+
+  try {
+    const nights = calculateNights(checkIn, checkOut)
+    if (minNights && nights < minNights) {
+      return new Error('{"error":{"code":"MIN_NIGHTS_NOT_MET"}}')
+    }
+    if (maxNights && nights > maxNights) {
+      return new Error('{"error":{"code":"MAX_NIGHTS_EXCEEDED"}}')
+    }
+  } catch {
+    return new Error('{"error":{"code":"VALIDATION_FAILED"}}')
+  }
+
+  return null
 }
 
 function QuoteErrorView({
@@ -143,7 +196,7 @@ function QuoteErrorView({
   return (
     <>
       <Header variant="dark" />
-      <main className="mx-auto max-w-[1132px] px-6 py-16 md:px-12 lg:px-0">
+      <main className="mx-auto max-w-[1132px] px-6 pt-32 pb-16 md:px-12 lg:px-0">
         <h1 className="text-coffee mb-4 text-3xl font-semibold md:text-4xl">{apartmentName}</h1>
         <div className="border-divider bg-cream rounded-lg border p-8">
           <p className="text-coffee text-lg font-semibold">{title}</p>

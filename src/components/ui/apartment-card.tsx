@@ -1,5 +1,9 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { useLocale } from '@/components/providers/locale-provider'
+import { type InquiryLocale } from '@/types/inquiry'
 
 interface ApartmentCardProps {
   name: string
@@ -11,6 +15,7 @@ interface ApartmentCardProps {
   image?: string
   city?: string
   neighborhood?: string
+  priceSource?: 'base' | 'quote'
 }
 
 export function ApartmentCard({
@@ -23,8 +28,10 @@ export function ApartmentCard({
   image,
   city,
   neighborhood,
+  priceSource = 'base',
 }: ApartmentCardProps) {
-  const totalEstimate = Math.round(price * 6.5)
+  const locale = useLocale()
+  const copy = CARD_COPY[locale]
   const specs = [
     { icon: 'guests' as const, value: `${guests} p.` },
     ...(surface > 0 ? [{ icon: 'surface' as const, value: `${surface} m`, sup: '2' }] : []),
@@ -82,15 +89,34 @@ export function ApartmentCard({
           </div>
 
           <div className="flex flex-wrap items-center gap-x-[10px] gap-y-1">
-            <span className="text-silver text-body leading-[1.5]">{price}&euro;/nuit</span>
-            <span className="text-ash decoration-ash/50 text-body leading-[1.5] underline underline-offset-2">
-              {totalEstimate.toLocaleString('fr-FR')}&euro; au total
+            <span className="text-silver text-body leading-[1.5]">
+              {priceSource === 'quote' ? '' : `${copy.from} `}
+              {formatCurrency(price, locale)}{copy.perNight}
             </span>
           </div>
         </div>
       </article>
     </Link>
   )
+}
+
+const CARD_COPY = {
+  fr: {
+    from: 'Dès',
+    perNight: '/nuit',
+  },
+  en: {
+    from: 'From',
+    perNight: '/night',
+  },
+} as const
+
+function formatCurrency(value: number, locale: InquiryLocale) {
+  return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 function LocationBadge({ children }: { children: React.ReactNode }) {

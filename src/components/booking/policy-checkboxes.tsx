@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { t } from '@/lib/i18n/booking-dictionary'
 import { type InquiryLocale } from '@/types/inquiry'
 
@@ -24,29 +25,33 @@ export function PolicyCheckboxes({
   return (
     <div className="space-y-2" role="group">
       <CheckboxField
-        label={t(locale, 'policyPrivacy')}
         checked={values.privacy}
         onChange={(v) => onChange({ ...values, privacy: v })}
         disabled={disabled}
-      />
+      >
+        {t(locale, 'policyPrivacyPrefix')}{' '}
+        <PolicyLink href="/confidentialite">{t(locale, 'policyPrivacyLink')}</PolicyLink>
+      </CheckboxField>
       <CheckboxField
-        label={t(locale, 'policyTerms')}
         checked={values.terms}
         onChange={(v) => onChange({ ...values, terms: v })}
         disabled={disabled}
-      />
+      >
+        {t(locale, 'policyTermsPrefix')}{' '}
+        <PolicyLink href="/cgv">{t(locale, 'policyTermsLink')}</PolicyLink>
+      </CheckboxField>
     </div>
   )
 }
 
 interface CheckboxFieldProps {
-  label: string
+  children: React.ReactNode
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
 }
 
-function CheckboxField({ label, checked, onChange, disabled }: CheckboxFieldProps) {
+function CheckboxField({ children, checked, onChange, disabled }: CheckboxFieldProps) {
   return (
     <label className="flex cursor-pointer items-start gap-3 text-sm">
       <input
@@ -57,7 +62,18 @@ function CheckboxField({ label, checked, onChange, disabled }: CheckboxFieldProp
         required
         className="border-divider text-coffee focus:ring-coffee mt-0.5 size-4 rounded border accent-[#2f1a09]"
       />
-      <span className="text-coffee">{label}</span>
+      <span className="text-coffee">{children}</span>
     </label>
+  )
+}
+
+function PolicyLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="underline decoration-current underline-offset-2 transition-opacity hover:opacity-70"
+    >
+      {children}
+    </Link>
   )
 }

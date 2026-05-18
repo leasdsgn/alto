@@ -4,33 +4,13 @@ import Image from 'next/image'
 import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useLocale } from '@/components/providers/locale-provider'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const SERVICES = [
-  {
-    title: 'Self checkin',
-    description: 'Accès autonome à toute heure, sans attente ni comptoir.',
-    icon: '/images/icons/checkin.svg',
-  },
-  {
-    title: 'Ménage',
-    description: 'Linge de maison inclus, ménage professionnel entre chaque séjour.',
-    icon: '/images/icons/cleaning.svg',
-  },
-  {
-    title: 'Support 24/24',
-    description: 'Un gestionnaire disponible à tout moment pour vous accompagner.',
-    icon: '/images/icons/support.svg',
-  },
-  {
-    title: 'Pas de frais cachés',
-    description: 'Prix nets, sans surprise. Ce que vous voyez est ce que vous payez.',
-    icon: '/images/icons/wallet.svg',
-  },
-]
-
 export function ServicesSection() {
+  const locale = useLocale()
+  const services = SERVICES_COPY[locale]
   const cardsRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -62,7 +42,7 @@ export function ServicesSection() {
           ref={cardsRef}
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4"
         >
-          {SERVICES.map(({ title, description, icon }) => (
+          {services.map(({ title, description, icon }) => (
             <div
               key={title}
               className="bg-ash/10 rounded-lg p-8 flex flex-col gap-6"
@@ -81,3 +61,50 @@ export function ServicesSection() {
     </section>
   )
 }
+
+const SERVICES_COPY = {
+  fr: [
+    {
+      title: 'Self check-in',
+      description: 'Accès autonome à toute heure, sans attente ni comptoir.',
+      icon: '/images/icons/checkin.svg',
+    },
+    {
+      title: 'Ménage',
+      description: 'Linge de maison inclus, ménage professionnel entre chaque séjour.',
+      icon: '/images/icons/cleaning.svg',
+    },
+    {
+      title: 'Support 24/24',
+      description: 'Un gestionnaire disponible à tout moment pour vous accompagner.',
+      icon: '/images/icons/support.svg',
+    },
+    {
+      title: 'Pas de frais cachés',
+      description: 'Prix nets, sans surprise. Ce que vous voyez est ce que vous payez.',
+      icon: '/images/icons/wallet.svg',
+    },
+  ],
+  en: [
+    {
+      title: 'Self check-in',
+      description: 'Independent access at any time, with no waiting or front desk.',
+      icon: '/images/icons/checkin.svg',
+    },
+    {
+      title: 'Cleaning',
+      description: 'House linen included, with professional cleaning between each stay.',
+      icon: '/images/icons/cleaning.svg',
+    },
+    {
+      title: '24/7 support',
+      description: 'A manager available whenever you need assistance.',
+      icon: '/images/icons/support.svg',
+    },
+    {
+      title: 'No hidden fees',
+      description: 'Clear prices, no surprise. What you see is what you pay.',
+      icon: '/images/icons/wallet.svg',
+    },
+  ],
+} as const

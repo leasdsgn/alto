@@ -8,6 +8,7 @@ import { LyonBlogSection } from '@/components/sections/lyon-blog-section'
 import { FaqSection } from '@/components/sections/faq-section'
 import { Footer } from '@/components/layout/footer'
 import { StickyCta } from '@/components/ui/sticky-cta'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 
@@ -17,10 +18,11 @@ export const metadata = {
 }
 
 export default async function LyonPage() {
+  const locale = await getServerLocale()
   const [articles, lyonApartments, siteImages] = await Promise.all([
-    getBlogArticles('fr'),
+    getBlogArticles(locale),
     getApartmentsForSearch({ city: 'lyon' }),
-    getSiteImages(),
+    getSiteImages(locale),
   ])
 
   return (

@@ -1,4 +1,6 @@
 import { cache } from 'react'
+import { DEFAULT_LOCALE } from '@/lib/i18n/locale'
+import { type InquiryLocale } from '@/types/inquiry'
 
 interface StoryblokAssetObject {
   filename?: string
@@ -29,6 +31,7 @@ export interface SiteImages {
   about: {
     conceptLounge: string
     conceptCorridor: string
+    conceptChair: string
     founders: {
       paul: string
       mayeul: string
@@ -72,14 +75,16 @@ const DEFAULT_SITE_IMAGES: SiteImages = {
     heroBackground: '/images/hero-room.png',
     heroOverlay: '/images/hero-overlay.png',
     experience: {
-      arrival: '/images/hero-home.jpg',
-      checkin: '/images/alto-salon.jpg',
+      arrival: '/images/experience-espaces.png',
+      checkin: '/images/experience-localisation.png',
       checkout: '/images/blog-3.jpg',
     },
   },
   about: {
     conceptLounge: '/images/about/concept-lounge.jpg',
     conceptCorridor: '/images/about/concept-corridor.jpg',
+    conceptChair:
+      'https://a.storyblok.com/f/291441851126938/da52da72c6/images-about-concept-chair.jpg',
     founders: {
       paul: '/images/about/founder-paul.jpg',
       mayeul: '/images/about/founder-mayeul.jpg',
@@ -107,100 +112,110 @@ const DEFAULT_SITE_IMAGES: SiteImages = {
   },
 }
 
-export const getSiteImages = cache(async (): Promise<SiteImages> => {
-  const token = getStoryblokToken()
-  if (!token) return DEFAULT_SITE_IMAGES
+export const getSiteImages = cache(
+  async (locale: InquiryLocale = DEFAULT_LOCALE): Promise<SiteImages> => {
+    const token = getStoryblokToken()
+    if (!token) return DEFAULT_SITE_IMAGES
 
-  const content = await fetchSiteImagesContent(token)
-  if (!content) return DEFAULT_SITE_IMAGES
+    const content = await fetchSiteImagesContent(token, locale)
+    if (!content) return DEFAULT_SITE_IMAGES
 
-  return {
-    footerBackground: asset(content.footer_background, DEFAULT_SITE_IMAGES.footerBackground),
-    shared: {
-      locationAvatars: [
-        asset(content.shared_location_avatar_1, DEFAULT_SITE_IMAGES.shared.locationAvatars[0]),
-        asset(content.shared_location_avatar_2, DEFAULT_SITE_IMAGES.shared.locationAvatars[1]),
-        asset(content.shared_location_avatar_3, DEFAULT_SITE_IMAGES.shared.locationAvatars[2]),
-      ],
-      travelerAvatars: [
-        asset(content.shared_traveler_avatar_1, DEFAULT_SITE_IMAGES.shared.travelerAvatars[0]),
-        asset(content.shared_traveler_avatar_2, DEFAULT_SITE_IMAGES.shared.travelerAvatars[1]),
-        asset(content.shared_traveler_avatar_3, DEFAULT_SITE_IMAGES.shared.travelerAvatars[2]),
-      ],
-    },
-    home: {
-      heroBackground: asset(content.home_hero_background, DEFAULT_SITE_IMAGES.home.heroBackground),
-      heroOverlay: asset(content.home_hero_overlay, DEFAULT_SITE_IMAGES.home.heroOverlay),
-      experience: {
-        arrival: asset(
-          content.home_experience_arrival,
-          DEFAULT_SITE_IMAGES.home.experience.arrival,
-        ),
-        checkin: asset(
-          content.home_experience_checkin,
-          DEFAULT_SITE_IMAGES.home.experience.checkin,
-        ),
-        checkout: asset(
-          content.home_experience_checkout,
-          DEFAULT_SITE_IMAGES.home.experience.checkout,
-        ),
+    return {
+      footerBackground: asset(content.footer_background, DEFAULT_SITE_IMAGES.footerBackground),
+      shared: {
+        locationAvatars: [
+          asset(content.shared_location_avatar_1, DEFAULT_SITE_IMAGES.shared.locationAvatars[0]),
+          asset(content.shared_location_avatar_2, DEFAULT_SITE_IMAGES.shared.locationAvatars[1]),
+          asset(content.shared_location_avatar_3, DEFAULT_SITE_IMAGES.shared.locationAvatars[2]),
+        ],
+        travelerAvatars: [
+          asset(content.shared_traveler_avatar_1, DEFAULT_SITE_IMAGES.shared.travelerAvatars[0]),
+          asset(content.shared_traveler_avatar_2, DEFAULT_SITE_IMAGES.shared.travelerAvatars[1]),
+          asset(content.shared_traveler_avatar_3, DEFAULT_SITE_IMAGES.shared.travelerAvatars[2]),
+        ],
       },
-    },
-    about: {
-      conceptLounge: asset(content.about_concept_lounge, DEFAULT_SITE_IMAGES.about.conceptLounge),
-      conceptCorridor: asset(
-        content.about_concept_corridor,
-        DEFAULT_SITE_IMAGES.about.conceptCorridor,
-      ),
-      founders: {
-        paul: asset(content.about_founder_paul, DEFAULT_SITE_IMAGES.about.founders.paul),
-        mayeul: asset(
-          content.about_founder_mayeul,
-          DEFAULT_SITE_IMAGES.about.founders.mayeul,
+      home: {
+        heroBackground: asset(
+          content.home_hero_background,
+          DEFAULT_SITE_IMAGES.home.heroBackground,
         ),
-        benjamin: asset(
-          content.about_founder_benjamin,
-          DEFAULT_SITE_IMAGES.about.founders.benjamin,
-        ),
+        heroOverlay: asset(content.home_hero_overlay, DEFAULT_SITE_IMAGES.home.heroOverlay),
+        experience: {
+          arrival: asset(
+            content.home_experience_arrival,
+            DEFAULT_SITE_IMAGES.home.experience.arrival,
+          ),
+          checkin: asset(
+            content.home_experience_checkin,
+            DEFAULT_SITE_IMAGES.home.experience.checkin,
+          ),
+          checkout: asset(
+            content.home_experience_checkout,
+            DEFAULT_SITE_IMAGES.home.experience.checkout,
+          ),
+        },
       },
-    },
-    blog: {
-      storyArrival: asset(content.blog_story_arrival, DEFAULT_SITE_IMAGES.blog.storyArrival),
-      storyCheckin: asset(content.blog_story_checkin, DEFAULT_SITE_IMAGES.blog.storyCheckin),
-    },
-    lyon: {
-      heroBackground: asset(content.lyon_hero_background, DEFAULT_SITE_IMAGES.lyon.heroBackground),
-      bellecour: asset(content.lyon_bellecour, DEFAULT_SITE_IMAGES.lyon.bellecour),
-      vieuxLyon: asset(content.lyon_vieux_lyon, DEFAULT_SITE_IMAGES.lyon.vieuxLyon),
-      terreaux: asset(content.lyon_terreaux, DEFAULT_SITE_IMAGES.lyon.terreaux),
-      servicesImage: asset(content.lyon_services, DEFAULT_SITE_IMAGES.lyon.servicesImage),
-      pressLogo: asset(content.lyon_press_logo, DEFAULT_SITE_IMAGES.lyon.pressLogo),
-      monocleLogo: asset(content.lyon_monocle_logo, DEFAULT_SITE_IMAGES.lyon.monocleLogo),
-    },
-    pages: {
-      contactHero: asset(content.page_contact_hero, DEFAULT_SITE_IMAGES.pages.contactHero),
-      apartmentsHero: asset(
-        content.page_apartments_hero,
-        DEFAULT_SITE_IMAGES.pages.apartmentsHero,
-      ),
-      investHero: asset(content.page_invest_hero, DEFAULT_SITE_IMAGES.pages.investHero),
-      investModel: asset(content.page_invest_model, DEFAULT_SITE_IMAGES.pages.investModel),
-    },
-  }
-})
+      about: {
+        conceptLounge: asset(content.about_concept_lounge, DEFAULT_SITE_IMAGES.about.conceptLounge),
+        conceptCorridor: asset(
+          content.about_concept_corridor,
+          DEFAULT_SITE_IMAGES.about.conceptCorridor,
+        ),
+        conceptChair: asset(content.about_concept_chair, DEFAULT_SITE_IMAGES.about.conceptChair),
+        founders: {
+          paul: asset(content.about_founder_paul, DEFAULT_SITE_IMAGES.about.founders.paul),
+          mayeul: asset(content.about_founder_mayeul, DEFAULT_SITE_IMAGES.about.founders.mayeul),
+          benjamin: asset(
+            content.about_founder_benjamin,
+            DEFAULT_SITE_IMAGES.about.founders.benjamin,
+          ),
+        },
+      },
+      blog: {
+        storyArrival: asset(content.blog_story_arrival, DEFAULT_SITE_IMAGES.blog.storyArrival),
+        storyCheckin: asset(content.blog_story_checkin, DEFAULT_SITE_IMAGES.blog.storyCheckin),
+      },
+      lyon: {
+        heroBackground: asset(
+          content.lyon_hero_background,
+          DEFAULT_SITE_IMAGES.lyon.heroBackground,
+        ),
+        bellecour: asset(content.lyon_bellecour, DEFAULT_SITE_IMAGES.lyon.bellecour),
+        vieuxLyon: asset(content.lyon_vieux_lyon, DEFAULT_SITE_IMAGES.lyon.vieuxLyon),
+        terreaux: asset(content.lyon_terreaux, DEFAULT_SITE_IMAGES.lyon.terreaux),
+        servicesImage: asset(content.lyon_services, DEFAULT_SITE_IMAGES.lyon.servicesImage),
+        pressLogo: asset(content.lyon_press_logo, DEFAULT_SITE_IMAGES.lyon.pressLogo),
+        monocleLogo: asset(content.lyon_monocle_logo, DEFAULT_SITE_IMAGES.lyon.monocleLogo),
+      },
+      pages: {
+        contactHero: asset(content.page_contact_hero, DEFAULT_SITE_IMAGES.pages.contactHero),
+        apartmentsHero: asset(
+          content.page_apartments_hero,
+          DEFAULT_SITE_IMAGES.pages.apartmentsHero,
+        ),
+        investHero: asset(content.page_invest_hero, DEFAULT_SITE_IMAGES.pages.investHero),
+        investModel: asset(content.page_invest_model, DEFAULT_SITE_IMAGES.pages.investModel),
+      },
+    }
+  },
+)
 
 function getStoryblokToken() {
-  return process.env.STORYBLOK_PREVIEW_TOKEN
-    || process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN
-    || process.env.NEXT_PUBLIC_STORYBLOK_TOKEN
-    || ''
+  return (
+    process.env.STORYBLOK_PREVIEW_TOKEN ||
+    process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN ||
+    process.env.NEXT_PUBLIC_STORYBLOK_TOKEN ||
+    ''
+  )
 }
 
-async function fetchSiteImagesContent(token: string) {
+async function fetchSiteImagesContent(token: string, locale: InquiryLocale) {
   for (const slug of STORYBLOK_STORY_SLUGS) {
     const params = new URLSearchParams({
       token,
       version: process.env.NODE_ENV === 'production' ? 'published' : 'draft',
+      language: locale,
+      fallback_lang: DEFAULT_LOCALE,
     })
 
     const response = await fetch(`https://api.storyblok.com/v2/cdn/stories/${slug}?${params}`, {

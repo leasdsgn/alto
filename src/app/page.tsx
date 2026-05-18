@@ -8,14 +8,16 @@ import { BlogSection } from '@/components/sections/blog-section'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
 import { GuestySearchWidget } from '@/components/ui/guesty-search-widget'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 
 export default async function Home() {
+  const locale = await getServerLocale()
   const [apartments, blogArticles, siteImages] = await Promise.all([
     getApartments(),
-    getBlogArticles('fr'),
-    getSiteImages(),
+    getBlogArticles(locale),
+    getSiteImages(locale),
   ])
 
   return (

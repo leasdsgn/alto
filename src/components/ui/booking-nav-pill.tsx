@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useLocale } from '@/components/providers/locale-provider'
 import { useSearchStore } from '@/lib/stores/search'
 
 const CITIES = ['Paris', 'Lyon']
@@ -11,6 +12,8 @@ function formatShort(d: { day: number; month: number }): string {
 
 export function BookingNavPill() {
   const router = useRouter()
+  const locale = useLocale()
+  const copy = BOOKING_NAV_COPY[locale]
   const { city, dates, guests, setCity, setGuests } = useSearchStore()
 
   function handleSubmit() {
@@ -23,22 +26,44 @@ export function BookingNavPill() {
   }
 
   return (
-    <div className="bg-cream flex h-[35px] items-center rounded-full border border-divider px-1">
+    <div
+      className="bg-cream flex h-[35px] cursor-pointer items-center rounded-full border border-divider px-1"
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest('button')) return
+        handleSubmit()
+      }}
+    >
       <CityPill value={city} onChange={setCity} />
 
       <FieldDivider />
-      <FieldButton icon={<CalendarIcon />} label="Check-in" value={formatShort(dates.start)} />
+      <FieldButton
+        icon={<CalendarIcon />}
+        label={copy.checkIn}
+        value={formatShort(dates.start)}
+        onClick={handleSubmit}
+      />
 
       <FieldDivider />
-      <FieldButton icon={<CalendarIcon />} label="Check-out" value={formatShort(dates.end)} />
+      <FieldButton
+        icon={<CalendarIcon />}
+        label={copy.checkOut}
+        value={formatShort(dates.end)}
+        onClick={handleSubmit}
+      />
 
       <FieldDivider />
-      <GuestsField value={guests} onChange={setGuests} />
+      <GuestsField
+        value={guests}
+        onChange={setGuests}
+        label={copy.guests}
+        removeLabel={copy.removeGuest}
+        addLabel={copy.addGuest}
+      />
 
       <button
         type="button"
         onClick={handleSubmit}
-        aria-label="Rechercher"
+        aria-label={copy.search}
         className="bg-coffee text-cream ml-1 flex size-7 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80"
       >
         <SearchIcon />
@@ -46,6 +71,25 @@ export function BookingNavPill() {
     </div>
   )
 }
+
+const BOOKING_NAV_COPY = {
+  fr: {
+    checkIn: 'Arrivée',
+    checkOut: 'Départ',
+    guests: 'Voyageurs',
+    search: 'Rechercher',
+    removeGuest: 'Retirer un voyageur',
+    addGuest: 'Ajouter un voyageur',
+  },
+  en: {
+    checkIn: 'Check-in',
+    checkOut: 'Check-out',
+    guests: 'Guests',
+    search: 'Search',
+    removeGuest: 'Remove one guest',
+    addGuest: 'Add one guest',
+  },
+} as const
 
 function CityPill({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const next = () => {
@@ -63,23 +107,49 @@ function CityPill({ value, onChange }: { value: string; onChange: (v: string) =>
   )
 }
 
-function FieldButton({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function FieldButton({
+  icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  onClick: () => void
+}) {
   return (
-    <div className="text-taupe flex h-full items-center gap-1.5 px-3">
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-taupe flex h-full items-center gap-1.5 rounded-full px-3 transition-colors hover:bg-sand"
+    >
       <span className="shrink-0">{icon}</span>
       <span className="text-overline font-bold tracking-[0.02em]">{label}</span>
       <span className="text-overline ml-1 font-bold">{value}</span>
-    </div>
+    </button>
   )
 }
 
-function GuestsField({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function GuestsField({
+  value,
+  onChange,
+  label,
+  removeLabel,
+  addLabel,
+}: {
+  value: number
+  onChange: (v: number) => void
+  label: string
+  removeLabel: string
+  addLabel: string
+}) {
   return (
     <div className="text-taupe flex h-full items-center gap-1.5 px-3">
-      <span className="text-overline font-bold tracking-[0.02em]">Voyageurs</span>
+      <span className="text-overline font-bold tracking-[0.02em]">{label}</span>
       <button
         type="button"
-        aria-label="Retirer un voyageur"
+        aria-label={removeLabel}
         onClick={() => onChange(Math.max(1, value - 1))}
         className="flex size-3 items-center justify-center"
       >
@@ -88,7 +158,7 @@ function GuestsField({ value, onChange }: { value: number; onChange: (v: number)
       <span className="text-overline w-3 text-center font-bold tabular-nums">{value}</span>
       <button
         type="button"
-        aria-label="Ajouter un voyageur"
+        aria-label={addLabel}
         onClick={() => onChange(Math.min(10, value + 1))}
         className="flex size-3 items-center justify-center"
       >

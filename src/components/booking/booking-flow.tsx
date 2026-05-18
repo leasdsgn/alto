@@ -142,6 +142,13 @@ function PaymentSection(props: PaymentSectionProps) {
     event.preventDefault()
     if (!stripe || !elements) return
 
+    if (!isGuestValid(props.guest)) {
+      toast.error(t(props.locale, 'errorValidationTitle'), {
+        description: t(props.locale, 'errorValidationDesc'),
+      })
+      return
+    }
+
     setSubmitting(true)
 
     try {
@@ -228,7 +235,13 @@ function PaymentSection(props: PaymentSectionProps) {
     )
   }
 
-  const canSubmit = policy.privacy && policy.terms && !submitting && Boolean(stripe) && Boolean(elements)
+  const canSubmit =
+    policy.privacy
+    && policy.terms
+    && isGuestValid(props.guest)
+    && !submitting
+    && Boolean(stripe)
+    && Boolean(elements)
   const submitLabel =
     props.mode === 'instant' ? t(props.locale, 'submitInstant') : t(props.locale, 'submitInquiry')
 
@@ -255,6 +268,15 @@ function PaymentSection(props: PaymentSectionProps) {
         {submitting ? `${t(props.locale, 'loading')}...` : submitLabel}
       </button>
     </form>
+  )
+}
+
+function isGuestValid(guest: GuestFormValues) {
+  return (
+    guest.firstName.trim().length > 0
+    && guest.lastName.trim().length > 0
+    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guest.email)
+    && guest.phone.trim().length > 0
   )
 }
 

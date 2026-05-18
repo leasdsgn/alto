@@ -144,6 +144,8 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
 
     let cancelled = false
     let mapInstance: MapboxMap | null = null
+    let handleLoad: (() => void) | null = null
+    const cleanups: Array<() => void> = []
 
     async function initMap() {
       const mapboxgl = (await import('mapbox-gl')).default
@@ -168,7 +170,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
       mapRef.current = map
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right')
 
-      map.on('load', () => {
+      handleLoad = () => {
         try {
           map.setPaintProperty('land', 'background-color', '#f3f3ed')
           map.setPaintProperty('water', 'fill-color', '#e8e4de')
@@ -218,14 +220,19 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
           el.className = 'alto-marker'
           el.dataset.quartier = q.id
           el.innerHTML = `<div class="alto-marker-inner" data-arr="${q.arrondissement}"><span class="alto-marker-label">${q.name}</span></div>`
-          el.addEventListener('click', () => {
+          const handleQuartierClick = () => {
             setActive(q.id)
             map.flyTo({ center: [q.lng, q.lat], zoom: 14, duration: 800 })
-          })
+          }
+
+          el.addEventListener('click', handleQuartierClick)
+          cleanups.push(() => el.removeEventListener('click', handleQuartierClick))
 
           new mapboxgl.Marker({ element: el }).setLngLat([q.lng, q.lat]).addTo(map)
         })
-      })
+      }
+
+      map.on('load', handleLoad)
 
       apartments.forEach((apt) => {
         if (!apt.lat || !apt.lng) return
@@ -233,7 +240,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
 
         const el = document.createElement('div')
         el.className = 'alto-apt-pin'
-        el.innerHTML = `<div class="alto-apt-pin-inner">${apt.price}€</div>`
+        el.innerHTML = `<div class="alto-apt-pin-inner">Dès ${apt.price}€</div>`
 
         const imgSrc = apt.image ?? ''
         const imgBlock = imgSrc
@@ -254,7 +261,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
           <div style="padding:12px 14px 14px;">
             <div style="display:flex;justify-content:space-between;align-items:baseline;">
               <p style="font-weight:700;font-size:15px;color:#301a0a;margin:0;">${apt.name}</p>
-              <p style="font-size:12px;color:#82756b;margin:0;white-space:nowrap;">${apt.price}€/nuit</p>
+              <p style="font-size:12px;color:#82756b;margin:0;white-space:nowrap;">Dès ${apt.price}€/nuit</p>
             </div>
             <div style="margin-top:10px;display:flex;align-items:center;gap:4px;">
               <span style="font-size:11px;font-weight:700;color:#301a0a;letter-spacing:0.24px;">Découvrir</span>
@@ -264,16 +271,23 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
         </a>
       `)
 
-        popup.on('open', () => {
+        const handlePopupOpen = () => {
           const pinInner = el.querySelector('.alto-apt-pin-inner')
           pinInner?.classList.add('alto-apt-pin-active')
           document.querySelectorAll('.alto-apt-pin-inner.alto-apt-pin-active').forEach((other) => {
             if (other !== pinInner) other.classList.remove('alto-apt-pin-active')
           })
-        })
+        }
 
-        popup.on('close', () => {
+        const handlePopupClose = () => {
           el.querySelector('.alto-apt-pin-inner')?.classList.remove('alto-apt-pin-active')
+        }
+
+        popup.on('open', handlePopupOpen)
+        popup.on('close', handlePopupClose)
+        cleanups.push(() => {
+          popup.off('open', handlePopupOpen)
+          popup.off('close', handlePopupClose)
         })
 
         new mapboxgl.Marker({ element: el })
@@ -281,9 +295,12 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
           .setPopup(popup)
           .addTo(map)
 
-        el.addEventListener('click', () => {
+        const handleApartmentClick = () => {
           map.flyTo({ center: [lng, lat], zoom: 15, duration: 600 })
-        })
+        }
+
+        el.addEventListener('click', handleApartmentClick)
+        cleanups.push(() => el.removeEventListener('click', handleApartmentClick))
       })
     }
 
@@ -291,6 +308,8 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
 
     return () => {
       cancelled = true
+      cleanups.forEach((cleanup) => cleanup())
+      if (mapInstance && handleLoad) mapInstance.off('load', handleLoad)
       mapInstance?.remove()
       mapRef.current = null
     }
@@ -513,7 +532,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
                   )}
                   <div className="flex-1">
                     <p className="text-coffee text-xs font-bold">{apt.name}</p>
-                    <p className="text-taupe text-caption">{apt.price}€/nuit</p>
+                    <p className="text-taupe text-caption">Dès {apt.price}€/nuit</p>
                   </div>
                   <Link
                     href={`/appartements/${apt.slug}`}

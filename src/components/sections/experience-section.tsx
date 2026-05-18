@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Button } from '@/components/ui/button'
+import { useLocale } from '@/components/providers/locale-provider'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -17,23 +18,25 @@ interface ExperienceSectionProps {
 }
 
 export function ExperienceSection({ panelImages }: ExperienceSectionProps) {
+  const locale = useLocale()
+  const copy = EXPERIENCE_COPY[locale]
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
 
   const panels = [
     {
-      title: 'Arrivée',
-      description: 'Un quartier vivant, une adresse au cœur des plus beaux quartiers.',
+      label: copy.panels[0].label,
+      title: copy.panels[0].title,
       image: panelImages.arrival,
     },
     {
-      title: 'Checkin',
-      description: 'Accès autonome et gestionnaire joignable 24h/24 et 7j/7.',
+      label: copy.panels[1].label,
+      title: copy.panels[1].title,
       image: panelImages.checkin,
     },
     {
-      title: 'Checkout',
-      description: 'Départ flexible, sans formalités. Laissez les clés, on s’occupe du reste.',
+      label: copy.panels[2].label,
+      title: copy.panels[2].title,
       image: panelImages.checkout,
     },
   ]
@@ -72,24 +75,29 @@ export function ExperienceSection({ panelImages }: ExperienceSectionProps) {
   }, [])
 
   return (
-    <section ref={sectionRef} className="relative py-section md:h-screen md:overflow-hidden md:py-0">
-      <div className="mx-auto flex max-w-content items-stretch px-4 md:h-full md:items-center md:px-gutter-md">
+    <section
+      ref={sectionRef}
+      className="py-section relative md:h-screen md:overflow-hidden md:py-0"
+    >
+      <div className="max-w-content md:px-gutter-md mx-auto flex items-stretch px-4 md:h-full md:items-center">
         <div
           ref={trackRef}
-          className="flex w-full flex-col gap-3 md:flex-row md:items-stretch md:gap-4 md:will-change-transform"
+          className="flex w-full flex-col gap-3 md:flex-row md:items-stretch md:will-change-transform"
         >
-          <div className="bg-taupe flex h-[420px] w-full shrink-0 flex-col justify-between rounded-xl px-5 py-4 md:h-[598px] md:w-[396px] md:px-6 md:py-5">
-            <p className="text-silver text-overline font-bold uppercase tracking-[0.24px]">
-              À PROPOS
+          <div className="bg-taupe relative flex h-[420px] w-full shrink-0 flex-col justify-between overflow-hidden rounded-lg px-5 py-4 md:h-[598px] md:w-[396px] md:px-6 md:py-5">
+            <ArchBackdrop />
+            <p className="text-silver text-overline relative z-10 font-bold tracking-[0.24px] uppercase">
+              {copy.about}
             </p>
-            <div className="flex flex-col gap-6 md:gap-8">
-              <p className="text-cream text-body-xl leading-[1.5] font-semibold">
-                Chaque espace Alto propose une expérience fluide&nbsp;: un séjour
-                où le confort, la lumière, l&rsquo;autonomie et le soin silencieux
-                se conjuguent naturellement.
-              </p>
-              <Button variant="primary" size="regular" href="/notre-histoire" iconRight={<ArrowOutward />} className="self-start">
-                En savoir plus
+            <div className="relative z-10 flex flex-col gap-6 md:gap-8">
+              <Button
+                variant="primary"
+                size="regular"
+                href="/notre-histoire"
+                iconRight={<ArrowOutward />}
+                className="self-start"
+              >
+                {copy.button}
               </Button>
             </div>
           </div>
@@ -97,7 +105,7 @@ export function ExperienceSection({ panelImages }: ExperienceSectionProps) {
           {panels.map((panel) => (
             <div
               key={panel.title}
-              className="relative h-[420px] w-full shrink-0 overflow-hidden rounded-xl md:h-[598px] md:w-[396px]"
+              className="relative h-[420px] w-full shrink-0 overflow-hidden rounded-lg md:h-[598px] md:w-[396px]"
             >
               <Image
                 src={panel.image}
@@ -107,13 +115,13 @@ export function ExperienceSection({ panelImages }: ExperienceSectionProps) {
                 quality={85}
                 className="object-cover"
               />
-              <div className="bg-taupe/80 absolute inset-0 mix-blend-multiply" />
-              <div className="absolute inset-0 flex flex-col justify-between px-5 py-4 md:px-6 md:py-5">
-                <h3 className="text-[#fffff8] text-h4 font-medium tracking-[-0.24px]">
-                  {panel.title}
+              <div className="bg-taupe/80 absolute inset-0 rounded-lg mix-blend-multiply" />
+              <div className="absolute inset-0 px-5 py-6 md:px-8 md:py-8">
+                <h3 className="text-cream text-h4 absolute inset-0 flex items-center justify-start px-5 text-left font-medium tracking-[-0.24px] md:px-8">
+                  {panel.label}
                 </h3>
-                <p className="text-[#fffff8] text-body-xl font-semibold leading-[1.5]">
-                  {panel.description}
+                <p className="text-cream text-body-xl absolute inset-x-5 bottom-6 font-semibold md:inset-x-8 md:bottom-8">
+                  {panel.title}
                 </p>
               </div>
             </div>
@@ -124,9 +132,59 @@ export function ExperienceSection({ panelImages }: ExperienceSectionProps) {
   )
 }
 
+const EXPERIENCE_COPY = {
+  fr: {
+    about: 'À PROPOS',
+    button: 'En savoir plus',
+    panels: [
+      { label: 'Espaces', title: 'Espaces de charme, singuliers, atypiques, et bien pensés.' },
+      {
+        label: 'Localisation',
+        title: 'Bonnes adresses. Au cœur de l’action ou loin des sentiers battus.',
+      },
+      { label: 'Confort', title: 'Standards hôteliers. Soin des détails, équipements modernes.' },
+    ],
+  },
+  en: {
+    about: 'ABOUT',
+    button: 'Learn more',
+    panels: [
+      { label: 'Spaces', title: 'Charming, distinctive, atypical, and carefully designed spaces.' },
+      {
+        label: 'Location',
+        title: 'Good addresses. At the heart of the action or away from the expected path.',
+      },
+      { label: 'Comfort', title: 'Hotel standards. Attention to detail and modern amenities.' },
+    ],
+  },
+} as const
+
+function ArchBackdrop() {
+  return (
+    <div className="pointer-events-none absolute inset-0 opacity-50" aria-hidden="true">
+      <Image
+        src="/images/alto-arch.png"
+        alt=""
+        fill
+        sizes="(max-width: 768px) 100vw, 396px"
+        className="object-cover"
+      />
+    </div>
+  )
+}
+
 function ArrowOutward() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M3 11 11 3M11 3H5M11 3v6" />
     </svg>
   )

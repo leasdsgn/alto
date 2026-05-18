@@ -1,7 +1,10 @@
+import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
-import { type GuestyListing } from '@/types/guesty'
+import { calculateNights } from '@/lib/reservation-validation'
+import { type GuestyListing, type GuestyQuote } from '@/types/guesty'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
+import { getServerLocale } from '@/lib/i18n/server'
 
 function slugify(title: string): string {
   return title
@@ -43,6 +46,13 @@ function mapListing(listing: GuestyListing) {
     maxNights: listing.maxNights,
   }
 }
+
+const getCachedSearchQuote = unstable_cache(
+  (listingId: string, checkIn: string, checkOut: string, guestsCount: number) =>
+    guestyClient.createQuote(listingId, checkIn, checkOut, guestsCount),
+  ['guesty-search-quote'],
+  { revalidate: 300 },
+)
 
 const FALLBACK_APARTMENTS = [
   {
@@ -149,7 +159,12 @@ async function getApartmentsForSearch(criteria: SearchCriteria) {
   try {
     if (hasDates && checkIn && checkOut) {
       const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests)
-      return city ? applyCityFilter(results.map(mapListing), city) : results.map(mapListing)
+      const apartments = city ? applyCityFilter(results.map(mapListing), city) : results.map(mapListing)
+      return withQuotePrices(apartments, {
+        checkIn,
+        checkOut,
+        guestsCount: guests ?? 1,
+      })
     }
 
     const { results } = await guestyClient.getListings()
@@ -159,6 +174,74 @@ async function getApartmentsForSearch(criteria: SearchCriteria) {
   }
 }
 
+async function withQuotePrices<T extends { id: string; price: number }>(
+  apartments: T[],
+  {
+    checkIn,
+    checkOut,
+    guestsCount,
+  }: {
+    checkIn: string
+    checkOut: string
+    guestsCount: number
+  },
+) {
+  let nights = 0
+
+  try {
+    nights = calculateNights(checkIn, checkOut)
+  } catch {
+    return apartments
+  }
+
+  return mapWithConcurrency(apartments, 3, async (apartment) => {
+    if (isFallbackApartmentId(apartment.id)) return apartment
+
+    try {
+      const quote = await getCachedSearchQuote(apartment.id, checkIn, checkOut, guestsCount)
+      const nightlyPrice = getQuoteNightlyPrice(quote, nights)
+      if (!nightlyPrice) return apartment
+
+      return {
+        ...apartment,
+        price: nightlyPrice,
+        priceSource: 'quote' as const,
+      }
+    } catch {
+      return apartment
+    }
+  })
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T) => Promise<R>,
+) {
+  const results: R[] = []
+
+  for (let index = 0; index < items.length; index += concurrency) {
+    const batch = items.slice(index, index + concurrency)
+    const mapped = await Promise.all(batch.map(mapper))
+    results.push(...mapped)
+  }
+
+  return results
+}
+
+function getQuoteNightlyPrice(quote: GuestyQuote, nights: number) {
+  const ratePlan = quote.rates.ratePlans[0]
+  const total = ratePlan?.ratePlan.money.subTotalPrice
+
+  if (!total || !Number.isFinite(total) || nights <= 0) return null
+
+  return Math.round(total / nights)
+}
+
+function isFallbackApartmentId(id: string) {
+  return id.startsWith('fb-') || id.startsWith('ly-')
+}
+
 export { getApartments, getApartmentsForSearch }
 
 export async function ApartmentsSection({
@@ -166,6 +249,8 @@ export async function ApartmentsSection({
 }: {
   apartments?: Awaited<ReturnType<typeof getApartments>>
 }) {
+  const locale = await getServerLocale()
+  const copy = APARTMENTS_SECTION_COPY[locale]
   const data = apartments ?? (await getApartments())
   const paris = applyCityFilter(data, 'paris')
   const lyon = applyCityFilter(data, 'lyon')
@@ -173,11 +258,22 @@ export async function ApartmentsSection({
   return (
     <section className="mx-auto flex max-w-content flex-col gap-12 px-gutter py-section md:px-gutter-md md:py-section-md">
       {paris.length > 0 && (
-        <ApartmentsCarousel apartments={paris} title="Nos appartements à Paris" />
+        <ApartmentsCarousel apartments={paris} title={copy.paris} />
       )}
       {lyon.length > 0 && (
-        <ApartmentsCarousel apartments={lyon} title="Nos appartements à Lyon" />
+        <ApartmentsCarousel apartments={lyon} title={copy.lyon} />
       )}
     </section>
   )
 }
+
+const APARTMENTS_SECTION_COPY = {
+  fr: {
+    paris: 'Nos appartements à Paris',
+    lyon: 'Nos appartements à Lyon',
+  },
+  en: {
+    paris: 'Our apartments in Paris',
+    lyon: 'Our apartments in Lyon',
+  },
+} as const

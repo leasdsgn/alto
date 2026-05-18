@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useTranslations } from '@/components/providers/locale-provider'
+import { useLocale, useTranslations } from '@/components/providers/locale-provider'
 import { LocaleToggle } from '@/components/ui/locale-toggle'
 import { BookingNavPill } from '@/components/ui/booking-nav-pill'
 import { Button } from '@/components/ui/button'
+import { type InquiryLocale } from '@/types/inquiry'
 
 type Tone = 'light' | 'dark'
 type Mode = 'default' | 'apartment'
@@ -17,9 +18,43 @@ interface HeaderProps {
   mode?: Mode
 }
 
+const HEADER_COPY = {
+  fr: {
+    book: 'Réserver',
+    map: 'Voir la carte',
+    openMenu: 'Ouvrir le menu',
+    closeMenu: 'Fermer le menu',
+    navigation: 'Navigation',
+    quickAccess: 'Accès rapide',
+    apartmentsDescription: 'Paris & Lyon',
+    blogDescription: 'Adresses, quartiers, voyages',
+    storyDescription: 'L’approche Alto',
+    footerText:
+      'Séjours haut de gamme à Paris et Lyon, avec une expérience simple à réserver et claire à vivre.',
+    footerButton: 'Réserver un séjour',
+  },
+  en: {
+    book: 'Book',
+    map: 'View map',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+    navigation: 'Navigation',
+    quickAccess: 'Quick access',
+    apartmentsDescription: 'Paris & Lyon',
+    blogDescription: 'Addresses, neighborhoods, travel',
+    storyDescription: 'The Alto approach',
+    footerText:
+      'Premium stays in Paris and Lyon, with a clear booking flow and a simple guest experience.',
+    footerButton: 'Book a stay',
+  },
+} as const
+type HeaderCopy = (typeof HEADER_COPY)[InquiryLocale]
+
 export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
   const [openPath, setOpenPath] = useState<string | null>(null)
   const pathname = usePathname()
+  const locale = useLocale()
+  const copy = HEADER_COPY[locale]
   const t = useTranslations('nav')
   const open = openPath === pathname
   const isApartment = mode === 'apartment'
@@ -39,23 +74,23 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
       {
         href: '/appartements',
         label: t('apartments'),
-        description: 'Paris & Lyon',
+        description: copy.apartmentsDescription,
         match: (path: string) => path.startsWith('/appartements'),
       },
       {
         href: '/blog',
         label: t('blog'),
-        description: 'Adresses, quartiers, voyages',
+        description: copy.blogDescription,
         match: (path: string) => path.startsWith('/blog'),
       },
       {
         href: '/notre-histoire',
         label: t('story'),
-        description: 'L’approche Alto',
+        description: copy.storyDescription,
         match: (path: string) => path.startsWith('/notre-histoire') || path.startsWith('/about'),
       },
     ],
-    [t],
+    [copy.apartmentsDescription, copy.blogDescription, copy.storyDescription, t],
   )
   const secondaryLinks = useMemo(
     () => [
@@ -107,11 +142,15 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
           <div className="flex shrink-0 items-center gap-2">
             {!isApartment && (
               <Button variant="primary" size="small" href="/appartements">
-                Réserver
+                {copy.book}
               </Button>
             )}
-            {isApartment && <MapButton />}
-            <BurgerButton open={open} onClick={() => setOpenPath(open ? null : pathname)} />
+            {isApartment && <MapButton label={copy.map} />}
+            <BurgerButton
+              open={open}
+              copy={copy}
+              onClick={() => setOpenPath(open ? null : pathname)}
+            />
           </div>
         </div>
       </header>
@@ -122,6 +161,7 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
         pathname={pathname}
         primaryLinks={primaryLinks}
         secondaryLinks={secondaryLinks}
+        copy={copy}
       />
 
       <span className={textClass} aria-hidden="true" hidden />
@@ -129,11 +169,11 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
   )
 }
 
-function MapButton() {
+function MapButton({ label }: { label: string }) {
   return (
     <Link
       href="/appartements"
-      aria-label="Voir la carte"
+      aria-label={label}
       className="bg-coffee text-cream flex size-8 items-center justify-center rounded-md transition-opacity hover:opacity-80"
     >
       <svg
@@ -153,16 +193,26 @@ function MapButton() {
   )
 }
 
-function BurgerButton({ open, onClick }: { open: boolean; onClick: () => void }) {
+function BurgerButton({
+  open,
+  copy,
+  onClick,
+}: {
+  open: boolean
+  copy: HeaderCopy
+  onClick: () => void
+}) {
+  const label = open ? copy.closeMenu : copy.openMenu
+
   return (
     <button
       type="button"
-      aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+      aria-label={label}
       aria-expanded={open}
       onClick={onClick}
       className="bg-coffee text-cream relative flex size-8 items-center justify-center rounded-md transition-opacity hover:opacity-80"
     >
-      <span className="sr-only">{open ? 'Fermer le menu' : 'Ouvrir le menu'}</span>
+      <span className="sr-only">{label}</span>
       <span
         className={`absolute h-0.5 w-4 rounded-full bg-current transition-transform duration-300 ${open ? 'translate-y-0 rotate-45' : '-translate-y-[5px]'}`}
       />
@@ -182,6 +232,7 @@ function BurgerOverlay({
   pathname,
   primaryLinks,
   secondaryLinks,
+  copy,
 }: {
   open: boolean
   onClose: () => void
@@ -193,6 +244,7 @@ function BurgerOverlay({
     match: (path: string) => boolean
   }>
   secondaryLinks: Array<{ href: string; label: string }>
+  copy: HeaderCopy
 }) {
   const isActive = (href: string, match?: (path: string) => boolean) =>
     match ? match(pathname) : pathname === href
@@ -236,7 +288,7 @@ function BurgerOverlay({
               <button
                 type="button"
                 className="bg-coffee text-cream flex size-9 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-                aria-label="Fermer le menu"
+                aria-label={copy.closeMenu}
                 onClick={onClose}
               >
                 <svg
@@ -257,7 +309,7 @@ function BurgerOverlay({
             <div className="space-y-8">
               <div>
                 <p className="text-silver text-overline mb-4 font-bold tracking-[0.24px] uppercase">
-                  Navigation
+                  {copy.navigation}
                 </p>
                 <nav className="space-y-3">
                   {primaryLinks.map((link) => {
@@ -303,7 +355,7 @@ function BurgerOverlay({
 
               <div>
                 <p className="text-silver text-overline mb-4 font-bold tracking-[0.24px] uppercase">
-                  Accès rapide
+                  {copy.quickAccess}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {secondaryLinks.map((link) => (
@@ -326,11 +378,10 @@ function BurgerOverlay({
 
             <div className="border-divider mt-8 border-t pt-5">
               <p className="text-taupe text-body-sm mb-4 max-w-[26ch]">
-                Séjours haut de gamme à Paris et Lyon, avec une expérience simple à réserver et
-                claire à vivre.
+                {copy.footerText}
               </p>
               <Button href="/appartements" className="w-full justify-center">
-                Réserver un séjour
+                {copy.footerButton}
               </Button>
             </div>
           </div>

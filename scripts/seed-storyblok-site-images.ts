@@ -36,6 +36,7 @@ const IMAGE_FIELDS = [
   ['home_experience_checkout', 'Home experience checkout'],
   ['about_concept_lounge', 'About concept lounge'],
   ['about_concept_corridor', 'About concept corridor'],
+  ['about_concept_chair', 'About concept chair'],
   ['about_founder_paul', 'About founder Paul'],
   ['about_founder_mayeul', 'About founder Mayeul'],
   ['about_founder_benjamin', 'About founder Benjamin'],

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useLocale } from '@/components/providers/locale-provider'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -19,6 +20,8 @@ interface AboutSectionProps {
 }
 
 export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionProps) {
+  const locale = useLocale()
+  const copy = ABOUT_COPY[locale]
   const sectionRef = useRef<HTMLElement>(null)
   const quoteRef = useRef<HTMLParagraphElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
@@ -65,16 +68,14 @@ export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionP
     >
       <div className="mx-auto max-w-content px-gutter md:px-gutter-md">
         <p className="text-cream text-center text-body leading-[1.5]">
-          Alto, c&rsquo;est une nouvelle manière de penser l&rsquo;hospitalité.
+          {copy.kicker}
         </p>
 
         <p
           ref={quoteRef}
           className="text-cream mt-8 text-center text-xl leading-[1.3] font-bold tracking-[-0.58px] md:text-[29px]"
         >
-          Nous transformons des espaces singuliers en lieux de vie élégants,
-          bien pensés et confortables. Notre mission&nbsp;: permettre aux
-          voyageurs de vivre des séjours sans frictions aux plus belles adresses.
+          {copy.quote}
         </p>
 
         <div
@@ -87,7 +88,7 @@ export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionP
                 <AvatarImage key={i} src={src} alt="" />
               ))}
             </ClusterAvatars>
-            <StatLabel>13 locations</StatLabel>
+            <StatLabel>{copy.locations}</StatLabel>
           </StatCard>
 
           <StatCard>
@@ -96,7 +97,7 @@ export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionP
                 <AvatarImage key={i} src={src} alt="" />
               ))}
             </ClusterAvatars>
-            <StatLabel>4 500+ voyageurs</StatLabel>
+            <StatLabel>{copy.travelers}</StatLabel>
           </StatCard>
 
           <StatCard>
@@ -105,13 +106,32 @@ export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionP
                 <AvatarCircle key={p.name} bg={p.bg} label={p.label} aria-label={p.name} />
               ))}
             </ClusterAvatars>
-            <StatLabel>4,9 de note moyenne</StatLabel>
+            <StatLabel>{copy.rating}</StatLabel>
           </StatCard>
         </div>
       </div>
     </section>
   )
 }
+
+const ABOUT_COPY = {
+  fr: {
+    kicker: 'Alto, c’est une nouvelle manière de penser l’hospitalité.',
+    quote:
+      'Nous transformons des espaces singuliers en lieux de vie élégants, bien pensés et confortables. Notre mission : permettre aux voyageurs de vivre des séjours sans frictions aux plus belles adresses.',
+    locations: '13 locations',
+    travelers: '4 500+ voyageurs',
+    rating: '4,9 de note moyenne',
+  },
+  en: {
+    kicker: 'Alto is a new way to think about hospitality.',
+    quote:
+      'We turn distinctive spaces into elegant, considered, and comfortable places to live. Our mission: helping travelers enjoy clear, easy stays at carefully selected addresses.',
+    locations: '13 locations',
+    travelers: '4,500+ guests',
+    rating: '4.9 average rating',
+  },
+} as const
 
 function StatCard({ children }: { children: React.ReactNode }) {
   return (

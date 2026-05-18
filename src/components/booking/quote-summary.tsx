@@ -30,7 +30,7 @@ export function QuoteSummary({
   const guestsLabel = guestsCount > 1 ? t(locale, 'guestsPlural') : t(locale, 'guests')
 
   return (
-    <aside className="bg-cream border-divider rounded-xl border p-6">
+    <aside className="bg-cream border-divider self-start rounded-xl border p-6">
       <h2 className="text-coffee mb-5 text-lg font-semibold">{listingTitle}</h2>
 
       <dl className="space-y-3 text-sm">

@@ -3,9 +3,9 @@ import { loadStripe, type Stripe } from '@stripe/stripe-js'
 const stripeCache = new Map<string, Promise<Stripe | null>>()
 
 export function getStripeInstance(
-  _connectedAccountId: string | null,
+  connectedAccountId: string | null,
 ): Promise<Stripe | null> {
-  const cacheKey = '__default__'
+  const cacheKey = connectedAccountId ?? '__default__'
   const cached = stripeCache.get(cacheKey)
   if (cached) return cached
 
@@ -14,7 +14,10 @@ export function getStripeInstance(
     throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY manquante')
   }
 
-  const promise = loadStripe(publishableKey)
+  const promise = loadStripe(
+    publishableKey,
+    connectedAccountId ? { stripeAccount: connectedAccountId } : undefined,
+  )
   stripeCache.set(cacheKey, promise)
   return promise
 }
