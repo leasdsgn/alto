@@ -48,10 +48,10 @@ export function HeroSection({ backgroundImage, overlayImage }: HeroSectionProps)
   }, [])
 
   return (
-    <section ref={sectionRef} className="relative h-svh">
+    <section ref={sectionRef} className="relative h-svh overflow-hidden">
       <div
         ref={bgRef}
-        className="absolute inset-0 overflow-hidden"
+        className="absolute inset-0"
       >
         <Image
           src={backgroundImage}
@@ -78,8 +78,8 @@ export function HeroSection({ backgroundImage, overlayImage }: HeroSectionProps)
 
       <Header />
 
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-end px-6 pb-40 md:pb-52">
-        <div className="w-full max-w-[1212px]">
+      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 pb-28 pt-28 md:pb-36 md:pt-36">
+        <div className="w-full max-w-[1212px] md:-translate-y-6">
           <h1 className="text-cream flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-center text-2xl leading-none font-medium tracking-[0.12em] uppercase md:gap-x-8 md:text-h1 md:tracking-[0.16em]">
             <span>LIFTED</span>
             <span aria-hidden="true" className="bg-cream size-2 rounded-full md:size-2.5" />
