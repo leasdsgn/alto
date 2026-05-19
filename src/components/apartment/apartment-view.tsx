@@ -9,11 +9,19 @@ import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { ApartmentEditorialSections } from '@/components/sections/apartment-editorial-sections'
 import { Button } from '@/components/ui/button'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
+import type {
+  ApartmentEditorial,
+  ApartmentFaqItem,
+} from '@/lib/storyblok-apartment-editorial'
 import { type Apartment } from '@/types/apartment'
+import type { InquiryLocale } from '@/types/inquiry'
 
 interface Props {
   apartment: Apartment
   recommendations: Apartment[]
+  editorial?: ApartmentEditorial | null
+  globalFaq: ApartmentFaqItem[]
+  locale: InquiryLocale
 }
 
 interface ReviewItem {
@@ -26,14 +34,6 @@ interface FeatureItem {
   title: string
   description: string
 }
-
-const BASE_FAQ = [
-  'Comment fonctionne le check-in ?',
-  'Le ménage est-il inclus ?',
-  'Puis-je réserver en direct ?',
-  'Quelle est la durée minimum du séjour ?',
-  'Que comprend le prix affiché ?',
-]
 
 const FEATURE_LIBRARY = [
   {
@@ -108,6 +108,108 @@ const FALLBACK_FEATURES: FeatureItem[] = [
   },
 ]
 
+const FEATURE_LIBRARY_EN = [
+  {
+    matches: ['wifi', 'internet'],
+    title: 'Fast Wi-Fi',
+    description: 'A stable connection for remote work, calls, or streaming during your stay.',
+  },
+  {
+    matches: ['cuisine', 'kitchen'],
+    title: 'Equipped kitchen',
+    description: 'Everything needed to cook at home and keep the rhythm of a real stay.',
+  },
+  {
+    matches: ['linge', 'linen', 'washer', 'dryer'],
+    title: 'Linen and laundry',
+    description: 'Household linen and daily essentials are prepared for a comfortable arrival.',
+  },
+  {
+    matches: ['clim', 'air conditioning', 'heating'],
+    title: 'Thermal comfort',
+    description: 'The apartment stays comfortable year-round with season-ready equipment.',
+  },
+  {
+    matches: ['parking'],
+    title: 'Parking',
+    description: 'A practical addition for late arrivals, early departures, and longer stays.',
+  },
+  {
+    matches: ['tv', 'television'],
+    title: 'Relaxation area',
+    description: 'A living space designed to rest after the day, read, watch a film, or slow down.',
+  },
+  {
+    matches: ['workspace', 'desk', 'travail'],
+    title: 'Workspace',
+    description: 'A practical spot to open a laptop, answer emails, or extend a work stay.',
+  },
+  {
+    matches: ['coffee', 'espresso', 'maker'],
+    title: 'Coffee corner',
+    description: 'Everything needed to start the day at home.',
+  },
+  {
+    matches: ['soap', 'shampoo', 'body wash'],
+    title: 'Equipped bathroom',
+    description: 'Essentials are provided so you can travel lighter.',
+  },
+]
+
+const FALLBACK_FEATURES_EN: FeatureItem[] = [
+  {
+    title: 'Easy arrival',
+    description: 'The booking and arrival flow is designed to stay simple, even for late check-ins.',
+  },
+  {
+    title: 'Lively neighborhood',
+    description: 'The location keeps restaurants, transport, and points of interest within easy reach.',
+  },
+  {
+    title: 'Independent stay',
+    description: 'You keep the privacy and freedom of an apartment, with the expected level of care.',
+  },
+]
+
+const APARTMENT_COPY = {
+  fr: {
+    book: 'Réserver',
+    from: 'Dès',
+    perNight: '/nuit',
+    trips: '114 voyages',
+    fallbackNeighborhood: 'Quartier central',
+    guests: (count: number) => `${count} p.`,
+    bedroom: (count: number) => `${count} chambre${count > 1 ? 's' : ''}`,
+    apartmentsTitle: (city: string | null) =>
+      city ? `Nos appartements à ${city}` : 'Nos appartements',
+    minNightsQuestion: 'Quelle est la durée minimum du séjour ?',
+    faqTitle: 'FAQ',
+    faqHeading: 'Questions fréquentes',
+    minNightsAnswer: (nights: number, city: string) =>
+      `Le séjour minimum est de ${nights} nuit${nights > 1 ? 's' : ''}. Cela permet de conserver une expérience homogène dans l’appartement et dans ${city}.`,
+    featureLibrary: FEATURE_LIBRARY,
+    fallbackFeatures: FALLBACK_FEATURES,
+  },
+  en: {
+    book: 'Book',
+    from: 'From',
+    perNight: '/night',
+    trips: '114 stays',
+    fallbackNeighborhood: 'Central neighborhood',
+    guests: (count: number) => `${count} guest${count > 1 ? 's' : ''}`,
+    bedroom: (count: number) => `${count} bedroom${count > 1 ? 's' : ''}`,
+    apartmentsTitle: (city: string | null) =>
+      city ? `Our apartments in ${city}` : 'Our apartments',
+    minNightsQuestion: 'What is the minimum stay?',
+    faqTitle: 'FAQ',
+    faqHeading: 'Frequently asked questions',
+    minNightsAnswer: (nights: number, city: string) =>
+      `The minimum stay is ${nights} night${nights > 1 ? 's' : ''}. This helps keep a consistent experience in the apartment and in ${city}.`,
+    featureLibrary: FEATURE_LIBRARY_EN,
+    fallbackFeatures: FALLBACK_FEATURES_EN,
+  },
+} as const
+
 const REVIEW_BY_SLUG: Record<string, ReviewItem> = {
   'le-faubourg': {
     quote:
@@ -129,16 +231,31 @@ const REVIEW_BY_SLUG: Record<string, ReviewItem> = {
   },
 }
 
-export function ApartmentView({ apartment, recommendations }: Props) {
+export function ApartmentView({
+  apartment,
+  recommendations,
+  editorial,
+  globalFaq,
+  locale,
+}: Props) {
+  const copy = APARTMENT_COPY[locale]
   const cityName = getCityName(apartment)
-  const neighborhoodName = getNeighborhoodName(apartment)
+  const neighborhoodName =
+    editorial?.neighborhoodName ?? getNeighborhoodName(apartment, copy.fallbackNeighborhood)
   const coverImage = apartment.images[0] ?? apartment.image
   const galleryImages = getGalleryImages(apartment)
-  const featureItems = getFeatureItems(apartment)
-  const faqItems = getFaqItems(apartment)
-  const review = REVIEW_BY_SLUG[apartment.slug] ?? REVIEW_BY_SLUG['le-faubourg']
-  const recommendationItems = getRecommendationItems(apartment, recommendations)
-  const recommendationTitle = cityName ? `Nos appartements à ${cityName}` : 'Nos appartements'
+  const featureItems = getFeatureItems(apartment, copy, editorial)
+  const faqItems = getFaqItems(apartment, globalFaq, copy, editorial)
+  const review = editorial?.review ?? REVIEW_BY_SLUG[apartment.slug] ?? REVIEW_BY_SLUG['le-faubourg']
+  const recommendationItems = getRecommendationItems(
+    apartment,
+    recommendations,
+    copy.fallbackNeighborhood,
+  )
+  const recommendationTitle = copy.apartmentsTitle(cityName)
+  const description = editorial?.description ?? apartment.description
+  const space = editorial?.space ?? apartment.space
+  const transit = editorial?.transit ?? apartment.transit
 
   return (
     <>
@@ -152,18 +269,18 @@ export function ApartmentView({ apartment, recommendations }: Props) {
           <h1 className="text-coffee text-h4 max-w-4xl font-bold sm:text-h3">{apartment.name}</h1>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-            <MetaStat icon={<GuestsIcon />} value={`${apartment.guests} p.`} />
+            <MetaStat icon={<GuestsIcon />} value={copy.guests(apartment.guests)} />
             {apartment.surface > 0 && (
               <MetaStat icon={<SurfaceIcon />} value={`${apartment.surface} m²`} />
             )}
             {apartment.bedrooms > 0 && (
               <MetaStat
                 icon={<BedroomIcon />}
-                value={`${apartment.bedrooms} chambre${apartment.bedrooms > 1 ? 's' : ''}`}
+                value={copy.bedroom(apartment.bedrooms)}
               />
             )}
             <MetaStat icon={<RatingIcon />} value="4,9 (113)" />
-            <MetaStat value="114 voyages" />
+            <MetaStat value={copy.trips} />
           </div>
 
           <div className="mt-6">
@@ -202,12 +319,22 @@ export function ApartmentView({ apartment, recommendations }: Props) {
               </div>
 
               <div className="mt-6 max-w-3xl space-y-5 sm:mt-8">
-                <p className="text-ash text-body leading-[1.6]">{apartment.description}</p>
-                {apartment.space && (
-                  <p className="text-ash text-body leading-[1.6]">{apartment.space}</p>
+                {editorial?.intro && (
+                  <p className="text-coffee text-body-xl font-semibold leading-[1.5]">
+                    {editorial.intro}
+                  </p>
                 )}
-                {apartment.transit && (
-                  <p className="text-ash text-body leading-[1.6]">{apartment.transit}</p>
+                <p className="text-ash text-body leading-[1.6]">{description}</p>
+                {space && (
+                  <p className="text-ash text-body leading-[1.6]">{space}</p>
+                )}
+                {editorial?.neighborhoodDescription && (
+                  <p className="text-ash text-body leading-[1.6]">
+                    {editorial.neighborhoodDescription}
+                  </p>
+                )}
+                {transit && (
+                  <p className="text-ash text-body leading-[1.6]">{transit}</p>
                 )}
               </div>
             </section>
@@ -232,7 +359,11 @@ export function ApartmentView({ apartment, recommendations }: Props) {
             </section>
 
             <section className="pb-8">
-              <ApartmentFaq items={faqItems} />
+              <ApartmentFaq
+                items={faqItems}
+                title={copy.faqTitle}
+                heading={copy.faqHeading}
+              />
             </section>
           </div>
 
@@ -265,23 +396,30 @@ export function ApartmentView({ apartment, recommendations }: Props) {
         <div className="flex items-center justify-between gap-4">
           <div>
             <span className="text-coffee text-body-xl font-semibold">
-              Dès {apartment.price.toLocaleString('fr-FR')}&euro;
+              {copy.from} {apartment.price.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-GB')}
+              &euro;
             </span>
-            <span className="text-taupe text-body-sm"> /nuit</span>
+            <span className="text-taupe text-body-sm"> {copy.perNight}</span>
           </div>
-          <Button href={`/book/${apartment.slug}`}>Réserver</Button>
+          <Button href={`/book/${apartment.slug}`}>{copy.book}</Button>
         </div>
       </div>
     </>
   )
 }
 
-function getFeatureItems(apartment: Apartment): FeatureItem[] {
+function getFeatureItems(
+  apartment: Apartment,
+  copy: (typeof APARTMENT_COPY)[InquiryLocale],
+  editorial?: ApartmentEditorial | null,
+): FeatureItem[] {
+  if (editorial?.features.length) return editorial.features
+
   const items: FeatureItem[] = []
   const seen = new Set<string>()
   const normalizedAmenities = apartment.amenities.map(normalizeValue)
 
-  for (const preset of FEATURE_LIBRARY) {
+  for (const preset of copy.featureLibrary) {
     const matchFound = normalizedAmenities.some((amenity) =>
       preset.matches.some((match) => amenity.includes(match)),
     )
@@ -294,7 +432,7 @@ function getFeatureItems(apartment: Apartment): FeatureItem[] {
     if (items.length === 5) break
   }
 
-  for (const fallback of FALLBACK_FEATURES) {
+  for (const fallback of copy.fallbackFeatures) {
     if (items.length === 5) break
     if (seen.has(fallback.title)) continue
     items.push(fallback)
@@ -309,39 +447,30 @@ function getGalleryImages(apartment: Apartment) {
   return apartment.image ? [apartment.image] : []
 }
 
-function getFaqItems(apartment: Apartment) {
+function getFaqItems(
+  apartment: Apartment,
+  globalFaq: ApartmentFaqItem[],
+  copy: (typeof APARTMENT_COPY)[InquiryLocale],
+  editorial?: ApartmentEditorial | null,
+) {
   const minNights = apartment.minNights > 0 ? apartment.minNights : 2
   const cityName = getCityName(apartment)
 
   return [
+    ...globalFaq,
     {
-      question: BASE_FAQ[0],
-      answer:
-        'L’arrivée se fait en autonomie avec des instructions envoyées avant le séjour. L’équipe reste disponible si vous avez besoin d’aide.',
+      question: copy.minNightsQuestion,
+      answer: copy.minNightsAnswer(minNights, cityName),
     },
-    {
-      question: BASE_FAQ[1],
-      answer:
-        'Le ménage de départ est prévu et l’appartement est préparé avant votre arrivée pour un séjour sans logistique supplémentaire.',
-    },
-    {
-      question: BASE_FAQ[2],
-      answer:
-        'Oui. La réservation peut se faire directement sur Alto avec le même niveau d’information, un contact plus direct et un suivi plus simple.',
-    },
-    {
-      question: BASE_FAQ[3],
-      answer: `Le séjour minimum est de ${minNights} nuit${minNights > 1 ? 's' : ''}. Cela permet de conserver une expérience homogène dans l’appartement et dans ${cityName}.`,
-    },
-    {
-      question: BASE_FAQ[4],
-      answer:
-        'Le tarif couvre le logement, le linge de maison, le Wi-Fi et l’accompagnement de l’équipe. Les conditions exactes restent précisées au moment de la réservation.',
-    },
+    ...(editorial?.faqExtra ?? []),
   ]
 }
 
-function getRecommendationItems(apartment: Apartment, recommendations: Apartment[]) {
+function getRecommendationItems(
+  apartment: Apartment,
+  recommendations: Apartment[],
+  fallbackNeighborhood: string,
+) {
   const sameCity = recommendations.filter(
     (item) => normalizeValue(item.city) === normalizeValue(apartment.city),
   )
@@ -351,7 +480,7 @@ function getRecommendationItems(apartment: Apartment, recommendations: Apartment
 
   return [...sameCity, ...fallback].slice(0, 4).map((item) => ({
     ...item,
-    neighborhoodLabel: getNeighborhoodName(item),
+    neighborhoodLabel: getNeighborhoodName(item, fallbackNeighborhood),
   }))
 }
 
@@ -366,7 +495,7 @@ function getCityName(apartment: Apartment) {
   return addressParts.at(-1) ?? 'Paris'
 }
 
-function getNeighborhoodName(apartment: Apartment) {
+function getNeighborhoodName(apartment: Apartment, fallbackNeighborhood: string) {
   const mapped = getNeighborhoodBySlug(apartment.slug)
   if (mapped) return mapped
 
@@ -377,7 +506,7 @@ function getNeighborhoodName(apartment: Apartment) {
   const byComma = raw.split(',')[0]?.trim()
   if (byComma && byComma.length <= 32) return byComma
 
-  return apartment.city ?? 'Quartier central'
+  return apartment.city ?? fallbackNeighborhood
 }
 
 function normalizeValue(value: string | undefined | null) {

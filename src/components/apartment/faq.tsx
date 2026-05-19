@@ -9,16 +9,18 @@ interface FaqItem {
 
 interface FaqProps {
   items: FaqItem[]
+  title?: string
+  heading?: string
 }
 
-export function ApartmentFaq({ items }: FaqProps) {
+export function ApartmentFaq({ items, title = 'FAQ', heading = 'Questions fréquentes' }: FaqProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
     <div>
-      <p className="text-silver text-overline font-bold tracking-[0.24px] uppercase">FAQ</p>
+      <p className="text-silver text-overline font-bold tracking-[0.24px] uppercase">{title}</p>
       <h2 className="text-coffee text-body-xl mt-2 leading-[1.5] font-semibold">
-        Questions fréquentes
+        {heading}
       </h2>
 
       <div className="mt-6 flex flex-col">

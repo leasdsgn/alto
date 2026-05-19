@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "storyblok:seed-images": "bun run scripts/seed-storyblok-site-images.ts",
+    "storyblok:seed-apartments": "bun run scripts/seed-storyblok-apartments.ts",
     "storyblok:sync-assets": "bun run scripts/sync-storyblok-site-assets.ts",
     "test": "vitest run",
     "test:watch": "vitest"
