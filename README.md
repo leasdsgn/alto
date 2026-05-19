@@ -55,10 +55,16 @@ Le site lit les contenus Storyblok en `published` par défaut et passe en `draft
 URL de preview à configurer dans Storyblok :
 
 ```txt
-https://alto-collection.com/api/storyblok/preview?secret=STORYBLOK_PREVIEW_SECRET&slug={story.full_slug}
+https://alto-collection.com/preview
 ```
 
-Pour la story d'accueil, renseigner `/` dans le champ `Real path` du Visual Editor.
+Pour la story `site-images`, renseigner `/` dans le champ `Real path` du Visual Editor.
+
+La route manuelle suivante reste disponible pour activer le draft mode depuis un lien sécurisé :
+
+```txt
+https://alto-collection.com/api/storyblok/preview?secret=STORYBLOK_PREVIEW_SECRET&slug=/
+```
 
 ## Architecture réservation
 
