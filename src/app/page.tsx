@@ -22,7 +22,7 @@ export default async function Home() {
 
   return (
     <>
-      <main>
+      <main {...siteImages.editable}>
         <HeroSection
           backgroundImage={siteImages.home.heroBackground}
           overlayImage={siteImages.home.heroOverlay}
