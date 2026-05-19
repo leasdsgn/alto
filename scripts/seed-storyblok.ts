@@ -1,10 +1,10 @@
 /**
  * Script pour créer les articles placeholder dans Storyblok.
- * Usage : STORYBLOK_PERSONAL_TOKEN=xxx npx tsx scripts/seed-storyblok.ts
+ * Usage : STORYBLOK_PERSONAL_TOKEN=xxx bun run storyblok:seed-blog
  */
 
 const TOKEN = process.env.STORYBLOK_PERSONAL_TOKEN
-const SPACE_ID = '291441851126938'
+const SPACE_ID = process.env.STORYBLOK_SPACE_ID || '291441851126938'
 
 if (!TOKEN) {
   console.error('STORYBLOK_PERSONAL_TOKEN requis')
@@ -16,6 +16,15 @@ const API = `https://mapi.storyblok.com/v1/spaces/${SPACE_ID}`
 const headers = {
   Authorization: TOKEN,
   'Content-Type': 'application/json',
+}
+
+interface StoryblokComponent {
+  id: number
+  name: string
+}
+
+interface ComponentListResponse {
+  components?: StoryblokComponent[]
 }
 
 const ARTICLES = [
@@ -117,69 +126,107 @@ const ARTICLES = [
   },
 ]
 
-async function createComponent() {
-  const res = await fetch(`${API}/components`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      component: {
-        name: 'article',
-        display_name: 'Article',
-        is_root: true,
-        is_nestable: false,
-        schema: {
-          title: { type: 'text', pos: 0, display_name: 'Titre' },
-          subtitle: { type: 'text', pos: 1, display_name: 'Sous-titre' },
-          category: { type: 'text', pos: 2, display_name: 'Catégorie' },
-          date: { type: 'text', pos: 3, display_name: 'Date' },
-          image: { type: 'image', pos: 4, display_name: 'Image' },
-          sections: { type: 'bloks', pos: 5, display_name: 'Sections', restrict_components: true, component_whitelist: ['article_section'] },
-        },
+const COMPONENTS = [
+  {
+    name: 'article_section',
+    display_name: 'Section article',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      label: {
+        type: 'text',
+        pos: 0,
+        display_name: 'Label',
+        translatable: true,
       },
-    }),
-  })
+      heading: {
+        type: 'text',
+        pos: 1,
+        display_name: 'Titre',
+        translatable: true,
+      },
+      text: {
+        type: 'textarea',
+        pos: 2,
+        display_name: 'Texte',
+        translatable: true,
+      },
+    },
+  },
+  {
+    name: 'article',
+    display_name: 'Article',
+    is_root: true,
+    is_nestable: false,
+    schema: {
+      title: {
+        type: 'text',
+        pos: 0,
+        display_name: 'Titre',
+        translatable: true,
+      },
+      subtitle: {
+        type: 'text',
+        pos: 1,
+        display_name: 'Sous-titre',
+        translatable: true,
+      },
+      category: {
+        type: 'text',
+        pos: 2,
+        display_name: 'Catégorie',
+        translatable: true,
+      },
+      date: {
+        type: 'text',
+        pos: 3,
+        display_name: 'Date',
+      },
+      image: {
+        type: 'image',
+        pos: 4,
+        display_name: 'Image',
+      },
+      sections: {
+        type: 'bloks',
+        pos: 5,
+        display_name: 'Sections',
+        restrict_components: true,
+        component_whitelist: ['article_section'],
+      },
+    },
+  },
+] as const
 
-  if (!res.ok) {
-    const text = await res.text()
-    if (text.includes('already exists')) {
-      console.log('Component "article" existe déjà')
-      return
-    }
-    console.error('Erreur création component article:', text)
-    return
-  }
-  console.log('Component "article" créé')
+async function getComponents() {
+  const res = await fetch(`${API}/components`, { headers })
+  if (!res.ok) throw new Error(await res.text())
+  const data = (await res.json()) as ComponentListResponse
+  return data.components ?? []
 }
 
-async function createSectionComponent() {
-  const res = await fetch(`${API}/components`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      component: {
-        name: 'article_section',
-        display_name: 'Section article',
-        is_root: false,
-        is_nestable: true,
-        schema: {
-          label: { type: 'text', pos: 0, display_name: 'Label' },
-          heading: { type: 'text', pos: 1, display_name: 'Titre' },
-          text: { type: 'textarea', pos: 2, display_name: 'Texte' },
-        },
-      },
-    }),
-  })
+async function upsertComponent(existing: StoryblokComponent[], component: (typeof COMPONENTS)[number]) {
+  const current = existing.find((item) => item.name === component.name)
+  const payload = { component }
 
-  if (!res.ok) {
-    const text = await res.text()
-    if (text.includes('already exists')) {
-      console.log('Component "article_section" existe déjà')
-      return
-    }
-    console.error('Erreur création component article_section:', text)
+  if (!current) {
+    const res = await fetch(`${API}/components`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) throw new Error(await res.text())
+    console.log(`Component "${component.name}" créé`)
     return
   }
-  console.log('Component "article_section" créé')
+
+  const res = await fetch(`${API}/components/${current.id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  console.log(`Component "${component.name}" mis à jour`)
 }
 
 async function createStory(article: (typeof ARTICLES)[0]) {
@@ -215,8 +262,11 @@ async function createStory(article: (typeof ARTICLES)[0]) {
 
 async function main() {
   console.log('Création des components...')
-  await createSectionComponent()
-  await createComponent()
+  const existingComponents = await getComponents()
+
+  for (const component of COMPONENTS) {
+    await upsertComponent(existingComponents, component)
+  }
 
   console.log('\nCréation des articles...')
   for (const article of ARTICLES) {

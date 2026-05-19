@@ -25,6 +25,7 @@ Le serveur tourne sur `http://localhost:3000`.
 | `bun run typecheck`    | Vérification TypeScript |
 | `bun run format`       | Prettier (écriture)     |
 | `bun run format:check` | Prettier (vérification) |
+| `bun run storyblok:seed-blog` | Crée ou met à jour le modèle blog dans Storyblok |
 | `bun run storyblok:seed-apartments` | Crée le modèle éditorial des appartements dans Storyblok |
 
 ## Variables d'environnement
@@ -81,7 +82,7 @@ Chaque story appartement doit utiliser le composant `apartment_editorial` et ren
 - `guesty_id` : ID Guesty de l’appartement
 - `slug` : slug front, par exemple `voltaire-iii`
 
-Les champs texte sont marqués comme traduisibles dans Storyblok pour gérer FR/EN.
+Les champs texte des modèles blog et appartements sont marqués comme traduisibles dans Storyblok pour gérer FR/EN.
 
 ## Architecture réservation
 
