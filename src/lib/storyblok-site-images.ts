@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { storyblokEditable } from '@storyblok/react/rsc'
 import { DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { getStoryblokToken, getStoryblokVersion } from '@/lib/storyblok-preview'
 import { type InquiryLocale } from '@/types/inquiry'
@@ -14,7 +15,11 @@ interface StoryblokStoryResponse {
   }
 }
 
+type StoryblokEditableAttrs = Record<'data-blok-c' | 'data-blok-uid', string>
+type StoryblokEditableBlok = Parameters<typeof storyblokEditable>[0]
+
 export interface SiteImages {
+  editable?: StoryblokEditableAttrs
   footerBackground: string
   shared: {
     locationAvatars: [string, string, string]
@@ -123,6 +128,7 @@ export const getSiteImages = cache(
     if (!content) return DEFAULT_SITE_IMAGES
 
     return {
+      editable: storyblokEditable(content as StoryblokEditableBlok) as StoryblokEditableAttrs,
       footerBackground: asset(content.footer_background, DEFAULT_SITE_IMAGES.footerBackground),
       shared: {
         locationAvatars: [
