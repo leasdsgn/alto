@@ -1,28 +1,32 @@
-import { HeroSection } from '@/components/sections/hero-section'
+import { storyblokEditable } from '@storyblok/react/rsc'
+import { Footer } from '@/components/layout/footer'
 import { AboutSection } from '@/components/sections/about-section'
 import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
+import { BlogSection } from '@/components/sections/blog-section'
 import { ExperienceSection } from '@/components/sections/experience-section'
+import { HeroSection } from '@/components/sections/hero-section'
 import { ServicesSection } from '@/components/sections/services-section'
 import { TestimonialsSection } from '@/components/sections/testimonials-section'
-import { BlogSection } from '@/components/sections/blog-section'
-import { StickyCta } from '@/components/ui/sticky-cta'
-import { Footer } from '@/components/layout/footer'
 import { GuestySearchWidget } from '@/components/ui/guesty-search-widget'
+import { StickyCta } from '@/components/ui/sticky-cta'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
-import { getSiteImages } from '@/lib/storyblok-site-images'
+import { mapSiteImagesContent } from '@/lib/storyblok-site-images'
 
-export default async function Home() {
+type SiteImagesBlok = Record<string, unknown>
+type StoryblokEditableBlok = Parameters<typeof storyblokEditable>[0]
+
+export async function SiteImagesStory({ blok }: { blok: SiteImagesBlok }) {
   const locale = await getServerLocale()
-  const [apartments, blogArticles, siteImages] = await Promise.all([
+  const siteImages = mapSiteImagesContent(blok)
+  const [apartments, blogArticles] = await Promise.all([
     getApartments(),
-    getBlogArticles(locale),
-    getSiteImages(locale),
+    getBlogArticles(locale, 'draft'),
   ])
 
   return (
     <>
-      <main>
+      <main {...storyblokEditable(blok as StoryblokEditableBlok)}>
         <HeroSection
           backgroundImage={siteImages.home.heroBackground}
           overlayImage={siteImages.home.heroOverlay}

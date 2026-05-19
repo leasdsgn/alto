@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
 import { Manrope } from 'next/font/google'
 import { Agentation } from 'agentation'
 import { Toaster } from 'sonner'
 import { I18nProvider } from '@/components/providers/i18n-provider'
 import { LocaleProvider } from '@/components/providers/locale-provider'
-import { StoryblokBridge } from '@/components/providers/storyblok-bridge'
+import { StoryblokProvider } from '@/components/providers/storyblok-provider'
 import { CustomCursor } from '@/components/ui/custom-cursor'
 import { LenisProvider } from '@/components/providers/lenis-provider'
 import { getServerLocale } from '@/lib/i18n/server'
@@ -30,41 +29,38 @@ export default async function RootLayout({
   const locale = await getServerLocale()
 
   return (
-    <html lang={locale} className={`${manrope.className} h-full antialiased`}>
-      <head>
-        <link rel="icon" href="/favicon.ico?v=alto-arch-3" sizes="any" />
-        <link rel="shortcut icon" href="/favicon.ico?v=alto-arch-3" />
-        <link rel="apple-touch-icon" href="/apple-icon.png?v=alto-arch-3" />
-      </head>
-      <body
-        className="text-coffee flex min-h-full flex-col"
-        style={{ background: 'var(--Floral-white, #FFFFF8)' }}
-        suppressHydrationWarning
-      >
-        <LocaleProvider>
-          <LenisProvider>
-            <I18nProvider>
-              {children}
-            </I18nProvider>
-          </LenisProvider>
-        </LocaleProvider>
-        <Suspense fallback={null}>
-          <StoryblokBridge />
-        </Suspense>
-        <CustomCursor />
-        <Toaster
-          position="top-center"
-          theme="light"
-          toastOptions={{
-            classNames: {
-              toast: 'bg-cream border border-divider text-coffee',
-              title: 'text-coffee font-semibold',
-              description: 'text-taupe',
-            },
-          }}
-        />
-        {process.env.NODE_ENV === 'development' && <Agentation />}
-      </body>
-    </html>
+    <StoryblokProvider>
+      <html lang={locale} className={`${manrope.className} h-full antialiased`}>
+        <head>
+          <link rel="icon" href="/favicon.ico?v=alto-arch-3" sizes="any" />
+          <link rel="shortcut icon" href="/favicon.ico?v=alto-arch-3" />
+          <link rel="apple-touch-icon" href="/apple-icon.png?v=alto-arch-3" />
+        </head>
+        <body
+          className="text-coffee flex min-h-full flex-col"
+          style={{ background: 'var(--Floral-white, #FFFFF8)' }}
+          suppressHydrationWarning
+        >
+          <LocaleProvider>
+            <LenisProvider>
+              <I18nProvider>{children}</I18nProvider>
+            </LenisProvider>
+          </LocaleProvider>
+          <CustomCursor />
+          <Toaster
+            position="top-center"
+            theme="light"
+            toastOptions={{
+              classNames: {
+                toast: 'bg-cream border border-divider text-coffee',
+                title: 'text-coffee font-semibold',
+                description: 'text-taupe',
+              },
+            }}
+          />
+          {process.env.NODE_ENV === 'development' && <Agentation />}
+        </body>
+      </html>
+    </StoryblokProvider>
   )
 }

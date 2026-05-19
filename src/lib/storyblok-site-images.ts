@@ -1,5 +1,4 @@
 import { cache } from 'react'
-import { storyblokEditable } from '@storyblok/react/rsc'
 import { DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { getStoryblokToken, getStoryblokVersion } from '@/lib/storyblok-preview'
 import { type InquiryLocale } from '@/types/inquiry'
@@ -15,11 +14,9 @@ interface StoryblokStoryResponse {
   }
 }
 
-type StoryblokEditableAttrs = Record<'data-blok-c' | 'data-blok-uid', string>
-type StoryblokEditableBlok = Parameters<typeof storyblokEditable>[0]
+type StoryblokVersion = 'draft' | 'published'
 
 export interface SiteImages {
-  editable?: StoryblokEditableAttrs
   footerBackground: string
   shared: {
     locationAvatars: [string, string, string]
@@ -119,94 +116,91 @@ const DEFAULT_SITE_IMAGES: SiteImages = {
 }
 
 export const getSiteImages = cache(
-  async (locale: InquiryLocale = DEFAULT_LOCALE): Promise<SiteImages> => {
-    const version = await getStoryblokVersion()
+  async (
+    locale: InquiryLocale = DEFAULT_LOCALE,
+    versionOverride?: StoryblokVersion,
+  ): Promise<SiteImages> => {
+    const version = versionOverride ?? (await getStoryblokVersion())
     const token = getStoryblokToken(version)
     if (!token) return DEFAULT_SITE_IMAGES
 
     const content = await fetchSiteImagesContent(token, locale, version)
     if (!content) return DEFAULT_SITE_IMAGES
 
-    return {
-      editable: storyblokEditable(content as StoryblokEditableBlok) as StoryblokEditableAttrs,
-      footerBackground: asset(content.footer_background, DEFAULT_SITE_IMAGES.footerBackground),
-      shared: {
-        locationAvatars: [
-          asset(content.shared_location_avatar_1, DEFAULT_SITE_IMAGES.shared.locationAvatars[0]),
-          asset(content.shared_location_avatar_2, DEFAULT_SITE_IMAGES.shared.locationAvatars[1]),
-          asset(content.shared_location_avatar_3, DEFAULT_SITE_IMAGES.shared.locationAvatars[2]),
-        ],
-        travelerAvatars: [
-          asset(content.shared_traveler_avatar_1, DEFAULT_SITE_IMAGES.shared.travelerAvatars[0]),
-          asset(content.shared_traveler_avatar_2, DEFAULT_SITE_IMAGES.shared.travelerAvatars[1]),
-          asset(content.shared_traveler_avatar_3, DEFAULT_SITE_IMAGES.shared.travelerAvatars[2]),
-        ],
-      },
-      home: {
-        heroBackground: asset(
-          content.home_hero_background,
-          DEFAULT_SITE_IMAGES.home.heroBackground,
-        ),
-        heroOverlay: asset(content.home_hero_overlay, DEFAULT_SITE_IMAGES.home.heroOverlay),
-        experience: {
-          arrival: asset(
-            content.home_experience_arrival,
-            DEFAULT_SITE_IMAGES.home.experience.arrival,
-          ),
-          checkin: asset(
-            content.home_experience_checkin,
-            DEFAULT_SITE_IMAGES.home.experience.checkin,
-          ),
-          checkout: asset(
-            content.home_experience_checkout,
-            DEFAULT_SITE_IMAGES.home.experience.checkout,
-          ),
-        },
-      },
-      about: {
-        conceptLounge: asset(content.about_concept_lounge, DEFAULT_SITE_IMAGES.about.conceptLounge),
-        conceptCorridor: asset(
-          content.about_concept_corridor,
-          DEFAULT_SITE_IMAGES.about.conceptCorridor,
-        ),
-        conceptChair: asset(content.about_concept_chair, DEFAULT_SITE_IMAGES.about.conceptChair),
-        founders: {
-          paul: asset(content.about_founder_paul, DEFAULT_SITE_IMAGES.about.founders.paul),
-          mayeul: asset(content.about_founder_mayeul, DEFAULT_SITE_IMAGES.about.founders.mayeul),
-          benjamin: asset(
-            content.about_founder_benjamin,
-            DEFAULT_SITE_IMAGES.about.founders.benjamin,
-          ),
-        },
-      },
-      blog: {
-        storyArrival: asset(content.blog_story_arrival, DEFAULT_SITE_IMAGES.blog.storyArrival),
-        storyCheckin: asset(content.blog_story_checkin, DEFAULT_SITE_IMAGES.blog.storyCheckin),
-      },
-      lyon: {
-        heroBackground: asset(
-          content.lyon_hero_background,
-          DEFAULT_SITE_IMAGES.lyon.heroBackground,
-        ),
-        bellecour: asset(content.lyon_bellecour, DEFAULT_SITE_IMAGES.lyon.bellecour),
-        vieuxLyon: asset(content.lyon_vieux_lyon, DEFAULT_SITE_IMAGES.lyon.vieuxLyon),
-        terreaux: asset(content.lyon_terreaux, DEFAULT_SITE_IMAGES.lyon.terreaux),
-        servicesImage: asset(content.lyon_services, DEFAULT_SITE_IMAGES.lyon.servicesImage),
-        pressLogo: asset(content.lyon_press_logo, DEFAULT_SITE_IMAGES.lyon.pressLogo),
-        monocleLogo: asset(content.lyon_monocle_logo, DEFAULT_SITE_IMAGES.lyon.monocleLogo),
-      },
-      pages: {
-        contactHero: asset(content.page_contact_hero, DEFAULT_SITE_IMAGES.pages.contactHero),
-        apartmentsHero: asset(
-          content.page_apartments_hero,
-          DEFAULT_SITE_IMAGES.pages.apartmentsHero,
-        ),
-        investHero: asset(content.page_invest_hero, DEFAULT_SITE_IMAGES.pages.investHero),
-        investModel: asset(content.page_invest_model, DEFAULT_SITE_IMAGES.pages.investModel),
-      },
-    }
+    return mapSiteImagesContent(content)
   },
 )
+
+export function mapSiteImagesContent(content: Record<string, unknown>): SiteImages {
+  return {
+    footerBackground: asset(content.footer_background, DEFAULT_SITE_IMAGES.footerBackground),
+    shared: {
+      locationAvatars: [
+        asset(content.shared_location_avatar_1, DEFAULT_SITE_IMAGES.shared.locationAvatars[0]),
+        asset(content.shared_location_avatar_2, DEFAULT_SITE_IMAGES.shared.locationAvatars[1]),
+        asset(content.shared_location_avatar_3, DEFAULT_SITE_IMAGES.shared.locationAvatars[2]),
+      ],
+      travelerAvatars: [
+        asset(content.shared_traveler_avatar_1, DEFAULT_SITE_IMAGES.shared.travelerAvatars[0]),
+        asset(content.shared_traveler_avatar_2, DEFAULT_SITE_IMAGES.shared.travelerAvatars[1]),
+        asset(content.shared_traveler_avatar_3, DEFAULT_SITE_IMAGES.shared.travelerAvatars[2]),
+      ],
+    },
+    home: {
+      heroBackground: asset(content.home_hero_background, DEFAULT_SITE_IMAGES.home.heroBackground),
+      heroOverlay: asset(content.home_hero_overlay, DEFAULT_SITE_IMAGES.home.heroOverlay),
+      experience: {
+        arrival: asset(
+          content.home_experience_arrival,
+          DEFAULT_SITE_IMAGES.home.experience.arrival,
+        ),
+        checkin: asset(
+          content.home_experience_checkin,
+          DEFAULT_SITE_IMAGES.home.experience.checkin,
+        ),
+        checkout: asset(
+          content.home_experience_checkout,
+          DEFAULT_SITE_IMAGES.home.experience.checkout,
+        ),
+      },
+    },
+    about: {
+      conceptLounge: asset(content.about_concept_lounge, DEFAULT_SITE_IMAGES.about.conceptLounge),
+      conceptCorridor: asset(
+        content.about_concept_corridor,
+        DEFAULT_SITE_IMAGES.about.conceptCorridor,
+      ),
+      conceptChair: asset(content.about_concept_chair, DEFAULT_SITE_IMAGES.about.conceptChair),
+      founders: {
+        paul: asset(content.about_founder_paul, DEFAULT_SITE_IMAGES.about.founders.paul),
+        mayeul: asset(content.about_founder_mayeul, DEFAULT_SITE_IMAGES.about.founders.mayeul),
+        benjamin: asset(
+          content.about_founder_benjamin,
+          DEFAULT_SITE_IMAGES.about.founders.benjamin,
+        ),
+      },
+    },
+    blog: {
+      storyArrival: asset(content.blog_story_arrival, DEFAULT_SITE_IMAGES.blog.storyArrival),
+      storyCheckin: asset(content.blog_story_checkin, DEFAULT_SITE_IMAGES.blog.storyCheckin),
+    },
+    lyon: {
+      heroBackground: asset(content.lyon_hero_background, DEFAULT_SITE_IMAGES.lyon.heroBackground),
+      bellecour: asset(content.lyon_bellecour, DEFAULT_SITE_IMAGES.lyon.bellecour),
+      vieuxLyon: asset(content.lyon_vieux_lyon, DEFAULT_SITE_IMAGES.lyon.vieuxLyon),
+      terreaux: asset(content.lyon_terreaux, DEFAULT_SITE_IMAGES.lyon.terreaux),
+      servicesImage: asset(content.lyon_services, DEFAULT_SITE_IMAGES.lyon.servicesImage),
+      pressLogo: asset(content.lyon_press_logo, DEFAULT_SITE_IMAGES.lyon.pressLogo),
+      monocleLogo: asset(content.lyon_monocle_logo, DEFAULT_SITE_IMAGES.lyon.monocleLogo),
+    },
+    pages: {
+      contactHero: asset(content.page_contact_hero, DEFAULT_SITE_IMAGES.pages.contactHero),
+      apartmentsHero: asset(content.page_apartments_hero, DEFAULT_SITE_IMAGES.pages.apartmentsHero),
+      investHero: asset(content.page_invest_hero, DEFAULT_SITE_IMAGES.pages.investHero),
+      investModel: asset(content.page_invest_model, DEFAULT_SITE_IMAGES.pages.investModel),
+    },
+  }
+}
 
 async function fetchSiteImagesContent(
   token: string,

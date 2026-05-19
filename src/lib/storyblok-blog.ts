@@ -16,9 +16,13 @@ interface StoryblokStoriesResponse {
 
 const STORYBLOK_BASE_URL = 'https://api.storyblok.com/v2/cdn/stories'
 const STORYBLOK_STARTS_WITH = ['blog/', 'articles/']
+type StoryblokVersion = 'draft' | 'published'
 
-export async function getBlogArticles(locale: InquiryLocale): Promise<BlogArticle[]> {
-  const articles = await fetchStoryblokArticles(locale)
+export async function getBlogArticles(
+  locale: InquiryLocale,
+  versionOverride?: StoryblokVersion,
+): Promise<BlogArticle[]> {
+  const articles = await fetchStoryblokArticles(locale, versionOverride)
   return articles.length > 0 ? articles : getFallbackBlogArticles(locale)
 }
 
@@ -30,8 +34,11 @@ export async function getBlogArticle(
   return articles.find((article) => article.slug === slug) ?? null
 }
 
-async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticle[]> {
-  const version = await getStoryblokVersion()
+async function fetchStoryblokArticles(
+  locale: InquiryLocale,
+  versionOverride?: StoryblokVersion,
+): Promise<BlogArticle[]> {
+  const version = versionOverride ?? (await getStoryblokVersion())
   const token = getStoryblokToken(version)
   if (!token) return []
 
