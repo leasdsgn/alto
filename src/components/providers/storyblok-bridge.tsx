@@ -1,15 +1,19 @@
 'use client'
 
 import Script from 'next/script'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 type StoryblokBridgeConstructor = new () => {
   on: (events: string[] | string, callback: () => void) => void
 }
 
 export function StoryblokBridge() {
+  const pathname = usePathname()
   const searchParams = useSearchParams()
-  const isEditor = searchParams.has('_storyblok') || searchParams.has('_storyblok_tk')
+  const isEditor =
+    pathname.startsWith('/preview') ||
+    searchParams.has('_storyblok') ||
+    searchParams.has('_storyblok_tk')
 
   if (!isEditor) return null
 
