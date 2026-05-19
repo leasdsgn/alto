@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { DEFAULT_LOCALE } from '@/lib/i18n/locale'
+import { getStoryblokToken, getStoryblokVersion } from '@/lib/storyblok-preview'
 import { type InquiryLocale } from '@/types/inquiry'
 
 interface StoryblokAssetObject {
@@ -114,10 +115,11 @@ const DEFAULT_SITE_IMAGES: SiteImages = {
 
 export const getSiteImages = cache(
   async (locale: InquiryLocale = DEFAULT_LOCALE): Promise<SiteImages> => {
-    const token = getStoryblokToken()
+    const version = await getStoryblokVersion()
+    const token = getStoryblokToken(version)
     if (!token) return DEFAULT_SITE_IMAGES
 
-    const content = await fetchSiteImagesContent(token, locale)
+    const content = await fetchSiteImagesContent(token, locale, version)
     if (!content) return DEFAULT_SITE_IMAGES
 
     return {
@@ -200,20 +202,15 @@ export const getSiteImages = cache(
   },
 )
 
-function getStoryblokToken() {
-  return (
-    process.env.STORYBLOK_PREVIEW_TOKEN ||
-    process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN ||
-    process.env.NEXT_PUBLIC_STORYBLOK_TOKEN ||
-    ''
-  )
-}
-
-async function fetchSiteImagesContent(token: string, locale: InquiryLocale) {
+async function fetchSiteImagesContent(
+  token: string,
+  locale: InquiryLocale,
+  version: 'draft' | 'published',
+) {
   for (const slug of STORYBLOK_STORY_SLUGS) {
     const params = new URLSearchParams({
       token,
-      version: process.env.NODE_ENV === 'production' ? 'published' : 'draft',
+      version,
       language: locale,
       fallback_lang: DEFAULT_LOCALE,
     })

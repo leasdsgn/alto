@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Manrope } from 'next/font/google'
 import { Agentation } from 'agentation'
 import { Toaster } from 'sonner'
 import { I18nProvider } from '@/components/providers/i18n-provider'
 import { LocaleProvider } from '@/components/providers/locale-provider'
+import { StoryblokBridge } from '@/components/providers/storyblok-bridge'
 import { CustomCursor } from '@/components/ui/custom-cursor'
 import { LenisProvider } from '@/components/providers/lenis-provider'
 import { getServerLocale } from '@/lib/i18n/server'
@@ -46,6 +48,9 @@ export default async function RootLayout({
             </I18nProvider>
           </LenisProvider>
         </LocaleProvider>
+        <Suspense fallback={null}>
+          <StoryblokBridge />
+        </Suspense>
         <CustomCursor />
         <Toaster
           position="top-center"

@@ -32,6 +32,9 @@ Copier `.env.example` vers `.env.local` et remplir les valeurs.
 
 Variables minimales pour le flow de réservation :
 
+- `NEXT_PUBLIC_STORYBLOK_TOKEN`
+- `STORYBLOK_PREVIEW_TOKEN`
+- `STORYBLOK_PREVIEW_SECRET`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 - `GUESTY_BEAPI_CLIENT_ID`
 - `GUESTY_BEAPI_CLIENT_SECRET`
@@ -44,6 +47,24 @@ Variables minimales pour le flow de réservation :
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL`
 - `CRON_SECRET`
+
+## Storyblok
+
+Le site lit les contenus Storyblok en `published` par défaut et passe en `draft` quand le mode preview Next.js est activé.
+
+URL de preview à configurer dans Storyblok :
+
+```txt
+https://alto-collection.com/preview
+```
+
+Pour la story `site-images`, renseigner `/` dans le champ `Real path` du Visual Editor.
+
+La route manuelle suivante reste disponible pour activer le draft mode depuis un lien sécurisé :
+
+```txt
+https://alto-collection.com/api/storyblok/preview?secret=STORYBLOK_PREVIEW_SECRET&slug=/
+```
 
 ## Architecture réservation
 
