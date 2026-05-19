@@ -7,7 +7,6 @@ import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { BlogSection } from '@/components/sections/blog-section'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
-import { GuestySearchWidget } from '@/components/ui/guesty-search-widget'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
@@ -36,7 +35,6 @@ export default async function Home() {
         <TestimonialsSection />
         <ServicesSection />
         <BlogSection articles={blogArticles} />
-        <GuestySearchWidget />
       </main>
       <Footer reserveStickyCtaSpace />
       <StickyCta />
