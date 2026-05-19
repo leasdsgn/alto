@@ -49,9 +49,19 @@ function firstQueryValue(value: string | string[] | undefined) {
 }
 
 function normalizePath(value: string) {
-  if (!value || value === 'home') return '/'
-  if (value.startsWith('/preview')) return value.replace(/^\/preview/, '') || '/'
-  return value.startsWith('/') ? value : `/${value}`
+  const path = value.startsWith('/preview') ? value.replace(/^\/preview/, '') : value
+  const normalized = path.startsWith('/') ? path : `/${path}`
+
+  if (
+    !path ||
+    normalized === '/home' ||
+    normalized === '/site-images' ||
+    normalized === '/globals/site-images'
+  ) {
+    return '/'
+  }
+
+  return normalized
 }
 
 function toQueryString(query: Record<string, string | string[] | undefined>) {
