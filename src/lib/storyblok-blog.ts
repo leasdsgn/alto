@@ -1,4 +1,5 @@
 import { getFallbackBlogArticles, inferBlogSection, type BlogArticle } from '@/lib/blog-data'
+import { getStoryblokToken, getStoryblokVersion } from '@/lib/storyblok-preview'
 import type { InquiryLocale } from '@/types/inquiry'
 
 interface StoryblokStory {
@@ -30,14 +31,15 @@ export async function getBlogArticle(
 }
 
 async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticle[]> {
-  const token = getStoryblokToken()
+  const version = await getStoryblokVersion()
+  const token = getStoryblokToken(version)
   if (!token) return []
 
   const responses = await Promise.all(
     STORYBLOK_STARTS_WITH.map(async (startsWith) => {
       const params = new URLSearchParams({
         token,
-        version: process.env.NODE_ENV === 'production' ? 'published' : 'draft',
+        version,
         starts_with: startsWith,
         content_type: 'article',
         language: locale,
@@ -59,15 +61,6 @@ async function fetchStoryblokArticles(locale: InquiryLocale): Promise<BlogArticl
     .flat()
     .map((story) => mapStoryblokArticle(story, locale))
     .filter(Boolean) as BlogArticle[]
-}
-
-function getStoryblokToken() {
-  return process.env.NODE_ENV === 'production'
-    ? process.env.NEXT_PUBLIC_STORYBLOK_TOKEN || ''
-    : process.env.STORYBLOK_PREVIEW_TOKEN
-        || process.env.NEXT_PUBLIC_STORYBLOK_PREVIEW_TOKEN
-        || process.env.NEXT_PUBLIC_STORYBLOK_TOKEN
-        || ''
 }
 
 function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): BlogArticle | null {
