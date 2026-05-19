@@ -7,7 +7,6 @@ import { ExperienceSection } from '@/components/sections/experience-section'
 import { HeroSection } from '@/components/sections/hero-section'
 import { ServicesSection } from '@/components/sections/services-section'
 import { TestimonialsSection } from '@/components/sections/testimonials-section'
-import { GuestySearchWidget } from '@/components/ui/guesty-search-widget'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
@@ -40,7 +39,6 @@ export async function SiteImagesStory({ blok }: { blok: SiteImagesBlok }) {
         <TestimonialsSection />
         <ServicesSection />
         <BlogSection articles={blogArticles} />
-        <GuestySearchWidget />
       </main>
       <Footer reserveStickyCtaSpace />
       <StickyCta />
