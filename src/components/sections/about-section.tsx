@@ -17,11 +17,24 @@ const PLATFORM_LOGOS = [
 interface AboutSectionProps {
   locationAvatars: readonly string[]
   travelerAvatars: readonly string[]
+  copy?: AboutSectionCopy
 }
 
-export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionProps) {
+type AboutSectionCopy = {
+  kicker: string
+  quote: string
+  locations: string
+  travelers: string
+  rating: string
+}
+
+export function AboutSection({
+  locationAvatars,
+  travelerAvatars,
+  copy: copyOverride,
+}: AboutSectionProps) {
   const locale = useLocale()
-  const copy = ABOUT_COPY[locale]
+  const copy = copyOverride ?? ABOUT_COPY[locale]
   const sectionRef = useRef<HTMLElement>(null)
   const quoteRef = useRef<HTMLParagraphElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
@@ -64,12 +77,10 @@ export function AboutSection({ locationAvatars, travelerAvatars }: AboutSectionP
   return (
     <section
       ref={sectionRef}
-      className="bg-gradient-to-r from-silver to-taupe py-section md:py-section-md"
+      className="from-silver to-taupe py-section md:py-section-md bg-gradient-to-r"
     >
-      <div className="mx-auto max-w-content px-gutter md:px-gutter-md">
-        <p className="text-cream text-center text-body leading-[1.5]">
-          {copy.kicker}
-        </p>
+      <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
+        <p className="text-cream text-body text-center leading-[1.5]">{copy.kicker}</p>
 
         <p
           ref={quoteRef}
@@ -142,18 +153,18 @@ function StatCard({ children }: { children: React.ReactNode }) {
 }
 
 function StatLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-[#fffff8] text-body-xl font-semibold leading-none">
-      {children}
-    </span>
-  )
+  return <span className="text-body-xl leading-none font-semibold text-[#fffff8]">{children}</span>
 }
 
 function ClusterAvatars({ children }: { children: React.ReactNode }) {
   return <div className="flex -space-x-[18px]">{children}</div>
 }
 
-function AvatarCircle({ bg, label, ...rest }: { bg: string; label: string } & React.HTMLAttributes<HTMLDivElement>) {
+function AvatarCircle({
+  bg,
+  label,
+  ...rest
+}: { bg: string; label: string } & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       {...rest}

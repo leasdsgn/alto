@@ -15,11 +15,23 @@ interface ExperienceSectionProps {
     checkin: string
     checkout: string
   }
+  copy?: ExperienceSectionCopy
 }
 
-export function ExperienceSection({ panelImages }: ExperienceSectionProps) {
+type ExperiencePanelCopy = {
+  label: string
+  title: string
+}
+
+type ExperienceSectionCopy = {
+  about: string
+  button: string
+  panels: [ExperiencePanelCopy, ExperiencePanelCopy, ExperiencePanelCopy]
+}
+
+export function ExperienceSection({ panelImages, copy: copyOverride }: ExperienceSectionProps) {
   const locale = useLocale()
-  const copy = EXPERIENCE_COPY[locale]
+  const copy = copyOverride ?? EXPERIENCE_COPY[locale]
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
 

@@ -1,4 +1,4 @@
-import { storyblokEditable } from '@storyblok/react/rsc'
+import { StoryblokServerComponent, storyblokEditable } from '@storyblok/react/rsc'
 import { Footer } from '@/components/layout/footer'
 import { AboutSection } from '@/components/sections/about-section'
 import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
@@ -18,6 +18,22 @@ type StoryblokEditableBlok = Parameters<typeof storyblokEditable>[0]
 export async function SiteImagesStory({ blok }: { blok: SiteImagesBlok }) {
   const locale = await getServerLocale()
   const siteImages = mapSiteImagesContent(blok)
+  const sections = getSections(blok.sections)
+
+  if (sections.length > 0) {
+    return (
+      <>
+        <main {...storyblokEditable(blok as StoryblokEditableBlok)}>
+          {sections.map((section) => (
+            <StoryblokServerComponent key={String(section._uid)} blok={section} />
+          ))}
+        </main>
+        <Footer reserveStickyCtaSpace />
+        <StickyCta />
+      </>
+    )
+  }
+
   const [apartments, blogArticles] = await Promise.all([
     getApartments(),
     getBlogArticles(locale, 'draft'),
@@ -44,4 +60,9 @@ export async function SiteImagesStory({ blok }: { blok: SiteImagesBlok }) {
       <StickyCta />
     </>
   )
+}
+
+function getSections(value: unknown): SiteImagesBlok[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is SiteImagesBlok => Boolean(item && typeof item === 'object'))
 }

@@ -8,11 +8,21 @@ import { useLocale } from '@/components/providers/locale-provider'
 
 interface BlogSectionProps {
   articles: BlogArticle[]
+  copy?: BlogSectionCopy
 }
 
-export function BlogSection({ articles }: BlogSectionProps) {
+type BlogSectionCopy = {
+  previous: string
+  next: string
+  description: string
+  button: string
+  fallbackSubtitle: string
+  readingTime: string
+}
+
+export function BlogSection({ articles, copy: copyOverride }: BlogSectionProps) {
   const locale = useLocale()
-  const copy = BLOG_SECTION_COPY[locale]
+  const copy = copyOverride ?? BLOG_SECTION_COPY[locale]
   const trackRef = useRef<HTMLDivElement>(null)
 
   function scroll(direction: 'left' | 'right') {
@@ -21,17 +31,20 @@ export function BlogSection({ articles }: BlogSectionProps) {
     const card = track.querySelector('[data-card]') as HTMLElement | null
     const cardWidth = card?.clientWidth ?? 396
     const gap = 16
-    track.scrollBy({ left: direction === 'right' ? cardWidth + gap : -(cardWidth + gap), behavior: 'smooth' })
+    track.scrollBy({
+      left: direction === 'right' ? cardWidth + gap : -(cardWidth + gap),
+      behavior: 'smooth',
+    })
   }
 
   return (
     <section className="py-section md:py-section-md md:overflow-hidden">
-      <div className="mx-auto flex max-w-content flex-col gap-7 px-4 md:px-gutter-md">
+      <div className="max-w-content md:px-gutter-md mx-auto flex flex-col gap-7 px-4">
         <div className="flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={() => scroll('left')}
-            className="bg-[#fffff8] text-[#301a0a] border-[#301a0a] flex size-9 items-center justify-center rounded-full border transition-opacity hover:opacity-70"
+            className="flex size-9 items-center justify-center rounded-full border border-[#301a0a] bg-[#fffff8] text-[#301a0a] transition-opacity hover:opacity-70"
             aria-label={copy.previous}
           >
             <ArrowLeft />
@@ -39,7 +52,7 @@ export function BlogSection({ articles }: BlogSectionProps) {
           <button
             type="button"
             onClick={() => scroll('right')}
-            className="bg-[#fffff8] text-[#301a0a] border-[#301a0a] flex size-9 items-center justify-center rounded-full border transition-opacity hover:opacity-70"
+            className="flex size-9 items-center justify-center rounded-full border border-[#301a0a] bg-[#fffff8] text-[#301a0a] transition-opacity hover:opacity-70"
             aria-label={copy.next}
           >
             <ArrowRight />
@@ -48,17 +61,24 @@ export function BlogSection({ articles }: BlogSectionProps) {
 
         <div
           ref={trackRef}
-          className="-mx-4 flex gap-4 overflow-x-auto px-4 scrollbar-none md:-mx-0 md:px-0"
+          className="scrollbar-none -mx-4 flex gap-4 overflow-x-auto px-4 md:-mx-0 md:px-0"
         >
-          <div data-card className="bg-taupe flex h-[420px] w-[294px] shrink-0 flex-col justify-between rounded-xl px-5 py-4 md:h-[598px] md:w-[396px] md:px-6 md:py-5">
-            <p className="text-silver text-overline font-bold uppercase tracking-[0.24px]">
-              BLOG
-            </p>
+          <div
+            data-card
+            className="bg-taupe flex h-[420px] w-[294px] shrink-0 flex-col justify-between rounded-xl px-5 py-4 md:h-[598px] md:w-[396px] md:px-6 md:py-5"
+          >
+            <p className="text-silver text-overline font-bold tracking-[0.24px] uppercase">BLOG</p>
             <div className="flex flex-col gap-8">
               <p className="text-cream text-body-xl leading-[1.5] font-semibold">
                 {copy.description}
               </p>
-              <Button variant="primary" size="regular" href="/blog" iconRight={<ArrowOutward />} className="self-start">
+              <Button
+                variant="primary"
+                size="regular"
+                href="/blog"
+                iconRight={<ArrowOutward />}
+                className="self-start"
+              >
                 {copy.button}
               </Button>
             </div>
@@ -81,15 +101,15 @@ export function BlogSection({ articles }: BlogSectionProps) {
               <div className="bg-taupe/80 absolute inset-0 mix-blend-multiply" />
               <div className="absolute inset-0 flex flex-col justify-between px-5 py-4 md:px-6 md:py-5">
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-[#fffff8] text-h4 font-medium tracking-[-0.24px]">
+                  <h3 className="text-h4 font-medium tracking-[-0.24px] text-[#fffff8]">
                     {article.title}
                   </h3>
-                  <p className="text-[#fffff8] text-body-xl font-semibold leading-[1.5]">
+                  <p className="text-body-xl leading-[1.5] font-semibold text-[#fffff8]">
                     {article.subtitle ?? copy.fallbackSubtitle}
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[#aba39e] text-overline font-bold uppercase tracking-[0.24px]">
+                  <p className="text-overline font-bold tracking-[0.24px] text-[#aba39e] uppercase">
                     {copy.readingTime}
                   </p>
                   <span className="bg-taupe text-cream flex size-9 shrink-0 items-center justify-center rounded-full transition-opacity group-hover:opacity-80">
@@ -128,7 +148,16 @@ const BLOG_SECTION_COPY = {
 
 function ArrowLeft() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M10 3L5 8l5 5" />
     </svg>
   )
@@ -136,7 +165,16 @@ function ArrowLeft() {
 
 function ArrowRight() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M6 3l5 5-5 5" />
     </svg>
   )
@@ -144,7 +182,16 @@ function ArrowRight() {
 
 function ArrowOutward() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M3 11 11 3M11 3H5M11 3v6" />
     </svg>
   )

@@ -3,9 +3,23 @@
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/components/providers/locale-provider'
 
-export function TestimonialsSection() {
+interface TestimonialsSectionProps {
+  copy?: TestimonialsSectionCopy
+}
+
+type TestimonialsSectionCopy = {
+  title: string
+  items: readonly {
+    quote: string
+    name: string
+    apartment: string
+    stay: string
+  }[]
+}
+
+export function TestimonialsSection({ copy: copyOverride }: TestimonialsSectionProps = {}) {
   const locale = useLocale()
-  const copy = TESTIMONIALS_COPY[locale]
+  const copy = copyOverride ?? TESTIMONIALS_COPY[locale]
   const [current, setCurrent] = useState(0)
   const testimonial = copy.items[current]
 
@@ -19,9 +33,11 @@ export function TestimonialsSection() {
 
   return (
     <section>
-      <div className="mx-auto max-w-content px-gutter md:px-gutter-md">
-        <div className="border-divider border-b py-section md:py-section-md">
-          <p className="text-silver text-overline font-bold uppercase tracking-[0.24px]">{copy.title}</p>
+      <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
+        <div className="border-divider py-section md:py-section-md border-b">
+          <p className="text-silver text-overline font-bold tracking-[0.24px] uppercase">
+            {copy.title}
+          </p>
 
           <div className="mt-10 flex flex-col gap-6">
             <blockquote className="text-coffee min-h-[180px] text-xl leading-[1.5] font-semibold md:min-h-[140px] md:text-2xl md:leading-[1.4]">
@@ -62,19 +78,22 @@ const TESTIMONIALS_COPY = {
     title: 'Témoignages',
     items: [
       {
-        quote: 'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
+        quote:
+          'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
         name: 'Marie & Thomas',
         apartment: 'Le Faubourg',
         stay: 'Avril 2026',
       },
       {
-        quote: 'Le check-in autonome à minuit, sans stress. Et le quartier est parfait pour découvrir Paris à pied.',
+        quote:
+          'Le check-in autonome à minuit, sans stress. Et le quartier est parfait pour découvrir Paris à pied.',
         name: 'James W.',
         apartment: 'L’Opera',
         stay: 'Mars 2026',
       },
       {
-        quote: 'Trois nuits, et on a déjà réservé pour l’été. Le Saint-Germain est devenu notre adresse parisienne.',
+        quote:
+          'Trois nuits, et on a déjà réservé pour l’été. Le Saint-Germain est devenu notre adresse parisienne.',
         name: 'Sofia & Leo',
         apartment: 'Le Saint-Germain',
         stay: 'Février 2026',
@@ -85,19 +104,22 @@ const TESTIMONIALS_COPY = {
     title: 'Guest reviews',
     items: [
       {
-        quote: 'We felt at home from the first minute. The apartment is exactly like the photos, only better.',
+        quote:
+          'We felt at home from the first minute. The apartment is exactly like the photos, only better.',
         name: 'Marie & Thomas',
         apartment: 'Le Faubourg',
         stay: 'April 2026',
       },
       {
-        quote: 'Self check-in at midnight, with no stress. The neighborhood is perfect for exploring Paris on foot.',
+        quote:
+          'Self check-in at midnight, with no stress. The neighborhood is perfect for exploring Paris on foot.',
         name: 'James W.',
         apartment: 'L’Opera',
         stay: 'March 2026',
       },
       {
-        quote: 'Three nights, and we already booked again for summer. Le Saint-Germain became our Paris address.',
+        quote:
+          'Three nights, and we already booked again for summer. Le Saint-Germain became our Paris address.',
         name: 'Sofia & Leo',
         apartment: 'Le Saint-Germain',
         stay: 'February 2026',

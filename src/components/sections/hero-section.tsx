@@ -13,9 +13,14 @@ gsap.registerPlugin(ScrollTrigger)
 interface HeroSectionProps {
   backgroundImage: string
   overlayImage: string
+  titleParts?: readonly [string, string, string]
 }
 
-export function HeroSection({ backgroundImage, overlayImage }: HeroSectionProps) {
+export function HeroSection({
+  backgroundImage,
+  overlayImage,
+  titleParts = ['LIFTED', 'MINDFUL', 'HOME'],
+}: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
 
@@ -49,10 +54,7 @@ export function HeroSection({ backgroundImage, overlayImage }: HeroSectionProps)
 
   return (
     <section ref={sectionRef} className="relative h-svh overflow-hidden">
-      <div
-        ref={bgRef}
-        className="absolute inset-0"
-      >
+      <div ref={bgRef} className="absolute inset-0">
         <Image
           src={backgroundImage}
           alt=""
@@ -78,18 +80,18 @@ export function HeroSection({ backgroundImage, overlayImage }: HeroSectionProps)
 
       <Header />
 
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 pb-28 pt-28 md:pb-36 md:pt-36">
+      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 pt-28 pb-28 md:pt-36 md:pb-36">
         <div className="w-full max-w-[1212px] md:-translate-y-6">
-          <h1 className="text-cream flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-center text-2xl leading-none font-medium tracking-[0.12em] uppercase md:gap-x-8 md:text-h1 md:tracking-[0.16em]">
-            <span>LIFTED</span>
+          <h1 className="text-cream md:text-h1 flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-center text-2xl leading-none font-medium tracking-[0.12em] uppercase md:gap-x-8 md:tracking-[0.16em]">
+            <span>{titleParts[0]}</span>
             <span aria-hidden="true" className="bg-cream size-2 rounded-full md:size-2.5" />
-            <span>MINDFUL</span>
+            <span>{titleParts[1]}</span>
             <span aria-hidden="true" className="bg-cream size-2 rounded-full md:size-2.5" />
-            <span>HOME</span>
+            <span>{titleParts[2]}</span>
           </h1>
         </div>
 
-        <div className="absolute inset-x-6 bottom-8 mx-auto hidden max-w-[800px] md:block md:bottom-12">
+        <div className="absolute inset-x-6 bottom-8 mx-auto hidden max-w-[800px] md:bottom-12 md:block">
           <SearchBar />
         </div>
 

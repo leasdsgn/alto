@@ -31,8 +31,8 @@ function mapListing(listing: GuestyListing) {
     bathrooms: listing.bathrooms,
     slug,
     image: normalizeGuestyImageUrl(listing.pictures?.[0]?.original),
-    images: listing.pictures
-      ?.flatMap((picture) => {
+    images:
+      listing.pictures?.flatMap((picture) => {
         const url = normalizeGuestyImageUrl(picture.original || picture.thumbnail)
         return url ? [url] : []
       }) ?? [],
@@ -69,68 +69,203 @@ const getCachedSearchQuote = unstable_cache(
 
 const FALLBACK_APARTMENTS = [
   {
-    id: 'fb-1', name: 'Le Faubourg', price: 280, currency: 'EUR', guests: 4, surface: 80, bedrooms: 3, bathrooms: 1, slug: 'le-faubourg',
-    lat: 48.8620, lng: 2.3645, address: 'Le Marais, Paris', city: 'Paris', neighborhoodLabel: 'Le Marais', images: [] as string[],
-    description: "Un appartement haussmannien au cœur du Marais. Parquet ancien, plafonds hauts, moulures délicates.",
-    space: "80m² lumineux avec salon, cuisine équipée, chambre avec lit king-size.",
+    id: 'fb-1',
+    name: 'Le Faubourg',
+    price: 280,
+    currency: 'EUR',
+    guests: 4,
+    surface: 80,
+    bedrooms: 3,
+    bathrooms: 1,
+    slug: 'le-faubourg',
+    lat: 48.862,
+    lng: 2.3645,
+    address: 'Le Marais, Paris',
+    city: 'Paris',
+    neighborhoodLabel: 'Le Marais',
+    images: [] as string[],
+    description:
+      'Un appartement haussmannien au cœur du Marais. Parquet ancien, plafonds hauts, moulures délicates.',
+    space: '80m² lumineux avec salon, cuisine équipée, chambre avec lit king-size.',
     neighborhood: "Le Marais déploie ses ruelles vivantes et ses façades chargées d'histoire.",
-    transit: "Métro Saint-Paul (L1) à 2 minutes à pied.", amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning', 'Free parking'], minNights: 2, maxNights: 30,
+    transit: 'Métro Saint-Paul (L1) à 2 minutes à pied.',
+    amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning', 'Free parking'],
+    minNights: 2,
+    maxNights: 30,
   },
   {
-    id: 'fb-2', name: "L'Opéra", price: 210, currency: 'EUR', guests: 2, surface: 45, bedrooms: 1, bathrooms: 1, slug: 'l-opera',
-    lat: 48.8735, lng: 2.3340, address: '9e arr., Paris', city: 'Paris', neighborhoodLabel: '9e arr.', images: [] as string[],
-    description: "Un studio élégant à deux pas du Palais Garnier. Parfait pour un couple en escapade parisienne.",
-    space: "45m² avec coin salon, cuisine ouverte et salle de bain en marbre.",
-    neighborhood: "Grands boulevards, passages couverts, terrasses animées.",
-    transit: "Métro Opéra (L3, L7, L8) à 3 minutes.", amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'], minNights: 2, maxNights: 30,
+    id: 'fb-2',
+    name: "L'Opéra",
+    price: 210,
+    currency: 'EUR',
+    guests: 2,
+    surface: 45,
+    bedrooms: 1,
+    bathrooms: 1,
+    slug: 'l-opera',
+    lat: 48.8735,
+    lng: 2.334,
+    address: '9e arr., Paris',
+    city: 'Paris',
+    neighborhoodLabel: '9e arr.',
+    images: [] as string[],
+    description:
+      'Un studio élégant à deux pas du Palais Garnier. Parfait pour un couple en escapade parisienne.',
+    space: '45m² avec coin salon, cuisine ouverte et salle de bain en marbre.',
+    neighborhood: 'Grands boulevards, passages couverts, terrasses animées.',
+    transit: 'Métro Opéra (L3, L7, L8) à 3 minutes.',
+    amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'],
+    minNights: 2,
+    maxNights: 30,
   },
   {
-    id: 'fb-3', name: 'Le Saint-Germain', price: 240, currency: 'EUR', guests: 2, surface: 55, bedrooms: 2, bathrooms: 1, slug: 'le-saint-germain',
-    lat: 48.8515, lng: 2.3360, address: '6e arr., Paris', city: 'Paris', neighborhoodLabel: '6e arr.', images: [] as string[],
-    description: "Rive gauche, entre cafés littéraires et jardins secrets. Un refuge élégant au cœur de Saint-Germain.",
-    space: "55m² avec deux chambres, salon cosy et cuisine équipée.",
-    neighborhood: "Cafés, librairies, galeries. Le Paris intellectuel et bohème.",
-    transit: "Métro Saint-Germain-des-Prés (L4) à 1 minute.", amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning', 'Free parking'], minNights: 2, maxNights: 30,
+    id: 'fb-3',
+    name: 'Le Saint-Germain',
+    price: 240,
+    currency: 'EUR',
+    guests: 2,
+    surface: 55,
+    bedrooms: 2,
+    bathrooms: 1,
+    slug: 'le-saint-germain',
+    lat: 48.8515,
+    lng: 2.336,
+    address: '6e arr., Paris',
+    city: 'Paris',
+    neighborhoodLabel: '6e arr.',
+    images: [] as string[],
+    description:
+      'Rive gauche, entre cafés littéraires et jardins secrets. Un refuge élégant au cœur de Saint-Germain.',
+    space: '55m² avec deux chambres, salon cosy et cuisine équipée.',
+    neighborhood: 'Cafés, librairies, galeries. Le Paris intellectuel et bohème.',
+    transit: 'Métro Saint-Germain-des-Prés (L4) à 1 minute.',
+    amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning', 'Free parking'],
+    minNights: 2,
+    maxNights: 30,
   },
   {
-    id: 'fb-4', name: 'Le Marais', price: 260, currency: 'EUR', guests: 4, surface: 70, bedrooms: 2, bathrooms: 1, slug: 'le-marais',
-    lat: 48.8655, lng: 2.3595, address: 'Le Marais, Paris', city: 'Paris', neighborhoodLabel: 'Le Marais', images: [] as string[],
-    description: "Un loft contemporain dans une cour pavée du Marais. Volumes généreux et lumière zénithale.",
-    space: "70m² sur deux niveaux avec mezzanine, salon double hauteur.",
+    id: 'fb-4',
+    name: 'Le Marais',
+    price: 260,
+    currency: 'EUR',
+    guests: 4,
+    surface: 70,
+    bedrooms: 2,
+    bathrooms: 1,
+    slug: 'le-marais',
+    lat: 48.8655,
+    lng: 2.3595,
+    address: 'Le Marais, Paris',
+    city: 'Paris',
+    neighborhoodLabel: 'Le Marais',
+    images: [] as string[],
+    description:
+      'Un loft contemporain dans une cour pavée du Marais. Volumes généreux et lumière zénithale.',
+    space: '70m² sur deux niveaux avec mezzanine, salon double hauteur.',
     neighborhood: "Galeries d'art, concept stores, restaurants intimistes.",
-    transit: "Métro Filles du Calvaire (L8) à 4 minutes.", amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'], minNights: 2, maxNights: 30,
+    transit: 'Métro Filles du Calvaire (L8) à 4 minutes.',
+    amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'],
+    minNights: 2,
+    maxNights: 30,
   },
   {
-    id: 'ly-1', name: 'Le Bellecour', price: 180, currency: 'EUR', guests: 4, surface: 75, bedrooms: 2, bathrooms: 1, slug: 'le-bellecour',
-    lat: 45.7570, lng: 4.8330, address: "Presqu'île, Lyon", city: 'Lyon', neighborhoodLabel: "Presqu'île", images: [] as string[],
-    description: "Un appartement élégant au cœur de la Presqu'île, à deux pas de la place Bellecour.",
-    space: "75m² lumineux avec salon, cuisine équipée, deux chambres.",
+    id: 'ly-1',
+    name: 'Le Bellecour',
+    price: 180,
+    currency: 'EUR',
+    guests: 4,
+    surface: 75,
+    bedrooms: 2,
+    bathrooms: 1,
+    slug: 'le-bellecour',
+    lat: 45.757,
+    lng: 4.833,
+    address: "Presqu'île, Lyon",
+    city: 'Lyon',
+    neighborhoodLabel: "Presqu'île",
+    images: [] as string[],
+    description:
+      "Un appartement élégant au cœur de la Presqu'île, à deux pas de la place Bellecour.",
+    space: '75m² lumineux avec salon, cuisine équipée, deux chambres.',
     neighborhood: "La Presqu'île, entre Rhône et Saône, boutiques et brasseries.",
-    transit: "Métro Bellecour (A, D) à 3 minutes.", amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'], minNights: 2, maxNights: 30,
+    transit: 'Métro Bellecour (A, D) à 3 minutes.',
+    amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'],
+    minNights: 2,
+    maxNights: 30,
   },
   {
-    id: 'ly-2', name: 'Les Terreaux', price: 160, currency: 'EUR', guests: 2, surface: 50, bedrooms: 1, bathrooms: 1, slug: 'les-terreaux',
-    lat: 45.7676, lng: 4.8341, address: "Presqu'île, Lyon", city: 'Lyon', neighborhoodLabel: "Presqu'île", images: [] as string[],
-    description: "Un appartement lumineux à deux pas de la place des Terreaux et du musée des Beaux-Arts.",
-    space: "50m² avec salon ouvert, cuisine équipée et salle de bain en pierre.",
-    neighborhood: "Musées, galeries, vie nocturne et restaurants gastronomiques.",
-    transit: "Métro Hôtel de Ville (A, C, D) à 2 minutes.", amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'], minNights: 2, maxNights: 30,
+    id: 'ly-2',
+    name: 'Les Terreaux',
+    price: 160,
+    currency: 'EUR',
+    guests: 2,
+    surface: 50,
+    bedrooms: 1,
+    bathrooms: 1,
+    slug: 'les-terreaux',
+    lat: 45.7676,
+    lng: 4.8341,
+    address: "Presqu'île, Lyon",
+    city: 'Lyon',
+    neighborhoodLabel: "Presqu'île",
+    images: [] as string[],
+    description:
+      'Un appartement lumineux à deux pas de la place des Terreaux et du musée des Beaux-Arts.',
+    space: '50m² avec salon ouvert, cuisine équipée et salle de bain en pierre.',
+    neighborhood: 'Musées, galeries, vie nocturne et restaurants gastronomiques.',
+    transit: 'Métro Hôtel de Ville (A, C, D) à 2 minutes.',
+    amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'],
+    minNights: 2,
+    maxNights: 30,
   },
   {
-    id: 'ly-3', name: 'Le Vieux-Lyon', price: 195, currency: 'EUR', guests: 4, surface: 65, bedrooms: 2, bathrooms: 1, slug: 'le-vieux-lyon',
-    lat: 45.7625, lng: 4.8272, address: 'Vieux-Lyon, Lyon', city: 'Lyon', neighborhoodLabel: 'Vieux-Lyon', images: [] as string[],
-    description: "Au cœur du plus grand ensemble Renaissance d'Europe, un appartement chargé d'histoire.",
-    space: "65m² avec poutres apparentes, cuisine en pierre et deux chambres cosy.",
-    neighborhood: "Traboules, bouchons lyonnais, cathédrale Saint-Jean.",
-    transit: "Métro Vieux-Lyon (D) à 1 minute.", amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'], minNights: 2, maxNights: 30,
+    id: 'ly-3',
+    name: 'Le Vieux-Lyon',
+    price: 195,
+    currency: 'EUR',
+    guests: 4,
+    surface: 65,
+    bedrooms: 2,
+    bathrooms: 1,
+    slug: 'le-vieux-lyon',
+    lat: 45.7625,
+    lng: 4.8272,
+    address: 'Vieux-Lyon, Lyon',
+    city: 'Lyon',
+    neighborhoodLabel: 'Vieux-Lyon',
+    images: [] as string[],
+    description:
+      "Au cœur du plus grand ensemble Renaissance d'Europe, un appartement chargé d'histoire.",
+    space: '65m² avec poutres apparentes, cuisine en pierre et deux chambres cosy.',
+    neighborhood: 'Traboules, bouchons lyonnais, cathédrale Saint-Jean.',
+    transit: 'Métro Vieux-Lyon (D) à 1 minute.',
+    amenities: ['Wifi', 'Kitchen', 'Washer', 'Air conditioning'],
+    minNights: 2,
+    maxNights: 30,
   },
   {
-    id: 'ly-4', name: 'La Croix-Rousse', price: 145, currency: 'EUR', guests: 2, surface: 40, bedrooms: 1, bathrooms: 1, slug: 'la-croix-rousse',
-    lat: 45.7729, lng: 4.8290, address: 'Croix-Rousse, Lyon', city: 'Lyon', neighborhoodLabel: 'Croix-Rousse', images: [] as string[],
-    description: "Un studio bohème sur la colline des Canuts, avec vue sur les toits de Lyon.",
-    space: "40m² avec vue dégagée, cuisine équipée et coin salon chaleureux.",
+    id: 'ly-4',
+    name: 'La Croix-Rousse',
+    price: 145,
+    currency: 'EUR',
+    guests: 2,
+    surface: 40,
+    bedrooms: 1,
+    bathrooms: 1,
+    slug: 'la-croix-rousse',
+    lat: 45.7729,
+    lng: 4.829,
+    address: 'Croix-Rousse, Lyon',
+    city: 'Lyon',
+    neighborhoodLabel: 'Croix-Rousse',
+    images: [] as string[],
+    description: 'Un studio bohème sur la colline des Canuts, avec vue sur les toits de Lyon.',
+    space: '40m² avec vue dégagée, cuisine équipée et coin salon chaleureux.',
     neighborhood: "Marché, ateliers d'artistes, cafés indépendants et pentes emblématiques.",
-    transit: "Métro Croix-Rousse (C) à 4 minutes.", amenities: ['Wifi', 'Kitchen', 'Air conditioning'], minNights: 2, maxNights: 30,
+    transit: 'Métro Croix-Rousse (C) à 4 minutes.',
+    amenities: ['Wifi', 'Kitchen', 'Air conditioning'],
+    minNights: 2,
+    maxNights: 30,
   },
 ]
 
@@ -172,7 +307,9 @@ async function getApartmentsForSearch(criteria: SearchCriteria) {
   try {
     if (hasDates && checkIn && checkOut) {
       const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests)
-      const apartments = city ? applyCityFilter(results.map(mapListing), city) : results.map(mapListing)
+      const apartments = city
+        ? applyCityFilter(results.map(mapListing), city)
+        : results.map(mapListing)
       return withQuotePrices(apartments, {
         checkIn,
         checkOut,
@@ -259,23 +396,21 @@ export { getApartments, getApartmentsForSearch }
 
 export async function ApartmentsSection({
   apartments,
+  titles,
 }: {
   apartments?: Awaited<ReturnType<typeof getApartments>>
+  titles?: { paris: string; lyon: string }
 }) {
   const locale = await getServerLocale()
-  const copy = APARTMENTS_SECTION_COPY[locale]
+  const copy = titles ?? APARTMENTS_SECTION_COPY[locale]
   const data = apartments ?? (await getApartments())
   const paris = applyCityFilter(data, 'paris')
   const lyon = applyCityFilter(data, 'lyon')
 
   return (
-    <section className="mx-auto flex max-w-content flex-col gap-12 px-gutter py-section md:px-gutter-md md:py-section-md">
-      {paris.length > 0 && (
-        <ApartmentsCarousel apartments={paris} title={copy.paris} />
-      )}
-      {lyon.length > 0 && (
-        <ApartmentsCarousel apartments={lyon} title={copy.lyon} />
-      )}
+    <section className="max-w-content px-gutter py-section md:px-gutter-md md:py-section-md mx-auto flex flex-col gap-12">
+      {paris.length > 0 && <ApartmentsCarousel apartments={paris} title={copy.paris} />}
+      {lyon.length > 0 && <ApartmentsCarousel apartments={lyon} title={copy.lyon} />}
     </section>
   )
 }
