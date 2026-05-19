@@ -25,6 +25,8 @@ Le serveur tourne sur `http://localhost:3000`.
 | `bun run typecheck`    | Vérification TypeScript |
 | `bun run format`       | Prettier (écriture)     |
 | `bun run format:check` | Prettier (vérification) |
+| `bun run storyblok:seed-blog` | Crée ou met à jour le modèle blog dans Storyblok |
+| `bun run storyblok:seed-apartments` | Crée le modèle éditorial des appartements dans Storyblok |
 
 ## Variables d'environnement
 
@@ -65,6 +67,22 @@ La route manuelle suivante reste disponible pour activer le draft mode depuis un
 ```txt
 https://alto-collection.com/api/storyblok/preview?secret=STORYBLOK_PREVIEW_SECRET&slug=/
 ```
+
+### Appartements
+
+Guesty reste la source de vérité pour les données opérationnelles : prix, disponibilités, capacité, adresse, photos et réservation.
+
+Storyblok sert de couche éditoriale :
+
+- `global-faq` : FAQ commune à toutes les pages appartement
+- `apartments/{slug}` : contenu éditorial optionnel d’un appartement
+
+Chaque story appartement doit utiliser le composant `apartment_editorial` et renseigner au minimum :
+
+- `guesty_id` : ID Guesty de l’appartement
+- `slug` : slug front, par exemple `voltaire-iii`
+
+Les champs texte des modèles blog et appartements sont marqués comme traduisibles dans Storyblok pour gérer FR/EN.
 
 ## Architecture réservation
 
