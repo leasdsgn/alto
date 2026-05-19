@@ -1,5 +1,6 @@
 import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
+import HomePage from '@/app/page'
 
 interface PreviewPageProps {
   params: Promise<{
@@ -15,6 +16,11 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
 
   const { slug = [] } = await params
   const path = getPreviewPath(query, slug)
+
+  if (path === '/') {
+    return <HomePage />
+  }
+
   const queryString = toQueryString(query)
 
   redirect(queryString ? `${path}?${queryString}` : path)
