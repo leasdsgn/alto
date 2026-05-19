@@ -8,9 +8,19 @@ import { useLocale } from '@/components/providers/locale-provider'
 
 gsap.registerPlugin(ScrollTrigger)
 
-export function ServicesSection() {
+interface ServicesSectionProps {
+  services?: readonly ServiceItem[]
+}
+
+type ServiceItem = {
+  title: string
+  description: string
+  icon: string
+}
+
+export function ServicesSection({ services: servicesOverride }: ServicesSectionProps = {}) {
   const locale = useLocale()
-  const services = SERVICES_COPY[locale]
+  const services = servicesOverride ?? SERVICES_COPY[locale]
   const cardsRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -37,22 +47,16 @@ export function ServicesSection() {
 
   return (
     <section className="py-section md:py-section-md">
-      <div className="mx-auto max-w-content px-gutter md:px-gutter-md">
-        <div
-          ref={cardsRef}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4"
-        >
+      <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
+        <div ref={cardsRef} className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           {services.map(({ title, description, icon }) => (
-            <div
-              key={title}
-              className="bg-ash/10 rounded-lg p-8 flex flex-col gap-6"
-            >
-              <div className="size-10 flex items-center justify-center">
+            <div key={title} className="bg-ash/10 flex flex-col gap-6 rounded-lg p-8">
+              <div className="flex size-10 items-center justify-center">
                 <Image src={icon} alt="" width={40} height={40} />
               </div>
               <div>
                 <h3 className="text-coffee text-body-xl font-semibold">{title}</h3>
-                <p className="text-ash mt-2 text-body-sm leading-[1.6]">{description}</p>
+                <p className="text-ash text-body-sm mt-2 leading-[1.6]">{description}</p>
               </div>
             </div>
           ))}

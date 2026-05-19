@@ -1,3 +1,4 @@
+import { StoryblokStory } from '@storyblok/react/rsc'
 import { HeroSection } from '@/components/sections/hero-section'
 import { AboutSection } from '@/components/sections/about-section'
 import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
@@ -9,10 +10,16 @@ import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
+import { getStoryblokVersion } from '@/lib/storyblok-preview'
+import { getStoryblokApi } from '@/lib/storyblok'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 
 export default async function Home() {
   const locale = await getServerLocale()
+  const story = await getHomeStory(locale)
+
+  if (story) return <StoryblokStory story={story} />
+
   const [apartments, blogArticles, siteImages] = await Promise.all([
     getApartments(),
     getBlogArticles(locale),
@@ -40,4 +47,20 @@ export default async function Home() {
       <StickyCta />
     </>
   )
+}
+
+async function getHomeStory(locale: string) {
+  try {
+    const storyblokApi = getStoryblokApi()
+    const version = await getStoryblokVersion()
+    const { data } = await storyblokApi.get('cdn/stories/site-images', {
+      version,
+      language: locale,
+      fallback_lang: 'fr',
+    })
+
+    return data.story
+  } catch {
+    return null
+  }
 }
