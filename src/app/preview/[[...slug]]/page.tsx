@@ -1,6 +1,8 @@
 import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
-import HomePage from '@/app/page'
+import { StoryblokStory } from '@storyblok/react/rsc'
+import { getServerLocale } from '@/lib/i18n/server'
+import { getStoryblokApi } from '@/lib/storyblok'
 
 interface PreviewPageProps {
   params: Promise<{
@@ -18,7 +20,15 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
   const path = getPreviewPath(query, slug)
 
   if (path === '/') {
-    return <HomePage />
+    const storyblokApi = getStoryblokApi()
+    const locale = await getServerLocale()
+    const { data } = await storyblokApi.get('cdn/stories/site-images', {
+      version: 'draft',
+      language: locale,
+      fallback_lang: 'fr',
+    })
+
+    return <StoryblokStory story={data.story} />
   }
 
   const queryString = toQueryString(query)
@@ -27,7 +37,8 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
 }
 
 function getPreviewPath(query: Record<string, string | string[] | undefined>, slug: string[]) {
-  const queryPath = firstQueryValue(query.path) ?? firstQueryValue(query.slug) ?? firstQueryValue(query.real_path)
+  const queryPath =
+    firstQueryValue(query.path) ?? firstQueryValue(query.slug) ?? firstQueryValue(query.real_path)
   if (queryPath) return normalizePath(queryPath)
   if (slug.length > 0) return normalizePath(slug.join('/'))
   return '/'
