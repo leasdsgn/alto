@@ -209,7 +209,7 @@ const COMPONENTS = [
   },
   {
     name: 'site_images',
-    display_name: 'Site images',
+    display_name: 'Page d’accueil',
     is_root: true,
     is_nestable: false,
     schema: {
@@ -282,9 +282,10 @@ async function upsertStory() {
       headers,
       body: JSON.stringify({
         story: {
-          name: 'Site images',
+          name: 'Accueil',
           slug: STORY_SLUG,
           parent_id: 0,
+          path: '/',
           content,
         },
         publish: 1,
@@ -301,6 +302,8 @@ async function upsertStory() {
     body: JSON.stringify({
       story: {
         ...story,
+        name: 'Accueil',
+        path: '/',
         content,
       },
       force_update: 1,
