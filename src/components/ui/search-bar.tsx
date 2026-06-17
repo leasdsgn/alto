@@ -21,7 +21,20 @@ const DATE_COPY = {
     availabilityError: 'Disponibilités momentanément indisponibles',
     removeGuest: 'Retirer un voyageur',
     addGuest: 'Ajouter un voyageur',
-    months: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+    months: [
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
+    ],
     days: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
   },
   en: {
@@ -32,7 +45,20 @@ const DATE_COPY = {
     availabilityError: 'Availability temporarily unavailable',
     removeGuest: 'Remove one guest',
     addGuest: 'Add one guest',
-    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    months: [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ],
     days: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
   },
 } as const
@@ -109,17 +135,24 @@ export function SearchBar({
   }
 
   function prevMonth() {
-    if (viewMonth === 1) { setViewMonth(12); setViewYear(y => y - 1) }
-    else setViewMonth(m => m - 1)
+    if (viewMonth === 1) {
+      setViewMonth(12)
+      setViewYear((y) => y - 1)
+    } else setViewMonth((m) => m - 1)
   }
   function nextMonth() {
-    if (viewMonth === 12) { setViewMonth(1); setViewYear(y => y + 1) }
-    else setViewMonth(m => m + 1)
+    if (viewMonth === 12) {
+      setViewMonth(1)
+      setViewYear((y) => y + 1)
+    } else setViewMonth((m) => m + 1)
   }
 
   const numDays = daysInMonth(viewYear, viewMonth)
   const firstDay = firstDayOfWeek(viewYear, viewMonth)
-  const days = Array.from({ length: numDays }, (_, i) => new CalendarDate(viewYear, viewMonth, i + 1))
+  const days = Array.from(
+    { length: numDays },
+    (_, i) => new CalendarDate(viewYear, viewMonth, i + 1),
+  )
   const effectiveEnd = selectingEnd && hoverDate ? hoverDate : dates.end
 
   function handleSubmit(e: React.FormEvent) {
@@ -139,7 +172,6 @@ export function SearchBar({
           align === 'center' ? 'mx-auto' : ''
         }`}
       >
-
         {/* City pill */}
         <HeroUISelect
           aria-label={copy.city}
@@ -150,19 +182,17 @@ export function SearchBar({
           className="shrink-0"
         >
           <Label className="sr-only">{copy.city}</Label>
-          <HeroUISelect.Trigger className="bg-coffee text-cream flex h-[35px] items-center gap-1.5 rounded-full px-5 text-overline font-bold tracking-[0.24px]">
-            <HeroUISelect.Value>
-              {({ selectedText }) => selectedText}
-            </HeroUISelect.Value>
+          <HeroUISelect.Trigger className="bg-coffee text-cream text-overline flex h-[35px] items-center gap-1.5 rounded-full px-5 font-bold tracking-[0.24px]">
+            <HeroUISelect.Value>{({ selectedText }) => selectedText}</HeroUISelect.Value>
             <ChevronDownIcon open={cityOpen} />
           </HeroUISelect.Trigger>
-          <HeroUISelect.Popover className="bg-cream overflow-hidden rounded-xl border border-divider shadow-none">
+          <HeroUISelect.Popover className="bg-cream border-divider overflow-hidden rounded-xl border shadow-none">
             <ListBox>
               {CITIES.map((c) => (
                 <ListBoxItem
                   key={c}
                   id={c}
-                  className="text-coffee hover:bg-sand cursor-pointer px-5 py-2.5 text-xs font-bold tracking-[0.24px] outline-none data-[selected]:bg-sand"
+                  className="text-coffee hover:bg-sand data-[selected]:bg-sand cursor-pointer px-5 py-2.5 text-xs font-bold tracking-[0.24px] outline-none"
                 >
                   {c}
                 </ListBoxItem>
@@ -175,40 +205,53 @@ export function SearchBar({
         <div className="relative shrink-0" ref={calendarRef}>
           <div
             className="flex w-fit cursor-pointer items-center"
-            onClick={() => setDateOpen(o => !o)}
+            onClick={() => setDateOpen((o) => !o)}
           >
             <div className="flex items-center gap-1.5 px-[15px]">
               <CalendarIcon />
-              <span className="text-taupe text-[12px] font-bold leading-[1.55] tracking-[0.24px]">
+              <span className="text-taupe text-[12px] leading-[1.55] font-bold tracking-[0.24px]">
                 {formatDate(dates.start)}
               </span>
             </div>
             <Separator />
             <div className="flex items-center gap-1.5 px-[15px]">
               <CalendarIcon />
-              <span className="text-taupe text-[12px] font-bold leading-[1.55] tracking-[0.24px]">
+              <span className="text-taupe text-[12px] leading-[1.55] font-bold tracking-[0.24px]">
                 {formatDate(dates.end)}
               </span>
             </div>
           </div>
 
           {dateOpen && (
-            <div className={`bg-cream absolute z-[1000] min-w-[280px] rounded-xl border border-divider p-5 ${calendarPlacement === 'top start' ? 'bottom-[calc(100%+8px)] left-0' : 'left-0 top-[calc(100%+8px)]'}`}>
+            <div
+              className={`bg-cream border-divider absolute z-50 min-w-[280px] rounded-xl border p-5 ${calendarPlacement === 'top start' ? 'bottom-[calc(100%+8px)] left-0' : 'top-[calc(100%+8px)] left-0'}`}
+            >
               <div className="mb-4 flex items-center justify-between">
-                <button type="button" onClick={prevMonth} className="text-taupe hover:text-coffee p-1">
+                <button
+                  type="button"
+                  onClick={prevMonth}
+                  className="text-taupe hover:text-coffee p-1"
+                >
                   <ChevronLeftIcon />
                 </button>
                 <span className="text-coffee text-sm font-bold">
                   {copy.months[viewMonth - 1]} {viewYear}
                 </span>
-                <button type="button" onClick={nextMonth} className="text-taupe hover:text-coffee p-1">
+                <button
+                  type="button"
+                  onClick={nextMonth}
+                  className="text-taupe hover:text-coffee p-1"
+                >
                   <ChevronRightIcon />
                 </button>
               </div>
 
               <div className="mb-1 grid grid-cols-7">
                 {copy.days.map((d, i) => (
-                  <div key={i} className="text-taupe flex size-8 items-center justify-center text-[10px] font-bold">
+                  <div
+                    key={i}
+                    className="text-taupe flex size-8 items-center justify-center text-[10px] font-bold"
+                  >
                     {d}
                   </div>
                 ))}
@@ -234,22 +277,24 @@ export function SearchBar({
                       onMouseLeave={() => setHoverDate(null)}
                       className={[
                         'flex size-8 items-center justify-center rounded-sm text-xs outline-none',
-                        disabled ? 'cursor-not-allowed text-silver line-through' : 'cursor-pointer',
+                        disabled ? 'text-silver cursor-not-allowed line-through' : 'cursor-pointer',
                         isStart || isEnd ? 'bg-coffee text-cream' : '',
                         inRange ? 'bg-coffee/10 text-coffee' : '',
-                        !isStart && !isEnd && !inRange && !disabled ? 'text-coffee hover:bg-sand' : '',
+                        !isStart && !isEnd && !inRange && !disabled
+                          ? 'text-coffee hover:bg-sand'
+                          : '',
                       ].join(' ')}
                     >
                       {date.day}
                     </button>
                   )
                 })}
-                {searchAvailability.isLoading && (
-                  <div className="bg-cream/85 absolute inset-0 flex items-center justify-center rounded-sm">
-                    <LoadingSpinner label={copy.availabilityLoading} />
-                  </div>
-                )}
               </div>
+              {searchAvailability.isLoading && (
+                <div className="mt-3">
+                  <LoadingSpinner label={copy.availabilityLoading} />
+                </div>
+              )}
               {searchAvailability.hasError && (
                 <p className="text-taupe mt-3 text-[11px] font-bold tracking-[0.24px]">
                   {copy.availabilityError}
@@ -280,7 +325,6 @@ export function SearchBar({
         >
           <SearchIcon />
         </button>
-
       </div>
     </form>
   )
@@ -309,19 +353,19 @@ function Stepper({
       <div className="flex items-center gap-1">
         <button
           type="button"
-          className="text-taupe flex size-7 items-center justify-center outline-none transition-opacity hover:opacity-70 disabled:opacity-30"
+          className="text-taupe flex size-7 items-center justify-center transition-opacity outline-none hover:opacity-70 disabled:opacity-30"
           aria-label={removeLabel}
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
         >
           <MinusCircleIcon />
         </button>
-        <span className="text-taupe w-4 text-center text-overline font-bold tabular-nums tracking-[0.24px]">
+        <span className="text-taupe text-overline w-4 text-center font-bold tracking-[0.24px] tabular-nums">
           {value}
         </span>
         <button
           type="button"
-          className="text-taupe flex size-7 items-center justify-center outline-none transition-opacity hover:opacity-70 disabled:opacity-30"
+          className="text-taupe flex size-7 items-center justify-center transition-opacity outline-none hover:opacity-70 disabled:opacity-30"
           aria-label={addLabel}
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
@@ -339,7 +383,7 @@ function Separator() {
 
 function CalendarIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 text-taupe">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-taupe shrink-0">
       <rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1" />
       <path d="M4 1v2M8 1v2M1 5h10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     </svg>
@@ -366,7 +410,15 @@ function MinusCircleIcon() {
 
 function SearchIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#fffff8" strokeWidth="1.5" strokeLinecap="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="#fffff8"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    >
       <circle cx="6" cy="6" r="4" />
       <path d="M10 10l2.5 2.5" />
     </svg>
@@ -393,7 +445,16 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 
 function ChevronLeftIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M10 3L5 8l5 5" />
     </svg>
   )
@@ -401,7 +462,16 @@ function ChevronLeftIcon() {
 
 function ChevronRightIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M6 3l5 5-5 5" />
     </svg>
   )

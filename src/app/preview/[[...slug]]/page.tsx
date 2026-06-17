@@ -4,6 +4,19 @@ import { StoryblokStory } from '@storyblok/react/rsc'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getStoryblokApi } from '@/lib/storyblok'
 
+const STATIC_ROUTES = new Set([
+  '/about',
+  '/annulation',
+  '/appartements',
+  '/blog',
+  '/cgv',
+  '/confidentialite',
+  '/contact',
+  '/investir',
+  '/lyon',
+  '/notre-histoire',
+])
+
 interface PreviewPageProps {
   params: Promise<{
     slug?: string[]
@@ -50,7 +63,7 @@ function firstQueryValue(value: string | string[] | undefined) {
 
 function normalizePath(value: string) {
   const path = value.startsWith('/preview') ? value.replace(/^\/preview/, '') : value
-  const normalized = path.startsWith('/') ? path : `/${path}`
+  const normalized = normalizeLeadingSlash(path)
 
   if (
     !path ||
@@ -61,7 +74,44 @@ function normalizePath(value: string) {
     return '/'
   }
 
-  return normalized
+  if (normalized === '/global-faq' || normalized === '/apartment-faq') {
+    return '/appartements'
+  }
+
+  if (normalized === '/blog/index') {
+    return '/blog'
+  }
+
+  if (normalized.startsWith('/_categories/') || normalized.startsWith('/_settings/')) {
+    return '/'
+  }
+
+  if (normalized.startsWith('/articles/')) {
+    return normalized.replace(/^\/articles\//, '/blog/')
+  }
+
+  if (normalized.startsWith('/blog/')) {
+    return normalized
+  }
+
+  if (normalized.startsWith('/apartments/') || normalized.startsWith('/apartment-editorials/')) {
+    return normalized.replace(/^\/(apartments|apartment-editorials)\//, '/appartements/')
+  }
+
+  if (normalized.startsWith('/appartements/')) {
+    return normalized
+  }
+
+  if (STATIC_ROUTES.has(normalized)) {
+    return normalized
+  }
+
+  return `/blog${normalized}`
+}
+
+function normalizeLeadingSlash(value: string) {
+  if (!value) return '/'
+  return value.startsWith('/') ? value : `/${value}`
 }
 
 function toQueryString(query: Record<string, string | string[] | undefined>) {

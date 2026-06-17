@@ -80,7 +80,7 @@ export function HeroSection({
 
       <Header />
 
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 pt-28 pb-28 md:pt-36 md:pb-36">
+      <div className="relative flex h-full w-full flex-col items-center justify-center px-6 pt-28 pb-28 md:pt-36 md:pb-36">
         <div className="w-full max-w-[1212px] md:-translate-y-6">
           <h1 className="text-cream md:text-h1 flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-center text-2xl leading-none font-medium tracking-[0.12em] uppercase md:gap-x-8 md:tracking-[0.16em]">
             <span>{titleParts[0]}</span>
@@ -91,11 +91,11 @@ export function HeroSection({
           </h1>
         </div>
 
-        <div className="absolute inset-x-6 bottom-8 mx-auto hidden max-w-[800px] md:bottom-12 md:block">
-          <SearchBar />
+        <div className="absolute inset-x-6 bottom-8 z-50 mx-auto hidden max-w-[800px] md:bottom-12 md:block">
+          <SearchBar calendarPlacement="top start" />
         </div>
 
-        <div className="absolute inset-x-6 bottom-8 md:hidden">
+        <div className="absolute inset-x-6 bottom-8 z-50 md:hidden">
           <SearchBarMobile />
         </div>
       </div>

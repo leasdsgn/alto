@@ -18,6 +18,9 @@ interface SearchDateAvailabilityArgs {
   enabled: boolean
 }
 
+const MAX_CACHE_ENTRIES = 40
+const availabilityCache = new Map<string, string[]>()
+
 export function useSearchDateAvailability({
   city,
   guests,
@@ -41,6 +44,22 @@ export function useSearchDateAvailability({
     if (!enabled) return
 
     const controller = new AbortController()
+    const cacheKey = [
+      city,
+      guests,
+      range.firstDay.toString(),
+      range.lastDay.toString(),
+      nights,
+    ].join('|')
+
+    const cached = availabilityCache.get(cacheKey)
+    if (cached) {
+      setUnavailableDates(new Set(cached))
+      setIsLoading(false)
+      setHasError(false)
+      return
+    }
+
     const params = new URLSearchParams({
       city,
       guests: String(guests),
@@ -52,6 +71,7 @@ export function useSearchDateAvailability({
     async function loadAvailability() {
       setIsLoading(true)
       setHasError(false)
+      setUnavailableDates(new Set())
 
       try {
         const response = await fetch(`/api/guesty/search-availability?${params}`, {
@@ -60,7 +80,9 @@ export function useSearchDateAvailability({
         if (!response.ok) throw new Error('search_availability_failed')
 
         const data = (await response.json()) as { unavailableDates?: string[] }
-        setUnavailableDates(new Set(data.unavailableDates ?? []))
+        const nextUnavailableDates = data.unavailableDates ?? []
+        writeAvailabilityCache(cacheKey, nextUnavailableDates)
+        setUnavailableDates(new Set(nextUnavailableDates))
       } catch (error) {
         if (!controller.signal.aborted) {
           console.warn('[search date availability] failed', error)
@@ -87,4 +109,13 @@ export function useSearchDateAvailability({
 
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()
+}
+
+function writeAvailabilityCache(key: string, unavailableDates: string[]) {
+  availabilityCache.set(key, unavailableDates)
+
+  if (availabilityCache.size <= MAX_CACHE_ENTRIES) return
+
+  const oldestKey = availabilityCache.keys().next().value
+  if (oldestKey) availabilityCache.delete(oldestKey)
 }

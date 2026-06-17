@@ -48,10 +48,7 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
 
   return (
     <section ref={sectionRef} className="relative h-svh overflow-hidden">
-      <div
-        ref={bgRef}
-        className="absolute inset-0 -top-[10%] bottom-0 h-[120%]"
-      >
+      <div ref={bgRef} className="absolute inset-0 -top-[10%] bottom-0 h-[120%]">
         <Image
           src={backgroundImage}
           alt="Vue de Lyon"
@@ -62,7 +59,7 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
           className="object-cover"
         />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-coffee/70 via-coffee/30 to-transparent" />
+      <div className="from-coffee/70 via-coffee/30 absolute inset-0 bg-gradient-to-b to-transparent" />
 
       {/* Header */}
       <header className="relative z-20 flex items-center justify-between px-6 pt-6 md:px-12">
@@ -100,24 +97,22 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
       </header>
 
       {/* Content */}
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6">
+      <div className="relative flex h-full w-full flex-col items-center justify-center px-6">
         <div className="w-full max-w-[500px] text-center">
-          <p className="text-cream text-xs font-bold uppercase tracking-[0.24px]">Lyon</p>
-          <h1 className="text-cream mt-2 text-lg font-bold md:text-xl">
-            Vivre Lyon autrement.
-          </h1>
+          <p className="text-cream text-xs font-bold tracking-[0.24px] uppercase">Lyon</p>
+          <h1 className="text-cream mt-2 text-lg font-bold md:text-xl">Vivre Lyon autrement.</h1>
           <p className="text-cream/80 mt-3 text-xs leading-relaxed md:text-sm">
             Des appartements soignés, dans les quartiers qui comptent.
           </p>
         </div>
 
         {/* Search bar desktop */}
-        <div className="absolute inset-x-6 bottom-8 mx-auto hidden max-w-[500px] md:block md:bottom-12">
-          <SearchBar />
+        <div className="absolute inset-x-6 bottom-8 z-50 mx-auto hidden max-w-[500px] md:bottom-12 md:block">
+          <SearchBar calendarPlacement="top start" />
         </div>
 
         {/* Search bar mobile */}
-        <div className="absolute inset-x-6 bottom-8 md:hidden">
+        <div className="absolute inset-x-6 bottom-8 z-50 md:hidden">
           <SearchBarMobile />
         </div>
       </div>

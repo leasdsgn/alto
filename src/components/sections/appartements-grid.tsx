@@ -32,20 +32,18 @@ interface Apartment {
 export function AppartementsGrid({
   apartments,
   initialCity,
+  searchStatus = 'ready',
 }: {
   apartments: Apartment[]
   initialCity?: string
+  searchStatus?: 'ready' | 'fallback' | 'availability_error'
 }) {
   const locale = useLocale()
   const copy = APARTMENTS_GRID_COPY[locale]
   const normalizedInitialCity = normalizeFilterValue(initialCity)
   const cityFilters = useMemo(() => {
     const options = Array.from(
-      new Set(
-        apartments
-          .map((apartment) => normalizeFilterValue(apartment.city))
-          .filter(Boolean),
-      ),
+      new Set(apartments.map((apartment) => normalizeFilterValue(apartment.city)).filter(Boolean)),
     )
 
     return [
@@ -63,16 +61,13 @@ export function AppartementsGrid({
   const [view, setView] = useState<'list' | 'map'>('list')
 
   const neighborhoodFilters = useMemo(() => {
-    const source = activeCity === 'all'
-      ? apartments
-      : apartments.filter((apartment) => normalizeFilterValue(apartment.city) === activeCity)
+    const source =
+      activeCity === 'all'
+        ? apartments
+        : apartments.filter((apartment) => normalizeFilterValue(apartment.city) === activeCity)
 
     const options = Array.from(
-      new Set(
-        source
-          .map((apartment) => getNeighborhoodLabel(apartment))
-          .filter(Boolean),
-      ),
+      new Set(source.map((apartment) => getNeighborhoodLabel(apartment)).filter(Boolean)),
     ) as string[]
 
     return [
@@ -85,16 +80,18 @@ export function AppartementsGrid({
   }, [activeCity, apartments, copy.all])
 
   const filtered = useMemo(
-    () => apartments.filter((apartment) => {
-      if (activeCity !== 'all' && normalizeFilterValue(apartment.city) !== activeCity) return false
-      if (
-        activeNeighborhood
-        && normalizeFilterValue(getNeighborhoodLabel(apartment)) !== activeNeighborhood
-      ) {
-        return false
-      }
-      return true
-    }),
+    () =>
+      apartments.filter((apartment) => {
+        if (activeCity !== 'all' && normalizeFilterValue(apartment.city) !== activeCity)
+          return false
+        if (
+          activeNeighborhood &&
+          normalizeFilterValue(getNeighborhoodLabel(apartment)) !== activeNeighborhood
+        ) {
+          return false
+        }
+        return true
+      }),
     [activeCity, activeNeighborhood, apartments],
   )
 
@@ -103,7 +100,7 @@ export function AppartementsGrid({
   return (
     <>
       <div className="flex w-full flex-col gap-4">
-        <div className="bg-cream relative hidden min-h-search-frame w-full items-center gap-3 lg:flex">
+        <div className="bg-cream min-h-search-frame relative hidden w-full items-center gap-3 lg:flex">
           <span
             aria-hidden="true"
             className="bg-divider absolute bottom-0 left-1/2 h-px w-screen -translate-x-1/2"
@@ -165,7 +162,7 @@ export function AppartementsGrid({
           <div className="flex justify-end">
             <button
               type="button"
-              className="text-taupe text-xs font-bold uppercase tracking-[0.24px] transition-opacity hover:opacity-70"
+              className="text-taupe text-xs font-bold tracking-[0.24px] uppercase transition-opacity hover:opacity-70"
               onClick={() => {
                 setActiveNeighborhood(null)
               }}
@@ -181,14 +178,14 @@ export function AppartementsGrid({
           }`}
         >
           <div className="overflow-hidden">
-            <div className="rounded-xl border border-divider bg-sand/40 p-4">
+            <div className="border-divider bg-sand/40 rounded-xl border p-4">
               <div className="flex flex-wrap gap-2">
                 {neighborhoodFilters.map((filter) => (
                   <Chip
                     key={filter.id}
                     variant={
-                      (filter.id === 'all' && activeNeighborhood === null)
-                      || activeNeighborhood === filter.id
+                      (filter.id === 'all' && activeNeighborhood === null) ||
+                      activeNeighborhood === filter.id
                         ? 'active'
                         : 'default'
                     }
@@ -205,35 +202,33 @@ export function AppartementsGrid({
         </div>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="mt-12 rounded-xl border border-divider/60 bg-cream/60 p-10 text-center">
+      {searchStatus === 'availability_error' ? (
+        <div className="border-divider/60 bg-cream/60 mt-12 rounded-xl border p-10 text-center">
+          <p className="text-coffee text-sm font-semibold">{copy.availabilityErrorTitle}</p>
+          <p className="text-taupe mt-2 text-xs">{copy.availabilityErrorBody}</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="border-divider/60 bg-cream/60 mt-12 rounded-xl border p-10 text-center">
           <p className="text-coffee text-sm font-semibold">{copy.emptyTitle}</p>
           <p className="text-taupe mt-2 text-xs">{copy.emptyBody}</p>
         </div>
       ) : view === 'map' ? (
-        <div className="mt-8 flex min-h-results-panel flex-col gap-4 lg:flex-row">
+        <div className="min-h-results-panel mt-8 flex flex-col gap-4 lg:flex-row">
           <div className="min-w-0 flex-1">
             <AppartementsMap apartments={filtered} />
           </div>
-          <aside
-            className="alto-results-list flex flex-col gap-4 overscroll-contain lg:h-results-panel lg:w-[390px] lg:overflow-y-auto lg:pr-2"
-          >
+          <aside className="alto-results-list lg:h-results-panel flex flex-col gap-4 overscroll-contain lg:w-[390px] lg:overflow-y-auto lg:pr-2">
             {filtered.map((apt) => {
               const image = apt.images[0]
 
               return (
-                <MapApartmentResult
-                  key={apt.id}
-                  apartment={apt}
-                  image={image}
-                  locale={locale}
-                />
+                <MapApartmentResult key={apt.id} apartment={apt} image={image} locale={locale} />
               )
             })}
           </aside>
         </div>
       ) : (
-        <div className="mt-8 grid min-h-results-panel grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="min-h-results-panel mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((apt) => (
             <ApartmentCard
               key={apt.id}
@@ -289,12 +284,14 @@ function MapApartmentResult({
     ...(apartment.surface > 0
       ? [{ icon: 'surface' as const, value: `${apartment.surface} m`, sup: '2' }]
       : []),
-    ...(apartment.bedrooms > 0 ? [{ icon: 'bedrooms' as const, value: String(apartment.bedrooms) }] : []),
+    ...(apartment.bedrooms > 0
+      ? [{ icon: 'bedrooms' as const, value: String(apartment.bedrooms) }]
+      : []),
   ]
 
   return (
     <Link href={`/appartements/${apartment.slug}`} className="group block">
-      <article className="bg-taupe/10 rounded-result-card grid min-h-[154px] grid-cols-[90px_minmax(0,1fr)] gap-x-3 gap-y-3 overflow-hidden p-3 transition-colors hover:bg-taupe/15">
+      <article className="bg-taupe/10 rounded-result-card hover:bg-taupe/15 grid min-h-[154px] grid-cols-[90px_minmax(0,1fr)] gap-x-3 gap-y-3 overflow-hidden p-3 transition-colors">
         <div className="bg-sand rounded-result-card relative size-[90px] overflow-hidden">
           {image ? (
             <Image
@@ -308,7 +305,7 @@ function MapApartmentResult({
         </div>
 
         <div className="min-w-0">
-          <h3 className="text-coffee line-clamp-2 text-body-sm font-bold leading-[1.45]">
+          <h3 className="text-coffee text-body-sm line-clamp-2 leading-[1.45] font-bold">
             {apartment.name}
           </h3>
 
@@ -316,7 +313,7 @@ function MapApartmentResult({
             {specs.map((spec) => (
               <span
                 key={`${spec.icon}-${spec.value}`}
-                className="text-taupe flex items-center gap-2 text-overline font-bold"
+                className="text-taupe text-overline flex items-center gap-2 font-bold"
               >
                 <SpecIcon kind={spec.icon} />
                 <span>
@@ -330,7 +327,7 @@ function MapApartmentResult({
           </div>
         </div>
 
-        <div className="text-coffee flex items-center gap-1 text-body-sm leading-[1.5]">
+        <div className="text-coffee text-body-sm flex items-center gap-1 leading-[1.5]">
           <StarIcon />
           <span>4,9 (113)</span>
         </div>
@@ -338,7 +335,8 @@ function MapApartmentResult({
         <div className="flex min-w-0 items-center justify-end gap-3">
           <span className="text-silver text-body whitespace-nowrap">
             {apartment.priceSource === 'quote' ? '' : `${copy.from} `}
-            {formatCurrency(Math.round(apartment.price), locale)}{copy.perNight}
+            {formatCurrency(Math.round(apartment.price), locale)}
+            {copy.perNight}
           </span>
         </div>
       </article>
@@ -355,6 +353,9 @@ const APARTMENTS_GRID_COPY = {
     reset: 'Réinitialiser',
     emptyTitle: 'Aucun appartement disponible',
     emptyBody: 'Essayez d’élargir vos dates ou de changer de ville.',
+    availabilityErrorTitle: 'Disponibilités temporairement indisponibles',
+    availabilityErrorBody:
+      'La recherche datée n’a pas pu être vérifiée. Merci de réessayer dans un instant.',
     from: 'Dès',
     perNight: '/nuit',
   },
@@ -366,6 +367,8 @@ const APARTMENTS_GRID_COPY = {
     reset: 'Reset',
     emptyTitle: 'No apartments available',
     emptyBody: 'Try widening your dates or changing city.',
+    availabilityErrorTitle: 'Availability temporarily unavailable',
+    availabilityErrorBody: 'The dated search could not be verified. Please try again in a moment.',
     from: 'From',
     perNight: '/night',
   },
@@ -463,13 +466,7 @@ function FilterIcon() {
 
 function ListIcon() {
   return (
-    <svg
-      width="18"
-      height="15"
-      viewBox="0 0 18 15"
-      fill="currentColor"
-      aria-hidden="true"
-    >
+    <svg width="18" height="15" viewBox="0 0 18 15" fill="currentColor" aria-hidden="true">
       <path d="M1.5 3A1.5 1.5 0 1 0 1.5 0a1.5 1.5 0 0 0 0 3ZM1.5 9A1.5 1.5 0 1 0 1.5 6a1.5 1.5 0 0 0 0 3ZM1.5 15a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM6 1h12v2H6V1ZM6 7h12v2H6V7ZM6 13h12v2H6v-2Z" />
     </svg>
   )

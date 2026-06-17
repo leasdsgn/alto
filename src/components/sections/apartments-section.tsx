@@ -300,28 +300,58 @@ function applyCityFilter<T extends { city?: string }>(items: T[], city: string):
   return items.filter((apt) => normalizeCity(apt.city).includes(needle))
 }
 
-async function getApartmentsForSearch(criteria: SearchCriteria) {
+async function getApartmentSearchResult(criteria: SearchCriteria) {
   const { city, checkIn, checkOut, guests } = criteria
   const hasDates = Boolean(checkIn && checkOut)
 
-  try {
-    if (hasDates && checkIn && checkOut) {
+  if (hasDates && checkIn && checkOut) {
+    try {
       const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests)
       const apartments = city
         ? applyCityFilter(results.map(mapListing), city)
         : results.map(mapListing)
-      return withQuotePrices(apartments, {
-        checkIn,
-        checkOut,
-        guestsCount: guests ?? 1,
-      })
-    }
 
-    const { results } = await guestyClient.getListings()
-    return city ? applyCityFilter(results.map(mapListing), city) : results.map(mapListing)
-  } catch {
-    return city ? applyCityFilter(FALLBACK_APARTMENTS, city) : FALLBACK_APARTMENTS
+      return {
+        apartments: await withQuotePrices(apartments, {
+          checkIn,
+          checkOut,
+          guestsCount: guests ?? 1,
+        }),
+        hasDateSearch: true,
+        status: 'ready' as const,
+      }
+    } catch (error) {
+      console.error('[apartments search] availability search failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+
+      return {
+        apartments: [],
+        hasDateSearch: true,
+        status: 'availability_error' as const,
+      }
+    }
   }
+
+  try {
+    const { results } = await guestyClient.getListings()
+    return {
+      apartments: city ? applyCityFilter(results.map(mapListing), city) : results.map(mapListing),
+      hasDateSearch: false,
+      status: 'ready' as const,
+    }
+  } catch {
+    return {
+      apartments: city ? applyCityFilter(FALLBACK_APARTMENTS, city) : FALLBACK_APARTMENTS,
+      hasDateSearch: false,
+      status: 'fallback' as const,
+    }
+  }
+}
+
+async function getApartmentsForSearch(criteria: SearchCriteria) {
+  const result = await getApartmentSearchResult(criteria)
+  return result.apartments
 }
 
 async function withQuotePrices<T extends { id: string; price: number }>(
@@ -392,7 +422,7 @@ function isFallbackApartmentId(id: string) {
   return id.startsWith('fb-') || id.startsWith('ly-')
 }
 
-export { getApartments, getApartmentsForSearch }
+export { getApartments, getApartmentsForSearch, getApartmentSearchResult }
 
 export async function ApartmentsSection({
   apartments,

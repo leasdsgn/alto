@@ -49,17 +49,24 @@ export function ApartmentBooking({
   )
   const [quoteStatus, setQuoteStatus] = useState<QuoteStatus>('idle')
   const [quoteBreakdown, setQuoteBreakdown] = useState<QuoteBreakdown | null>(null)
+  const [verifiedQuoteKey, setVerifiedQuoteKey] = useState<string | null>(null)
   const nights = dates.end.compare(dates.start)
   const fallbackTotal = useMemo(() => price * Math.max(nights, 0), [nights, price])
   const minDate = today(getLocalTimeZone())
   const minDateKey = minDate.toString()
   const availabilityEnd = getAvailabilityEnd(minDate, dates.end)
+  const quoteRequestKey = listingId
+    ? [listingId, checkIn, checkOut, guests, locale].join(':')
+    : null
   const hasUnavailableSelection = rangeHasUnavailableNight(dates.start, dates.end, unavailableDates)
   const isBelowMinNights = Boolean(minNights && nights < minNights)
   const isAboveMaxNights = Boolean(maxNights && nights > maxNights)
   const isAboveCapacity = Boolean(capacity && guests > capacity)
+  const hasVerifiedQuote =
+    !listingId || (quoteStatus === 'ready' && verifiedQuoteKey === quoteRequestKey)
   const canReserve =
     (!listingId || availabilityStatus === 'ready') &&
+    hasVerifiedQuote &&
     nights > 0 &&
     !hasUnavailableSelection &&
     !isBelowMinNights &&
@@ -74,6 +81,7 @@ export function ApartmentBooking({
     minNights,
     maxNights,
     capacity,
+    quoteStatus,
   })
   const priceLabel = getPriceLabel({
     fallbackTotal,
@@ -116,9 +124,7 @@ export function ApartmentBooking({
         const data = (await response.json()) as GuestyCalendarDay[] | { days?: GuestyCalendarDay[] }
         const days = Array.isArray(data) ? data : (data.days ?? [])
         const unavailable = new Set(
-          days
-            .filter((day) => day.status !== 'available')
-            .map((day) => day.date.slice(0, 10)),
+          days.filter((day) => day.status !== 'available').map((day) => day.date.slice(0, 10)),
         )
 
         setUnavailableDates(unavailable)
@@ -149,7 +155,16 @@ export function ApartmentBooking({
     })
 
     if (nextRange) setDates(nextRange)
-  }, [availabilityStatus, dates.start, dates.end, maxNights, minDate, minNights, setDates, unavailableDates])
+  }, [
+    availabilityStatus,
+    dates.start,
+    dates.end,
+    maxNights,
+    minDate,
+    minNights,
+    setDates,
+    unavailableDates,
+  ])
 
   function handleDateChange(value: RangeValue<DateValue> | null) {
     if (!value) return
@@ -160,23 +175,26 @@ export function ApartmentBooking({
 
   useEffect(() => {
     if (
-      !listingId
-      || availabilityStatus !== 'ready'
-      || nights <= 0
-      || hasUnavailableSelection
-      || isBelowMinNights
-      || isAboveMaxNights
-      || isAboveCapacity
+      !listingId ||
+      availabilityStatus !== 'ready' ||
+      nights <= 0 ||
+      hasUnavailableSelection ||
+      isBelowMinNights ||
+      isAboveMaxNights ||
+      isAboveCapacity
     ) {
       setQuoteStatus('idle')
       setQuoteBreakdown(null)
+      setVerifiedQuoteKey(null)
       return
     }
 
     const controller = new AbortController()
+    const currentQuoteKey = quoteRequestKey
 
     async function loadQuote() {
       setQuoteStatus('loading')
+      setVerifiedQuoteKey(null)
 
       try {
         const response = await fetch('/api/guesty/quote', {
@@ -199,11 +217,13 @@ export function ApartmentBooking({
         if (!breakdown) throw new Error('quote_missing_total')
 
         setQuoteBreakdown(breakdown)
+        setVerifiedQuoteKey(currentQuoteKey)
         setQuoteStatus('ready')
       } catch (error) {
         if (!controller.signal.aborted) {
           console.warn('[apartment booking] quote failed', error)
           setQuoteBreakdown(null)
+          setVerifiedQuoteKey(null)
           setQuoteStatus('error')
         }
       }
@@ -224,6 +244,7 @@ export function ApartmentBooking({
     checkOut,
     guests,
     locale,
+    quoteRequestKey,
   ])
 
   return (
@@ -419,12 +440,12 @@ function getPriceLabel({
   locale: 'fr' | 'en'
   canShowFallbackPrice: boolean
 }) {
-  if (!canShowFallbackPrice) {
-    return locale === 'en' ? 'Pick available dates' : 'Choisissez des dates disponibles'
-  }
-
   if (quoteStatus === 'loading') {
     return locale === 'en' ? 'Calculating total...' : 'Calcul du total...'
+  }
+
+  if (!canShowFallbackPrice) {
+    return locale === 'en' ? 'Pick available dates' : 'Choisissez des dates disponibles'
   }
 
   if (quoteBreakdown) {
@@ -461,7 +482,9 @@ function getNightlyLabel({
     return locale === 'en' ? `${averageNight} / night` : `${averageNight} / nuit`
   }
 
-  return locale === 'en' ? `${formatPrice(fallbackPrice)}€ / night` : `${formatPrice(fallbackPrice)}€ / nuit`
+  return locale === 'en'
+    ? `${formatPrice(fallbackPrice)}€ / night`
+    : `${formatPrice(fallbackPrice)}€ / nuit`
 }
 
 function getQuoteBreakdown(quote: GuestyQuote): QuoteBreakdown | null {
@@ -538,6 +561,7 @@ function getAvailabilityMessage({
   minNights,
   maxNights,
   capacity,
+  quoteStatus,
 }: {
   status: AvailabilityStatus
   hasUnavailableSelection: boolean
@@ -547,10 +571,12 @@ function getAvailabilityMessage({
   minNights?: number
   maxNights?: number
   capacity?: number
+  quoteStatus: QuoteStatus
 }) {
   if (status === 'loading') return 'Vérification des disponibilités en cours.'
   if (status === 'error') return 'Les disponibilités ne peuvent pas être vérifiées pour le moment.'
-  if (hasUnavailableSelection) return 'Ces dates ne sont pas disponibles. Choisissez une autre période.'
+  if (hasUnavailableSelection)
+    return 'Ces dates ne sont pas disponibles. Choisissez une autre période.'
   if (isBelowMinNights && minNights) {
     return `Le séjour minimum est de ${minNights} nuit${minNights > 1 ? 's' : ''}.`
   }
@@ -559,6 +585,10 @@ function getAvailabilityMessage({
   }
   if (isAboveCapacity && capacity) {
     return `Cet appartement accueille jusqu’à ${capacity} voyageur${capacity > 1 ? 's' : ''}.`
+  }
+  if (quoteStatus === 'loading') return 'Vérification du tarif et des disponibilités.'
+  if (quoteStatus === 'error') {
+    return 'Ces dates ne sont pas disponibles pour cet appartement. Choisissez une autre période.'
   }
 
   return null
