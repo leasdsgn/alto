@@ -78,6 +78,14 @@ function normalizePath(value: string) {
     return '/appartements'
   }
 
+  if (normalized === '/blog/index') {
+    return '/blog'
+  }
+
+  if (normalized.startsWith('/_categories/') || normalized.startsWith('/_settings/')) {
+    return '/'
+  }
+
   if (normalized.startsWith('/articles/')) {
     return normalized.replace(/^\/articles\//, '/blog/')
   }

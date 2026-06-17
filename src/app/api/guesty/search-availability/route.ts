@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
+import { hasRedisConfig, redisCommand } from '@/lib/guesty-oauth-cache'
 import type { GuestyCalendarDay, GuestyListing } from '@/types/guesty'
 
 const schema = z.object({
@@ -12,6 +13,17 @@ const schema = z.object({
 })
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
+const CACHE_TTL_SECONDS = 180
+const CACHE_HEADER = `s-maxage=${CACHE_TTL_SECONDS}, stale-while-revalidate=900`
+const MEMORY_CACHE_MAX_ENTRIES = 80
+
+interface SearchAvailabilityPayload {
+  unavailableDates: string[]
+  checkedListings: number
+}
+
+const memoryCache = new Map<string, { expiresAt: number; payload: SearchAvailabilityPayload }>()
+const pendingRequests = new Map<string, Promise<SearchAvailabilityPayload>>()
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,52 +40,205 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'invalid_range' }, { status: 400 })
     }
 
-    const { results } = await guestyClient.getListings()
-    const listings = results.filter(
-      (listing) => matchesCity(listing, city) && listing.accommodates >= guests,
-    )
+    const cacheKey = buildCacheKey({ city, guests, from, to, nights })
+    const cached = await readAvailabilityCache(cacheKey)
 
-    const availableStarts = new Set<string>()
-    const candidateDates = listDates(startDate, endDate)
-    const calendarEnd = addDays(endDate, nights)
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          'Cache-Control': CACHE_HEADER,
+        },
+      })
+    }
 
-    for (const listing of listings) {
-      if (listing.minNights && nights < listing.minNights) continue
-      if (listing.maxNights && nights > listing.maxNights) continue
+    const pending = pendingRequests.get(cacheKey)
+    if (pending) {
+      const payload = await pending
+      return NextResponse.json(payload, {
+        headers: {
+          'Cache-Control': CACHE_HEADER,
+        },
+      })
+    }
 
+    const requestPromise = resolveSearchAvailability({
+      city,
+      guests,
+      startDate,
+      endDate,
+      nights,
+    }).finally(() => {
+      pendingRequests.delete(cacheKey)
+    })
+
+    pendingRequests.set(cacheKey, requestPromise)
+    const payload = await requestPromise
+    await writeAvailabilityCache(cacheKey, payload)
+
+    return NextResponse.json(payload, {
+      headers: {
+        'Cache-Control': CACHE_HEADER,
+      },
+    })
+  } catch (error) {
+    console.error('[search availability] error', error)
+    return NextResponse.json({ error: 'internal_error' }, { status: 500 })
+  }
+}
+
+async function resolveSearchAvailability({
+  city,
+  guests,
+  startDate,
+  endDate,
+  nights,
+}: {
+  city: string
+  guests: number
+  startDate: Date
+  endDate: Date
+  nights: number
+}): Promise<SearchAvailabilityPayload> {
+  const { results } = await guestyClient.getListings()
+  const listings = results.filter(
+    (listing) => matchesCity(listing, city) && listing.accommodates >= guests,
+  )
+
+  const availableStarts = new Set<string>()
+  const candidateDates = listDates(startDate, endDate)
+  const calendarEnd = addDays(endDate, nights)
+
+  const calendarResults = await mapWithConcurrency(listings, 4, async (listing) => {
+    if (listing.minNights && nights < listing.minNights) return { status: 'skipped' as const }
+    if (listing.maxNights && nights > listing.maxNights) return { status: 'skipped' as const }
+
+    try {
       const calendar = await guestyClient.getListingCalendar(
         listing._id,
         formatDate(startDate),
         formatDate(calendarEnd),
       )
-      const daysByDate = new Map(calendar.days.map((day) => [day.date.slice(0, 10), day]))
 
-      for (const date of candidateDates) {
-        if (isListingAvailableForStay(daysByDate, date, nights)) {
-          availableStarts.add(formatDate(date))
-        }
+      return { status: 'fulfilled' as const, calendar }
+    } catch (error) {
+      console.warn('[search availability] listing calendar failed', {
+        listingId: listing._id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+
+      return { status: 'rejected' as const }
+    }
+  })
+
+  const checkedListings = calendarResults.filter((result) => result?.status === 'fulfilled').length
+  const failedListings = calendarResults.filter((result) => result?.status === 'rejected').length
+
+  if (checkedListings === 0 && failedListings > 0) {
+    throw new Error('search_availability_calendars_failed')
+  }
+
+  for (const result of calendarResults) {
+    if (result?.status !== 'fulfilled') continue
+
+    const calendar = result.calendar
+    const daysByDate = new Map(calendar.days.map((day) => [day.date.slice(0, 10), day]))
+
+    for (const date of candidateDates) {
+      if (isListingAvailableForStay(daysByDate, date, nights)) {
+        availableStarts.add(formatDate(date))
       }
     }
-
-    const unavailableDates = candidateDates
-      .map(formatDate)
-      .filter((date) => !availableStarts.has(date))
-
-    return NextResponse.json(
-      {
-        unavailableDates,
-        checkedListings: listings.length,
-      },
-      {
-        headers: {
-          'Cache-Control': 's-maxage=300, stale-while-revalidate=900',
-        },
-      },
-    )
-  } catch (error) {
-    console.error('[search availability] error', error)
-    return NextResponse.json({ error: 'internal_error' }, { status: 500 })
   }
+
+  const unavailableDates = candidateDates
+    .map(formatDate)
+    .filter((date) => !availableStarts.has(date))
+
+  return {
+    unavailableDates,
+    checkedListings,
+  }
+}
+
+async function readAvailabilityCache(key: string): Promise<SearchAvailabilityPayload | null> {
+  const memoryEntry = memoryCache.get(key)
+  if (memoryEntry && Date.now() < memoryEntry.expiresAt) return memoryEntry.payload
+
+  if (!hasRedisConfig()) return null
+
+  try {
+    const value = await redisCommand<string>(['GET', key])
+    if (!value) return null
+
+    const payload = parseCachedPayload(value)
+    if (payload) writeMemoryCache(key, payload)
+    return payload
+  } catch (error) {
+    console.error('[search availability] cache read failed', error)
+    return null
+  }
+}
+
+async function writeAvailabilityCache(key: string, payload: SearchAvailabilityPayload) {
+  writeMemoryCache(key, payload)
+
+  if (!hasRedisConfig()) return
+
+  try {
+    await redisCommand<string>(['SET', key, JSON.stringify(payload), 'EX', CACHE_TTL_SECONDS])
+  } catch (error) {
+    console.error('[search availability] cache write failed', error)
+  }
+}
+
+function writeMemoryCache(key: string, payload: SearchAvailabilityPayload) {
+  memoryCache.set(key, {
+    expiresAt: Date.now() + CACHE_TTL_SECONDS * 1000,
+    payload,
+  })
+
+  if (memoryCache.size <= MEMORY_CACHE_MAX_ENTRIES) return
+
+  const oldestKey = memoryCache.keys().next().value
+  if (oldestKey) memoryCache.delete(oldestKey)
+}
+
+function parseCachedPayload(value: string): SearchAvailabilityPayload | null {
+  try {
+    const parsed = JSON.parse(value) as Partial<SearchAvailabilityPayload>
+    if (
+      Array.isArray(parsed.unavailableDates) &&
+      parsed.unavailableDates.every((date) => typeof date === 'string') &&
+      typeof parsed.checkedListings === 'number'
+    ) {
+      return {
+        unavailableDates: parsed.unavailableDates,
+        checkedListings: parsed.checkedListings,
+      }
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function buildCacheKey({
+  city,
+  guests,
+  from,
+  to,
+  nights,
+}: {
+  city: string
+  guests: number
+  from: string
+  to: string
+  nights: number
+}) {
+  return ['guesty:search_availability', normalize(city) || 'all', guests, from, to, nights].join(
+    ':',
+  )
 }
 
 function matchesCity(listing: GuestyListing, city: string) {
@@ -122,4 +287,19 @@ function listDates(start: Date, end: Date) {
 
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 10)
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T) => Promise<R>,
+) {
+  const results: R[] = []
+
+  for (let index = 0; index < items.length; index += concurrency) {
+    const batch = items.slice(index, index + concurrency)
+    results.push(...(await Promise.all(batch.map(mapper))))
+  }
+
+  return results
 }

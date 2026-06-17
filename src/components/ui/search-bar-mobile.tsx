@@ -77,7 +77,7 @@ export function SearchBarMobile() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
       <div className="bg-cream flex flex-col rounded-xl">
-        <div className="flex items-center justify-between border-b border-divider px-4 py-3">
+        <div className="border-divider flex items-center justify-between border-b px-4 py-3">
           <HeroUISelect
             aria-label={copy.city}
             selectedKey={city}
@@ -86,20 +86,18 @@ export function SearchBarMobile() {
           >
             <Label className="sr-only">{copy.city}</Label>
             <HeroUISelect.Trigger className="bg-ash text-cream flex h-[44px] items-center gap-1.5 rounded-md px-5 text-xs font-bold tracking-[0.24px]">
-              <HeroUISelect.Value>
-                {({ selectedText }) => selectedText}
-              </HeroUISelect.Value>
+              <HeroUISelect.Value>{({ selectedText }) => selectedText}</HeroUISelect.Value>
               <HeroUISelect.Indicator>
                 <ChevronIcon />
               </HeroUISelect.Indicator>
             </HeroUISelect.Trigger>
-            <HeroUISelect.Popover className="bg-cream overflow-hidden rounded-sm border border-divider shadow-none">
+            <HeroUISelect.Popover className="bg-cream border-divider overflow-hidden rounded-sm border shadow-none">
               <ListBox>
                 {CITIES.map((c) => (
                   <ListBoxItem
                     key={c}
                     id={c}
-                    className="text-coffee hover:bg-sand cursor-pointer px-5 py-2 text-xs font-bold tracking-[0.24px] outline-none data-[selected]:bg-sand"
+                    className="text-coffee hover:bg-sand data-[selected]:bg-sand cursor-pointer px-5 py-2 text-xs font-bold tracking-[0.24px] outline-none"
                   >
                     {c}
                   </ListBoxItem>
@@ -145,11 +143,11 @@ export function SearchBarMobile() {
           isDateUnavailable={searchAvailability.isDateUnavailable}
         >
           <Label className="sr-only">{copy.stayDates}</Label>
-          <div
-            className="cursor-pointer px-4 py-4"
-            onClick={() => setDateOpen(true)}
-          >
-            <DateField.Group className="pointer-events-none flex items-center justify-between" fullWidth>
+          <div className="cursor-pointer px-4 py-4" onClick={() => setDateOpen(true)}>
+            <DateField.Group
+              className="pointer-events-none flex items-center justify-between"
+              fullWidth
+            >
               <div className="flex items-center gap-0.5">
                 <DateField.Input slot="start" className="flex items-center gap-0.5">
                   {(segment) => (
@@ -169,10 +167,15 @@ export function SearchBarMobile() {
                   )}
                 </DateField.Input>
               </div>
-              <span className="text-coffee"><CalendarIcon /></span>
+              <span className="text-coffee">
+                <CalendarIcon />
+              </span>
             </DateField.Group>
           </div>
-          <DateRangePicker.Popover className="bg-cream rounded-lg border border-divider p-5 shadow-none" placement="bottom start">
+          <DateRangePicker.Popover
+            className="bg-cream border-divider rounded-lg border p-5 shadow-none"
+            placement="bottom start"
+          >
             <div className="relative" aria-busy={searchAvailability.isLoading}>
               <RangeCalendar
                 aria-label={copy.stayDates}
@@ -196,18 +199,18 @@ export function SearchBarMobile() {
                     {(date) => (
                       <RangeCalendar.Cell
                         date={date}
-                        className="text-coffee flex size-9 items-center justify-center rounded-sm text-xs outline-none hover:bg-sand data-[selected]:bg-coffee/10 data-[selection-start]:bg-coffee data-[selection-start]:text-cream data-[selection-end]:bg-coffee data-[selection-end]:text-cream data-[unavailable]:text-silver data-[unavailable]:line-through"
+                        className="text-coffee hover:bg-sand data-[selected]:bg-coffee/10 data-[selection-start]:bg-coffee data-[selection-start]:text-cream data-[selection-end]:bg-coffee data-[selection-end]:text-cream data-[unavailable]:text-silver flex size-9 items-center justify-center rounded-sm text-xs outline-none data-[unavailable]:line-through"
                       />
                     )}
                   </RangeCalendar.GridBody>
                 </RangeCalendar.Grid>
               </RangeCalendar>
-              {searchAvailability.isLoading && (
-                <div className="bg-cream/85 absolute inset-0 flex items-center justify-center rounded-sm">
-                  <LoadingSpinner label={copy.availabilityLoading} />
-                </div>
-              )}
             </div>
+            {searchAvailability.isLoading && (
+              <div className="mt-3">
+                <LoadingSpinner label={copy.availabilityLoading} />
+              </div>
+            )}
           </DateRangePicker.Popover>
         </DateRangePicker>
       </div>
@@ -225,7 +228,12 @@ function CalendarIcon() {
       <g clipPath="url(#cal-clip-m)">
         <path d="M3.6 3V0.6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M8.4 3V0.6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M10.2 1.8H1.8C1.482 1.8 1.176 1.926 0.951 2.151C0.726 2.377 0.6 2.682 0.6 3V10.2C0.6 10.518 0.726 10.824 0.951 11.049C1.176 11.274 1.482 11.4 1.8 11.4H10.2C10.518 11.4 10.824 11.274 11.049 11.049C11.274 10.824 11.4 10.518 11.4 10.2V3C11.4 2.682 11.274 2.377 11.049 2.151C10.824 1.926 10.518 1.8 10.2 1.8Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M10.2 1.8H1.8C1.482 1.8 1.176 1.926 0.951 2.151C0.726 2.377 0.6 2.682 0.6 3V10.2C0.6 10.518 0.726 10.824 0.951 11.049C1.176 11.274 1.482 11.4 1.8 11.4H10.2C10.518 11.4 10.824 11.274 11.049 11.049C11.274 10.824 11.4 10.518 11.4 10.2V3C11.4 2.682 11.274 2.377 11.049 2.151C10.824 1.926 10.518 1.8 10.2 1.8Z"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </g>
       <defs>
         <clipPath id="cal-clip-m">
@@ -238,7 +246,14 @@ function CalendarIcon() {
 
 function ChevronIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+    >
       <path d="M2.5 3.5L5 6.5L7.5 3.5" />
     </svg>
   )

@@ -15,7 +15,11 @@ interface StoryblokStoriesResponse {
 }
 
 const STORYBLOK_BASE_URL = 'https://api.storyblok.com/v2/cdn/stories'
-const STORYBLOK_STARTS_WITH = ['blog/', 'articles/']
+const STORYBLOK_SOURCES = [
+  { startsWith: 'blog/', contentType: 'blog_article' },
+  { startsWith: 'blog/', contentType: 'article' },
+  { startsWith: 'articles/', contentType: 'article' },
+] as const
 type StoryblokVersion = 'draft' | 'published'
 
 export async function getBlogArticles(
@@ -43,12 +47,12 @@ async function fetchStoryblokArticles(
   if (!token) return []
 
   const responses = await Promise.all(
-    STORYBLOK_STARTS_WITH.map(async (startsWith) => {
+    STORYBLOK_SOURCES.map(async ({ startsWith, contentType }) => {
       const params = new URLSearchParams({
         token,
         version,
         starts_with: startsWith,
-        content_type: 'article',
+        content_type: contentType,
         language: locale,
         fallback_lang: 'fr',
         per_page: '100',
@@ -66,6 +70,10 @@ async function fetchStoryblokArticles(
 
   return responses
     .flat()
+    .filter((story, index, allStories) => {
+      const slug = story.slug || story.full_slug.split('/').at(-1)
+      return allStories.findIndex((item) => item.slug === slug) === index
+    })
     .map((story) => mapStoryblokArticle(story, locale))
     .filter(Boolean) as BlogArticle[]
 }
@@ -79,13 +87,18 @@ function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): Blog
   return {
     slug,
     title,
-    subtitle: asString(content.subtitle) ?? asString(content.excerpt) ?? '',
-    date: formatStoryblokDate(asString(content.date) ?? story.first_published_at ?? null, locale),
-    category: asString(content.category) ?? 'Journal',
+    subtitle: asString(content.excerpt) ?? asString(content.subtitle) ?? '',
+    date: formatStoryblokDate(
+      asString(content.published_at) ?? asString(content.date) ?? story.first_published_at ?? null,
+      locale,
+    ),
+    category: categoryLabel(content.category) ?? 'Journal',
     image:
+      assetUrl(content.cover_image) ??
       assetUrl(content.image) ??
       assetUrl(content.cover) ??
       assetUrl(content.heroImage) ??
+      assetUrl(content.og_image) ??
       '/images/alto-salon.jpg',
     section: inferBlogSection({
       section: asString(content.section) ?? asString(content.group),
@@ -100,12 +113,16 @@ function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): Blog
 }
 
 function mapSections(content: Record<string, unknown>): BlogArticle['sections'] {
-  const sections = Array.isArray(content.sections) ? content.sections : []
+  const sections = Array.isArray(content.body)
+    ? content.body
+    : Array.isArray(content.sections)
+      ? content.sections
+      : []
   const mapped = sections
     .map((section) => {
       if (!isRecord(section)) return null
       const heading = asString(section.heading) ?? asString(section.title)
-      const body = asString(section.body) ?? asString(section.text)
+      const body = asString(section.body) ?? asString(section.text) ?? asString(section.quote)
       if (!heading || !body) return null
       return {
         label: asString(section.label),
@@ -124,6 +141,21 @@ function mapSections(content: Record<string, unknown>): BlogArticle['sections'] 
       body: body ?? '',
     },
   ].filter((section) => section.heading || section.body)
+}
+
+function categoryLabel(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) return value
+  if (!Array.isArray(value)) return null
+
+  const firstCategory = value.find((item) => isRecord(item))
+  if (!firstCategory) return null
+
+  return (
+    asString(firstCategory.name) ??
+    asString(firstCategory.title) ??
+    asString(firstCategory.slug) ??
+    asString(firstCategory.full_slug)
+  )
 }
 
 function assetUrl(value: unknown): string | null {
