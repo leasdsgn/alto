@@ -104,7 +104,7 @@ describe('guesty-client', () => {
     await guestyClient.createInquiry({
       quoteId: 'quote-123',
       ratePlanId: 'rate-123',
-      ccToken: 'pm_visa_123',
+      ccToken: 'tok_visa_123',
       guest: {
         firstName: 'Jean',
         lastName: 'Dupont',
@@ -122,7 +122,67 @@ describe('guesty-client', () => {
     expect(request.method).toBe('POST')
     expect(JSON.parse(String(request.body))).toMatchObject({
       ratePlanId: 'rate-123',
-      ccToken: 'pm_visa_123',
+      ccToken: 'tok_visa_123',
+    })
+  })
+
+  it('appelle l’endpoint instant pour une réservation instantanée', async () => {
+    process.env.GUESTY_BEAPI_CLIENT_ID = 'test-id'
+    process.env.GUESTY_BEAPI_CLIENT_SECRET = 'test-secret'
+
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ access_token: 'tok', expires_in: 3600, token_type: 'Bearer' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            _id: 'res-123',
+            confirmationCode: 'CONF123',
+            status: 'confirmed',
+            listingId: 'lst-123',
+            checkIn: '2026-05-01',
+            checkOut: '2026-05-05',
+            guestsCount: 2,
+            money: { totalPaid: 1200, balanceDue: 0, currency: 'EUR' },
+            guest: {
+              firstName: 'Jean',
+              lastName: 'Dupont',
+              email: 'jean@test.fr',
+              phone: '+33612345678',
+            },
+          }),
+      })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { guestyClient } = await import('@/lib/guesty-client')
+
+    await guestyClient.createInstantReservation({
+      quoteId: 'quote-123',
+      ratePlanId: 'rate-123',
+      ccToken: 'tok_visa_123',
+      guest: {
+        firstName: 'Jean',
+        lastName: 'Dupont',
+        email: 'jean@test.fr',
+        phone: '+33612345678',
+      },
+      policy: {
+        privacy: { accepted: true, acceptedAt: '2026-04-23T00:00:00.000Z' },
+        terms: { accepted: true, acceptedAt: '2026-04-23T00:00:00.000Z' },
+      },
+    })
+
+    const [, request] = mockFetch.mock.calls[1]
+    expect(String(mockFetch.mock.calls[1][0])).toContain('/reservations/quotes/quote-123/instant')
+    expect(request.method).toBe('POST')
+    expect(JSON.parse(String(request.body))).toMatchObject({
+      ratePlanId: 'rate-123',
+      ccToken: 'tok_visa_123',
     })
   })
 })

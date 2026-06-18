@@ -86,14 +86,15 @@ Les champs texte des modèles blog et appartements sont marqués comme traduisib
 
 ## Architecture réservation
 
-Flow actuel : inquiry Guesty-natif.
+Flow actuel : réservation instantanée Guesty.
 
 1. Le front récupère le payment provider Guesty du listing.
-2. Stripe.js crée un PaymentMethod `pm_...` côté navigateur.
-3. Le `pm_...` est envoyé comme `ccToken` à Guesty BEAPI pour créer l'inquiry.
+2. Stripe.js crée un token carte `tok_...` côté navigateur.
+3. Le `tok_...` est envoyé comme `ccToken` à Guesty BEAPI pour créer la réservation instantanée.
 4. Guesty pilote ensuite la charge, le refund et les statuts de réservation.
-5. Les webhooks Guesty signés Svix déclenchent les emails Resend et mettent à jour le miroir Supabase.
-6. Le mail de confirmation contient un lien d’annulation signé vers `/annulation?token=...`.
+5. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
+6. Les webhooks Guesty signés Svix déclenchent les emails Resend et mettent à jour le miroir Supabase.
+7. Le mail de confirmation contient un lien d’annulation signé vers `/annulation?token=...`.
 
 ## Branches
 

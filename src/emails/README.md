@@ -34,17 +34,17 @@ Ouvre `http://localhost:3001` pour naviguer les templates. Chaque template expos
 
 Pour `pre-arrival.tsx`, les infos (WiFi, code accès, adresse, instructions) viennent de Guesty via `guestyClient.getListing()`. Le client doit remplir ces custom fields côté dashboard Guesty sur chaque listing.
 
-## Flow inquiry Guesty-natif
+## Flow réservation instantanée Guesty
 
-Le mode inquiry transmet bien un `ccToken` à Guesty. Le site :
+Le mode instant transmet un `ccToken` à Guesty. Le site :
 
 1. Récupère le Stripe account du listing via `GET /api/guesty/payment-provider`
-2. Crée un PaymentMethod Stripe côté front, sans Customer ni SetupIntent
-3. Envoie ce `pm_...` comme `ccToken` à `/api/guesty/reservation` mode=inquiry
-4. Stocke un miroir léger de la réservation dans Supabase pour le suivi emails / cron
-5. Alto valide ou refuse dans Guesty
-6. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
-7. `payments.received` déclenche `booking-confirmation`, `reservation.updated` gère les refus, `payments.refunded` gère les annulations remboursées
+2. Crée un token carte Stripe `tok_...` côté front
+3. Envoie ce `tok_...` comme `ccToken` à `/api/guesty/reservation` mode=instant
+4. Guesty crée et confirme la réservation instantanément
+5. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
+6. `payments.received` déclenche `booking-confirmation`, `payments.refunded` gère les annulations remboursées
+7. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
 
 Le template `booking-confirmation` embarque aussi un lien d’annulation signé, construit côté serveur avec `CANCEL_TOKEN_SECRET`.
 

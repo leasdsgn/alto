@@ -36,16 +36,18 @@ const TERMS_COPY = {
   fr: {
     title: 'Conditions et termes',
     body: [
-      'Les réservations Alto sont soumises aux disponibilités, aux tarifs affichés au moment de la demande et aux conditions associées à chaque logement.',
-      'Toute demande peut nécessiter une validation manuelle avant confirmation définitive. Les conditions d’annulation et de remboursement sont communiquées pendant le parcours de réservation.',
+      'Les réservations Alto sont soumises aux disponibilités, aux tarifs affichés au moment de la réservation et aux conditions associées à chaque logement.',
+      'La réservation est confirmée après paiement en ligne. Une caution Swikly peut être demandée avant l’arrivée du voyageur. Cette caution est obligatoire lorsque Alto la demande.',
+      'Alto se réserve le droit d’annuler la réservation si la caution Swikly n’est pas complétée dans les délais indiqués au voyageur. Les conditions d’annulation et de remboursement applicables restent celles communiquées pendant le parcours de réservation.',
       'Pour toute question liée à une réservation, contactez Alto à l’adresse contact@alto-paris.com.',
     ],
   },
   en: {
     title: 'Terms and conditions',
     body: [
-      'Alto bookings are subject to availability, the rates displayed at the time of request, and the terms attached to each apartment.',
-      'Some requests may require manual validation before final confirmation. Cancellation and refund terms are shown during the booking flow.',
+      'Alto bookings are subject to availability, the rates displayed at the time of booking, and the terms attached to each apartment.',
+      'The booking is confirmed after online payment. A Swikly security deposit may be requested before the guest’s arrival. This deposit is mandatory when requested by Alto.',
+      'Alto reserves the right to cancel the booking if the Swikly security deposit is not completed within the timeframe indicated to the guest. Applicable cancellation and refund terms remain those shown during the booking flow.',
       'For any booking-related question, contact Alto at contact@alto-paris.com.',
     ],
   },

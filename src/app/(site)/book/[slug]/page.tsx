@@ -18,7 +18,7 @@ interface PageProps {
   searchParams: Promise<{ check_in?: string; check_out?: string; guests?: string }>
 }
 
-const BOOKING_MODE = 'inquiry' as const
+const BOOKING_MODE = 'instant' as const
 
 const getCachedQuote = unstable_cache(
   (listingId: string, checkIn: string, checkOut: string, guestsCount: number) =>
@@ -115,7 +115,7 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
 
       <main className="mx-auto max-w-[1132px] px-6 pt-32 pb-16 md:px-12 lg:px-0">
         <h1 className="text-coffee mb-10 text-3xl font-semibold md:text-4xl">
-          {locale === 'en' ? `Request to book ${apartment.name}` : `Demander à réserver ${apartment.name}`}
+          {locale === 'en' ? `Book ${apartment.name}` : `Réserver ${apartment.name}`}
         </h1>
 
         <BookingFlow

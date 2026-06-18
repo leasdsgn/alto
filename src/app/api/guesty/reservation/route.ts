@@ -76,10 +76,6 @@ export async function POST(request: NextRequest) {
       terms: { accepted: data.policy.terms, acceptedAt: nowIso },
     }
 
-    if (data.mode === 'instant') {
-      return NextResponse.json({ error: { code: 'INSTANT_BOOKING_DISABLED' } }, { status: 501 })
-    }
-
     const [listing, quote] = await Promise.all([
       guestyClient.getListing(data.listingId),
       guestyClient.createQuote(data.listingId, data.checkIn, data.checkOut, data.guestsCount),
@@ -94,17 +90,21 @@ export async function POST(request: NextRequest) {
       guestsCount: data.guestsCount,
     })
 
-    const inquiry = await guestyClient.createInquiry({
+    const reservationPayload = {
       quoteId: validated.quote._id,
       ratePlanId: validated.ratePlan.ratePlan._id,
       guest: data.guest,
       policy: guestyPolicy,
       ccToken: data.ccToken,
-    })
+    }
 
-    // Envoi de l'email "inquiry received" temporairement désactivé.
+    const reservation = data.mode === 'instant'
+      ? await guestyClient.createInstantReservation(reservationPayload)
+      : await guestyClient.createInquiry(reservationPayload)
 
-    return NextResponse.json(inquiry)
+    // Envoi des emails de réservation temporairement désactivé.
+
+    return NextResponse.json(reservation)
   } catch (error) {
     const { body, status } = toErrorResponse(error, locale)
     console.error('[reservation route] error', {

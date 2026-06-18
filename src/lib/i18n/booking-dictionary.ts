@@ -21,6 +21,8 @@ export const bookingDictionary = {
     phone: 'Téléphone',
     cardLabel: 'Carte bancaire',
     cardHelp: 'Saisie sécurisée via Stripe',
+    depositNotice:
+      'Une caution Swikly sera demandée avant votre arrivée. Elle est obligatoire pour maintenir la réservation et Alto pourra annuler le séjour si elle n’est pas complétée dans les délais indiqués.',
     policyPrivacy: 'J\'accepte la politique de confidentialité',
     policyPrivacyPrefix: 'J\'accepte la',
     policyPrivacyLink: 'politique de confidentialité',
@@ -69,6 +71,8 @@ export const bookingDictionary = {
     phone: 'Phone',
     cardLabel: 'Card details',
     cardHelp: 'Secure input via Stripe',
+    depositNotice:
+      'A Swikly security deposit will be requested before arrival. It is required to maintain the booking, and Alto may cancel the stay if it is not completed within the indicated timeframe.',
     policyPrivacy: 'I accept the privacy policy',
     policyPrivacyPrefix: 'I accept the',
     policyPrivacyLink: 'privacy policy',

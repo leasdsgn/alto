@@ -152,7 +152,7 @@ function PaymentSection(props: PaymentSectionProps) {
     setSubmitting(true)
 
     try {
-      const ccToken = await createPaymentMethodToken()
+      const ccToken = await createCardToken()
       await submitReservation(ccToken)
       setSuccess(true)
     } catch (err) {
@@ -168,26 +168,20 @@ function PaymentSection(props: PaymentSectionProps) {
     }
   }
 
-  async function createPaymentMethodToken(): Promise<string> {
+  async function createCardToken(): Promise<string> {
     if (!stripe || !elements) throw new Error(t(props.locale, 'errorGenericDesc'))
 
     const cardElement = elements.getElement(CardElement)
     if (!cardElement) throw new Error(t(props.locale, 'errorGenericDesc'))
 
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-      billing_details: {
-        name: `${props.guest.firstName} ${props.guest.lastName}`.trim(),
-        email: props.guest.email,
-        phone: props.guest.phone,
-      },
+    const { error, token } = await stripe.createToken(cardElement, {
+      name: `${props.guest.firstName} ${props.guest.lastName}`.trim(),
     })
 
     if (error) throw new Error(error.message ?? t(props.locale, 'errorInvalidCardDesc'))
-    if (!paymentMethod?.id) throw new Error(t(props.locale, 'errorInvalidCardDesc'))
+    if (!token?.id) throw new Error(t(props.locale, 'errorInvalidCardDesc'))
 
-    return paymentMethod.id
+    return token.id
   }
 
   async function submitReservation(ccToken: string) {
@@ -248,6 +242,10 @@ function PaymentSection(props: PaymentSectionProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentForm locale={props.locale} />
+
+      <p className="border-divider bg-cream text-coffee rounded-lg border p-4 text-sm leading-relaxed">
+        {t(props.locale, 'depositNotice')}
+      </p>
 
       <PolicyCheckboxes
         locale={props.locale}
