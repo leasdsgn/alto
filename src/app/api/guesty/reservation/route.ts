@@ -144,16 +144,12 @@ async function verifyPendingAuthPayment(
     throw new Error('{"error":{"code":"THREE_DS_REQUIRED"}}')
   }
 
-  console.info('[reservation route] verify pending auth payment', {
+  console.error('[reservation route] pending auth without challenge', {
     reservationId,
     paymentId,
   })
 
-  return guestyClient.verifyReservationPayment({
-    reservationId,
-    paymentId,
-    threeDSResult: {},
-  })
+  return response
 }
 
 function isPaidInstantCharge(response: GuestyInstantChargeReservation): boolean {
