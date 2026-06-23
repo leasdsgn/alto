@@ -5,6 +5,7 @@ export type GuestyErrorCode =
   | 'LISTING_IS_NOT_AVAILABLE'
   | 'INVALID_CC_TOKEN'
   | 'PAYMENT_FAILED'
+  | 'THREE_DS_REQUIRED'
   | 'RATE_PLAN_NOT_APPLICABLE'
   | 'GUESTS_EXCEED_CAPACITY'
   | 'MIN_NIGHTS_NOT_MET'
@@ -59,6 +60,11 @@ const ERROR_MAP: Record<
     httpStatus: 402,
     titleKey: 'errorPaymentFailedTitle',
     descriptionKey: 'errorPaymentFailedDesc',
+  },
+  THREE_DS_REQUIRED: {
+    httpStatus: 402,
+    titleKey: 'errorThreeDSRequiredTitle',
+    descriptionKey: 'errorThreeDSRequiredDesc',
   },
   RATE_LIMITED: {
     httpStatus: 503,

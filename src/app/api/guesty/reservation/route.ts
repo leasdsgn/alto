@@ -130,6 +130,15 @@ async function verifyPendingAuthPayment(
 
   if (!reservationId || !paymentId) return response
 
+  if (hasThreeDSChallenge(response.threeDSChallenge)) {
+    console.error('[reservation route] three ds challenge required', {
+      reservationId,
+      paymentId,
+      challengeKeys: getChallengeKeys(response.threeDSChallenge),
+    })
+    throw new Error('{"error":{"code":"THREE_DS_REQUIRED"}}')
+  }
+
   console.info('[reservation route] verify pending auth payment', {
     reservationId,
     paymentId,
@@ -168,4 +177,16 @@ function logInstantChargeNotPaid(response: GuestyInstantChargeReservation) {
     processorError: response.payment?.processorError,
     hasThreeDSChallenge: Boolean(response.threeDSChallenge),
   })
+}
+
+function hasThreeDSChallenge(challenge: unknown): boolean {
+  if (!challenge) return false
+  if (typeof challenge === 'string') return challenge.length > 0
+  if (typeof challenge !== 'object') return false
+  return Object.keys(challenge).length > 0
+}
+
+function getChallengeKeys(challenge: unknown): string[] {
+  if (!challenge || typeof challenge !== 'object' || Array.isArray(challenge)) return []
+  return Object.keys(challenge)
 }
