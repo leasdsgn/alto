@@ -111,7 +111,6 @@ describe('guesty-client', () => {
       quoteId: 'quote-123',
       ratePlanId: 'rate-123',
       confirmationToken: 'ctoken_visa_123',
-      reuse: true,
       guest: {
         firstName: 'Jean',
         lastName: 'Dupont',
@@ -132,7 +131,6 @@ describe('guesty-client', () => {
     expect(JSON.parse(String(request.body))).toMatchObject({
       ratePlanId: 'rate-123',
       confirmationToken: 'ctoken_visa_123',
-      reuse: true,
       policy: {
         privacy: {
           isAccepted: true,

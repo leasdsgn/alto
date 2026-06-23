@@ -99,9 +99,8 @@ export async function POST(request: NextRequest) {
     const instantCharge = await guestyClient.createInstantReservation({
       ...baseReservationPayload,
       confirmationToken: data.confirmationToken,
-      reuse: true,
     })
-    const reservation = await verifyPendingAuthPayment(instantCharge).catch(async (error) => {
+    const reservation = await rejectUnsupportedPendingAuth(instantCharge).catch(async (error) => {
       await cancelUnpaidReservation(instantCharge, 'Paiement non finalisé depuis le site Alto')
       throw error
     })
@@ -125,7 +124,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function verifyPendingAuthPayment(
+async function rejectUnsupportedPendingAuth(
   response: GuestyInstantChargeReservation,
 ): Promise<GuestyInstantChargeReservation> {
   if (response.payment.status?.toUpperCase() !== 'PENDING_AUTH') return response
@@ -135,33 +134,26 @@ async function verifyPendingAuthPayment(
 
   if (!reservationId || !paymentId) return response
 
-  if (hasThreeDSChallenge(response.threeDSChallenge)) {
-    console.error('[reservation route] three ds challenge required', {
-      reservationId,
-      paymentId,
-      challengeKeys: getChallengeKeys(response.threeDSChallenge),
-    })
-    throw new Error('{"error":{"code":"THREE_DS_REQUIRED"}}')
-  }
-
-  console.error('[reservation route] pending auth without challenge', {
+  console.error('[reservation route] unsupported pending auth payment', {
     reservationId,
     paymentId,
+    hasThreeDSChallenge: hasThreeDSChallenge(response.threeDSChallenge),
+    challengeKeys: getChallengeKeys(response.threeDSChallenge),
   })
 
-  return response
+  throw new Error('{"error":{"code":"THREE_DS_REQUIRED"}}')
 }
 
 function isPaidInstantCharge(response: GuestyInstantChargeReservation): boolean {
   const paymentStatus = response.payment.status?.toUpperCase()
-  const unresolvedStatuses = new Set(['FAILED', 'CANCELED', 'DECLINED', 'PENDING_AUTH'])
+  const paidStatuses = new Set(['DONE', 'PAID', 'SUCCEEDED', 'SUCCESS', 'SUCCESSFUL', 'COMPLETED'])
 
   return Boolean(
     response.reservation?._id &&
     response.payment?._id &&
     response.payment.amount > 0 &&
     paymentStatus &&
-    !unresolvedStatuses.has(paymentStatus),
+    paidStatuses.has(paymentStatus),
   )
 }
 

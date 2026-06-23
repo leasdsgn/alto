@@ -45,7 +45,7 @@ export const bookingDictionary = {
       "Le paiement n'a pas abouti. Vérifiez votre carte ou essayez-en une autre.",
     errorThreeDSRequiredTitle: 'Authentification bancaire requise',
     errorThreeDSRequiredDesc:
-      'Votre banque demande une vérification supplémentaire. Merci de réessayer ou de contacter Alto si le problème persiste.',
+      'Votre banque demande une vérification supplémentaire qui n’a pas pu être finalisée. Réessayez ou utilisez une autre carte.',
     errorRateLimitedTitle: 'Service temporairement occupé',
     errorRateLimitedDesc: 'Merci de patienter quelques instants avant de réessayer.',
     errorValidationTitle: 'Informations invalides',
@@ -97,7 +97,7 @@ export const bookingDictionary = {
     errorPaymentFailedDesc: 'The payment did not go through. Check your card or try another one.',
     errorThreeDSRequiredTitle: 'Bank authentication required',
     errorThreeDSRequiredDesc:
-      'Your bank requires an additional verification step. Please try again or contact Alto if the issue persists.',
+      'Your bank requires an additional verification step that could not be completed. Please try again or use another card.',
     errorRateLimitedTitle: 'Service temporarily busy',
     errorRateLimitedDesc: 'Please wait a few moments before trying again.',
     errorValidationTitle: 'Invalid information',
