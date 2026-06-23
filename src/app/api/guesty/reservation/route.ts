@@ -1,7 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
-import { guestyOpenApi, type GuestyOpenApiReservation } from '@/lib/guesty-openapi'
+import {
+  guestyOpenApi,
+  type GuestyCancellationReason,
+  type GuestyOpenApiReservation,
+} from '@/lib/guesty-openapi'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
 import { validateReservationInput } from '@/lib/reservation-validation'
@@ -101,13 +105,13 @@ export async function POST(request: NextRequest) {
       confirmationToken: data.confirmationToken,
     })
     const reservation = await rejectUnsupportedPendingAuth(instantCharge).catch(async (error) => {
-      await cancelUnpaidReservation(instantCharge, 'Paiement non finalisé depuis le site Alto')
+      await cancelUnpaidReservation(instantCharge, 'Financial Issues')
       throw error
     })
 
     if (!isPaidInstantCharge(reservation)) {
       logInstantChargeNotPaid(reservation)
-      await cancelUnpaidReservation(reservation, 'Paiement refusé depuis le site Alto')
+      await cancelUnpaidReservation(reservation, 'Financial Issues')
       throw new Error('{"error":{"code":"PAYMENT_FAILED"}}')
     }
 
@@ -174,7 +178,7 @@ function logInstantChargeNotPaid(response: GuestyInstantChargeReservation) {
 
 async function cancelUnpaidReservation(
   response: GuestyInstantChargeReservation,
-  reason: string,
+  reason: GuestyCancellationReason,
 ): Promise<void> {
   const reservationId = response.reservation?._id
   if (!reservationId) return
