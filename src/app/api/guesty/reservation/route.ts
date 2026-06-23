@@ -102,6 +102,18 @@ export async function POST(request: NextRequest) {
     })
 
     if (!isPaidInstantCharge(reservation)) {
+      console.error('[reservation route] instant charge not paid', {
+        reservationId: reservation.reservation?._id,
+        reservationStatus: reservation.reservation?.status,
+        paymentId: reservation.payment?._id,
+        paymentStatus: reservation.payment?.status,
+        paymentAmount: reservation.payment?.amount,
+        paymentCurrency: reservation.payment?.currency,
+        paymentMethodId: reservation.payment?.paymentMethodId,
+        paymentError: reservation.payment?.error,
+        processorError: reservation.payment?.processorError,
+        hasThreeDSChallenge: Boolean(reservation.threeDSChallenge),
+      })
       throw new Error('{"error":{"code":"PAYMENT_FAILED"}}')
     }
 
