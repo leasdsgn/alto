@@ -16,7 +16,7 @@ export interface InquiryReceivedProps {
   }
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-collection.com'
 
 export default function InquiryReceivedEmail({
   locale,
@@ -27,7 +27,7 @@ export default function InquiryReceivedEmail({
   const preview = translate(locale, 'inquiryReceived.subject')
   const cta = listing.slug
     ? {
-        label: locale === 'fr' ? 'Voir l\'appartement' : 'View apartment',
+        label: locale === 'fr' ? "Voir l'appartement" : 'View apartment',
         href: `${SITE_URL}/appartements/${listing.slug}`,
       }
     : undefined

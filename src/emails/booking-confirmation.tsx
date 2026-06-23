@@ -18,7 +18,7 @@ export interface BookingConfirmationProps {
   cancelUrl?: string
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-collection.com'
 
 export default function BookingConfirmationEmail({
   locale,
@@ -83,7 +83,7 @@ BookingConfirmationEmail.PreviewProps = {
   guest: { firstName: 'Camille' },
   listing: {
     title: 'Le Marais Terrasse',
-    image: 'https://alto-virid.vercel.app/images/alto-salon.jpg',
+    image: 'https://alto-collection.com/images/alto-salon.jpg',
     slug: 'le-marais-terrasse',
   },
   reservation: {
@@ -93,7 +93,7 @@ BookingConfirmationEmail.PreviewProps = {
     nights: 4,
     total: '1 120 EUR',
   },
-  cancelUrl: 'https://alto-virid.vercel.app/annulation?token=demo',
+  cancelUrl: 'https://alto-collection.com/annulation?token=demo',
 } satisfies BookingConfirmationProps
 
 const headingStyle = {

@@ -38,7 +38,7 @@ const fonts = {
   sans: "'Manrope', 'Helvetica Neue', Helvetica, Arial, sans-serif",
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-virid.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://alto-collection.com'
 const LOGO_URL = `${SITE_URL}/images/logo-alto-light.png`
 
 export function EmailLayout({
@@ -94,7 +94,7 @@ export function EmailLayout({
         }}
       >
         <Body
-          className="bg-coffee font-sans m-0 px-4 py-12"
+          className="bg-coffee m-0 px-4 py-12 font-sans"
           style={{
             WebkitFontSmoothing: 'antialiased',
             MozOsxFontSmoothing: 'grayscale',
@@ -102,13 +102,13 @@ export function EmailLayout({
           }}
         >
           <Container className="mx-auto max-w-[600px]">
-            <Section className="text-center pb-10">
+            <Section className="pb-10 text-center">
               <Img
                 src={LOGO_URL}
                 alt="Alto"
                 width="100"
                 height="26"
-                className="block mx-auto"
+                className="mx-auto block"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
             </Section>
@@ -130,10 +130,10 @@ export function EmailLayout({
               {children}
 
               {cta ? (
-                <Section className="text-center pt-8">
+                <Section className="pt-8 text-center">
                   <Button
                     href={cta.href}
-                    className="bg-coffee text-cream text-[13px] font-semibold uppercase tracking-[0.12em] px-8 py-4 inline-block no-underline"
+                    className="bg-coffee text-cream inline-block px-8 py-4 text-[13px] font-semibold tracking-[0.12em] uppercase no-underline"
                   >
                     {cta.label}
                   </Button>
@@ -141,7 +141,7 @@ export function EmailLayout({
               ) : null}
 
               {secondaryCta ? (
-                <Section className="text-center pt-4">
+                <Section className="pt-4 text-center">
                   <Link
                     href={secondaryCta.href}
                     style={{
@@ -157,13 +157,13 @@ export function EmailLayout({
             </Container>
 
             <Section className="pt-10 text-center">
-              <Text className="text-cream/80 text-[13px] leading-relaxed m-0 my-1">
+              <Text className="text-cream/80 m-0 my-1 text-[13px] leading-relaxed">
                 {translate(locale, 'common.contact')}
               </Text>
-              <Text className="text-cream text-[13px] font-semibold tracking-wide m-0 my-1">
+              <Text className="text-cream m-0 my-1 text-[13px] font-semibold tracking-wide">
                 {translate(locale, 'common.signature')}
               </Text>
-              <Text className="text-cream/50 text-[11px] leading-normal mt-4 tracking-wide">
+              <Text className="text-cream/50 mt-4 text-[11px] leading-normal tracking-wide">
                 {translate(locale, 'common.footer')}
               </Text>
             </Section>
