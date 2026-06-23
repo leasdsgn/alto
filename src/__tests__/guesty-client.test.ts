@@ -145,4 +145,53 @@ describe('guesty-client', () => {
       },
     })
   })
+
+  it('appelle l’endpoint verify-payment pour une réservation en pending auth', async () => {
+    process.env.GUESTY_BEAPI_CLIENT_ID = 'test-id'
+    process.env.GUESTY_BEAPI_CLIENT_SECRET = 'test-secret'
+
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({ access_token: 'tok', expires_in: 3600, token_type: 'Bearer' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            reservation: {
+              _id: 'res-123',
+              confirmationCode: 'CONF123',
+              status: 'confirmed',
+            },
+            payment: {
+              _id: 'pay-123',
+              status: 'done',
+              amount: 1200,
+              currency: 'EUR',
+              reservationId: 'res-123',
+              paymentMethodId: 'pm_123',
+            },
+          }),
+      })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { guestyClient } = await import('@/lib/guesty-client')
+
+    await guestyClient.verifyReservationPayment({
+      reservationId: 'res-123',
+      paymentId: 'pay-123',
+    })
+
+    const [, request] = mockFetch.mock.calls[1]
+    expect(String(mockFetch.mock.calls[1][0])).toContain('/reservations/res-123/verify-payment')
+    expect(request.method).toBe('POST')
+    expect(JSON.parse(String(request.body))).toEqual({
+      paymentId: 'pay-123',
+    })
+  })
 })

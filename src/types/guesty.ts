@@ -109,6 +109,15 @@ export interface GuestyInstantReservationRequest extends GuestyReservationBaseRe
   reuse?: boolean
 }
 
+export interface GuestyVerifyPaymentRequest {
+  reservationId: string
+  paymentId: string
+  threeDSResult?: {
+    provider?: string
+    clientSideChallengeResultToken?: string
+  }
+}
+
 export interface GuestyInstantChargeReservation {
   reservation: {
     _id: string

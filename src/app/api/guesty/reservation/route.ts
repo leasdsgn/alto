@@ -95,25 +95,15 @@ export async function POST(request: NextRequest) {
       policy: guestyPolicy,
     }
 
-    const reservation = await guestyClient.createInstantReservation({
+    const instantCharge = await guestyClient.createInstantReservation({
       ...baseReservationPayload,
       confirmationToken: data.confirmationToken,
       reuse: true,
     })
+    const reservation = await verifyPendingAuthPayment(instantCharge)
 
     if (!isPaidInstantCharge(reservation)) {
-      console.error('[reservation route] instant charge not paid', {
-        reservationId: reservation.reservation?._id,
-        reservationStatus: reservation.reservation?.status,
-        paymentId: reservation.payment?._id,
-        paymentStatus: reservation.payment?.status,
-        paymentAmount: reservation.payment?.amount,
-        paymentCurrency: reservation.payment?.currency,
-        paymentMethodId: reservation.payment?.paymentMethodId,
-        paymentError: reservation.payment?.error,
-        processorError: reservation.payment?.processorError,
-        hasThreeDSChallenge: Boolean(reservation.threeDSChallenge),
-      })
+      logInstantChargeNotPaid(reservation)
       throw new Error('{"error":{"code":"PAYMENT_FAILED"}}')
     }
 
@@ -130,6 +120,27 @@ export async function POST(request: NextRequest) {
   }
 }
 
+async function verifyPendingAuthPayment(
+  response: GuestyInstantChargeReservation,
+): Promise<GuestyInstantChargeReservation> {
+  if (response.payment.status?.toUpperCase() !== 'PENDING_AUTH') return response
+
+  const reservationId = response.reservation?._id
+  const paymentId = response.payment?._id
+
+  if (!reservationId || !paymentId) return response
+
+  console.info('[reservation route] verify pending auth payment', {
+    reservationId,
+    paymentId,
+  })
+
+  return guestyClient.verifyReservationPayment({
+    reservationId,
+    paymentId,
+  })
+}
+
 function isPaidInstantCharge(response: GuestyInstantChargeReservation): boolean {
   const paymentStatus = response.payment.status?.toUpperCase()
   const unresolvedStatuses = new Set(['FAILED', 'CANCELED', 'DECLINED', 'PENDING_AUTH'])
@@ -141,4 +152,19 @@ function isPaidInstantCharge(response: GuestyInstantChargeReservation): boolean 
     paymentStatus &&
     !unresolvedStatuses.has(paymentStatus),
   )
+}
+
+function logInstantChargeNotPaid(response: GuestyInstantChargeReservation) {
+  console.error('[reservation route] instant charge not paid', {
+    reservationId: response.reservation?._id,
+    reservationStatus: response.reservation?.status,
+    paymentId: response.payment?._id,
+    paymentStatus: response.payment?.status,
+    paymentAmount: response.payment?.amount,
+    paymentCurrency: response.payment?.currency,
+    paymentMethodId: response.payment?.paymentMethodId,
+    paymentError: response.payment?.error,
+    processorError: response.payment?.processorError,
+    hasThreeDSChallenge: Boolean(response.threeDSChallenge),
+  })
 }
