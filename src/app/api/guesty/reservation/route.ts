@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
+import { guestyOpenApi, type GuestyOpenApiReservation } from '@/lib/guesty-openapi'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
 import { validateReservationInput } from '@/lib/reservation-validation'
@@ -100,10 +101,14 @@ export async function POST(request: NextRequest) {
       confirmationToken: data.confirmationToken,
       reuse: true,
     })
-    const reservation = await verifyPendingAuthPayment(instantCharge)
+    const reservation = await verifyPendingAuthPayment(instantCharge).catch(async (error) => {
+      await cancelUnpaidReservation(instantCharge, 'Paiement non finalisé depuis le site Alto')
+      throw error
+    })
 
     if (!isPaidInstantCharge(reservation)) {
       logInstantChargeNotPaid(reservation)
+      await cancelUnpaidReservation(reservation, 'Paiement refusé depuis le site Alto')
       throw new Error('{"error":{"code":"PAYMENT_FAILED"}}')
     }
 
@@ -177,6 +182,59 @@ function logInstantChargeNotPaid(response: GuestyInstantChargeReservation) {
     processorError: response.payment?.processorError,
     hasThreeDSChallenge: Boolean(response.threeDSChallenge),
   })
+}
+
+async function cancelUnpaidReservation(
+  response: GuestyInstantChargeReservation,
+  reason: string,
+): Promise<void> {
+  const reservationId = response.reservation?._id
+  if (!reservationId) return
+
+  const status = response.reservation.status?.toLowerCase()
+  if (status && ['canceled', 'cancelled', 'closed', 'declined'].includes(status)) return
+
+  try {
+    const currentReservation = await guestyOpenApi.getReservation(reservationId)
+
+    if (isOpenApiReservationPaid(currentReservation)) {
+      console.info('[reservation route] skip cleanup for paid reservation', {
+        reservationId,
+        status: currentReservation.status,
+      })
+      return
+    }
+
+    await guestyOpenApi.cancelReservation(reservationId, reason)
+    console.info('[reservation route] canceled unpaid reservation', {
+      reservationId,
+      reason,
+    })
+  } catch (cleanupError) {
+    console.error('[reservation route] cleanup reservation failed', {
+      reservationId,
+      cleanupError: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+    })
+  }
+}
+
+function isOpenApiReservationPaid(reservation: GuestyOpenApiReservation): boolean {
+  const payments = reservation.money?.payments ?? reservation.payments ?? []
+  const hasPaidTotal =
+    typeof reservation.money?.totalPaid === 'number' && reservation.money.totalPaid > 0
+
+  return (
+    hasPaidTotal ||
+    payments.some((payment) => {
+      const status = payment.status?.toUpperCase()
+      return Boolean(
+        payment.amount &&
+        payment.amount > 0 &&
+        status &&
+        ['DONE', 'PAID', 'SUCCEEDED', 'SUCCESS', 'COMPLETED'].includes(status),
+      )
+    })
+  )
 }
 
 function hasThreeDSChallenge(challenge: unknown): boolean {
