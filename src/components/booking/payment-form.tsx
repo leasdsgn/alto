@@ -15,13 +15,7 @@ export function PaymentForm({ locale }: PaymentFormProps) {
         {t(locale, 'cardLabel')}
       </p>
       <div className="border-divider bg-cream rounded-lg border p-4">
-        <PaymentElement
-          options={{
-            fields: {
-              billingDetails: 'never',
-            },
-          }}
-        />
+        <PaymentElement />
       </div>
       <p className="text-taupe text-xs">{t(locale, 'cardHelp')}</p>
     </div>
