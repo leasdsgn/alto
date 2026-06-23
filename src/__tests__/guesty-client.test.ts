@@ -185,6 +185,7 @@ describe('guesty-client', () => {
     await guestyClient.verifyReservationPayment({
       reservationId: 'res-123',
       paymentId: 'pay-123',
+      threeDSResult: {},
     })
 
     const [, request] = mockFetch.mock.calls[1]
@@ -192,6 +193,7 @@ describe('guesty-client', () => {
     expect(request.method).toBe('POST')
     expect(JSON.parse(String(request.body))).toEqual({
       paymentId: 'pay-123',
+      threeDSResult: {},
     })
   })
 })

@@ -138,6 +138,7 @@ async function verifyPendingAuthPayment(
   return guestyClient.verifyReservationPayment({
     reservationId,
     paymentId,
+    threeDSResult: {},
   })
 }
 
