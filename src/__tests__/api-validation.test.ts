@@ -18,16 +18,9 @@ const reservationBaseSchema = z.object({
   }),
 })
 
-const reservationSchema = z.discriminatedUnion('mode', [
-  reservationBaseSchema.extend({
-    mode: z.literal('instant'),
-    ccToken: z.string().min(1),
-  }),
-  reservationBaseSchema.extend({
-    mode: z.literal('inquiry'),
-    ccToken: z.string().min(1),
-  }),
-])
+const reservationSchema = reservationBaseSchema.extend({
+  confirmationToken: z.string().min(1),
+})
 
 const availabilitySchema = z.object({
   listingId: z.string().min(1),
@@ -42,10 +35,14 @@ describe('validation des schémas API', () => {
       const result = reservationSchema.safeParse({
         quoteId: 'q-123',
         ratePlanId: 'rp-456',
-        guest: { firstName: 'Jean', lastName: 'Dupont', email: 'jean@test.fr', phone: '+33612345678' },
-        ccToken: 'tok_test_abc123',
+        guest: {
+          firstName: 'Jean',
+          lastName: 'Dupont',
+          email: 'jean@test.fr',
+          phone: '+33612345678',
+        },
+        confirmationToken: 'ctoken_test_abc123',
         policy: { privacy: true, terms: true },
-        mode: 'instant',
       })
       expect(result.success).toBe(true)
     })
@@ -54,9 +51,14 @@ describe('validation des schémas API', () => {
       const result = reservationSchema.safeParse({
         quoteId: 'q-123',
         ratePlanId: 'rp-456',
-        guest: { firstName: 'Jean', lastName: 'Dupont', email: 'jean@test.fr', phone: '+33612345678' },
+        guest: {
+          firstName: 'Jean',
+          lastName: 'Dupont',
+          email: 'jean@test.fr',
+          phone: '+33612345678',
+        },
+        confirmationToken: 'ctoken_test_abc123',
         policy: { privacy: false, terms: true },
-        mode: 'inquiry',
       })
       expect(result.success).toBe(false)
     })
@@ -65,20 +67,29 @@ describe('validation des schémas API', () => {
       const result = reservationSchema.safeParse({
         quoteId: 'q-123',
         ratePlanId: 'rp-456',
-        guest: { firstName: 'Jean', lastName: 'Dupont', email: 'pas-un-email', phone: '+33612345678' },
+        guest: {
+          firstName: 'Jean',
+          lastName: 'Dupont',
+          email: 'pas-un-email',
+          phone: '+33612345678',
+        },
+        confirmationToken: 'ctoken_test_abc123',
         policy: { privacy: true, terms: true },
-        mode: 'inquiry',
       })
       expect(result.success).toBe(false)
     })
 
-    it('rejette un mode inconnu', () => {
+    it('rejette une réservation sans confirmationToken', () => {
       const result = reservationSchema.safeParse({
         quoteId: 'q-123',
         ratePlanId: 'rp-456',
-        guest: { firstName: 'Jean', lastName: 'Dupont', email: 'jean@test.fr', phone: '+33612345678' },
+        guest: {
+          firstName: 'Jean',
+          lastName: 'Dupont',
+          email: 'jean@test.fr',
+          phone: '+33612345678',
+        },
         policy: { privacy: true, terms: true },
-        mode: 'express',
       })
       expect(result.success).toBe(false)
     })

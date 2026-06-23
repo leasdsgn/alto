@@ -4,8 +4,8 @@ import {
   type GuestyCalendarDay,
   type GuestyQuote,
   type GuestyPaymentProvider,
-  type GuestyReservation,
-  type GuestyReservationRequest,
+  type GuestyInstantChargeReservation,
+  type GuestyInstantReservationRequest,
 } from '@/types/guesty'
 import { type GuestyMock } from './guesty-mock'
 import {
@@ -119,8 +119,7 @@ async function requestNewAccessToken(): Promise<string> {
     memoryCache.__guestyRateLimitedUntil = rateLimitedUntil
     await writeRateLimit(rateLimitedUntil)
     throw new Error(
-      'Guesty rate limited, retry apres ' +
-        new Date(rateLimitedUntil).toLocaleTimeString('fr-FR'),
+      'Guesty rate limited, retry apres ' + new Date(rateLimitedUntil).toLocaleTimeString('fr-FR'),
     )
   }
 
@@ -231,8 +230,7 @@ async function guestyFetch<T>(
     const rateLimitedUntil = Date.now() + getRetryAfterMs(response)
     await writeApiRateLimit(rateLimitedUntil)
     throw new Error(
-      'Guesty rate limited, retry apres ' +
-        new Date(rateLimitedUntil).toLocaleTimeString('fr-FR'),
+      'Guesty rate limited, retry apres ' + new Date(rateLimitedUntil).toLocaleTimeString('fr-FR'),
     )
   }
 
@@ -279,8 +277,7 @@ export const guestyClient = {
   },
 
   getAvailableListings(checkIn: string, checkOut: string, guests?: number) {
-    if (USE_MOCK)
-      return mock('getAvailableListings').then((fn) => fn(checkIn, checkOut, guests))
+    if (USE_MOCK) return mock('getAvailableListings').then((fn) => fn(checkIn, checkOut, guests))
     const params = new URLSearchParams({ checkIn, checkOut })
     if (guests) params.set('minOccupancy', String(guests))
     return guestyFetch<{ results: GuestyListing[] }>(`/listings?${params}`, { revalidate: 60 })
@@ -305,21 +302,15 @@ export const guestyClient = {
     return guestyFetch<GuestyPaymentProvider>(`/listings/${listingId}/payment-provider`)
   },
 
-  createInstantReservation(body: GuestyReservationRequest) {
+  createInstantReservation(body: GuestyInstantReservationRequest) {
     const { quoteId, ...payload } = body
     if (USE_MOCK) return mock('createInstantReservation').then((fn) => fn(body))
-    return guestyFetch<GuestyReservation>(`/reservations/quotes/${quoteId}/instant`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
-  },
-
-  createInquiry(body: GuestyReservationRequest) {
-    const { quoteId, ...payload } = body
-    if (USE_MOCK) return mock('createInquiry').then((fn) => fn(body))
-    return guestyFetch<GuestyReservation>(`/reservations/quotes/${quoteId}/inquiry`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
+    return guestyFetch<GuestyInstantChargeReservation>(
+      `/reservations/quotes/${quoteId}/instant-charge`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+    )
   },
 }

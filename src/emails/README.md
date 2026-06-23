@@ -6,15 +6,15 @@ Flow Resend + Guesty pour les emails liés au cycle de réservation.
 
 Dans `src/emails/` :
 
-| Template | Déclencheur | Envoyé par |
-|---|---|---|
-| `booking-confirmation.tsx` | Paiement reçu et réservation confirmée | Webhook Guesty `payments.received` |
-| `inquiry-received.tsx` | Demande inquiry créée via `/api/guesty/reservation` mode=inquiry | Route reservation après succès Guesty |
-| `inquiry-confirmed.tsx` | Template legacy, non utilisé dans le flow actuel | Réservé si on veut distinguer validation inquiry et confirmation finale |
-| `inquiry-refused.tsx` | Guesty refuse une inquiry (webhook) | `/api/webhooks/guesty` |
+| Template                     | Déclencheur                                      | Envoyé par                                                              |
+| ---------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| `booking-confirmation.tsx`   | Paiement reçu et réservation confirmée           | Webhook Guesty `payments.received`                                      |
+| `inquiry-received.tsx`       | Template legacy, non utilisé dans le flow actuel | Réservé si le mode demande revient                                      |
+| `inquiry-confirmed.tsx`      | Template legacy, non utilisé dans le flow actuel | Réservé si on veut distinguer validation inquiry et confirmation finale |
+| `inquiry-refused.tsx`        | Guesty refuse une inquiry (webhook)              | `/api/webhooks/guesty`                                                  |
 | `cancellation-confirmed.tsx` | Annulation confirmée, avec ou sans remboursement | Webhook Guesty `payments.refunded` ou route cancel si remboursement nul |
-| `pre-arrival.tsx` | Check-in dans 3 jours | Cron `/api/cron/reservation-emails` |
-| `post-stay.tsx` | Check-out hier | Cron `/api/cron/reservation-emails` |
+| `pre-arrival.tsx`            | Check-in dans 3 jours                            | Cron `/api/cron/reservation-emails`                                     |
+| `post-stay.tsx`              | Check-out hier                                   | Cron `/api/cron/reservation-emails`                                     |
 
 ## Bilingue
 
@@ -36,21 +36,23 @@ Pour `pre-arrival.tsx`, les infos (WiFi, code accès, adresse, instructions) vie
 
 ## Flow réservation instantanée Guesty
 
-Le mode instant transmet un `ccToken` à Guesty. Le site :
+Le site crée uniquement des réservations instantanées. Le paiement doit être capturé par Guesty avant confirmation.
 
 1. Récupère le Stripe account du listing via `GET /api/guesty/payment-provider`
-2. Crée un token carte Stripe `tok_...` côté front
-3. Envoie ce `tok_...` comme `ccToken` à `/api/guesty/reservation` mode=instant
-4. Guesty crée et confirme la réservation instantanément
-5. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
-6. `payments.received` déclenche `booking-confirmation`, `payments.refunded` gère les annulations remboursées
-7. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
+2. Affiche le `PaymentElement` Stripe sur le compte connecté du listing
+3. Crée un `confirmationToken` Stripe côté front
+4. Envoie ce `confirmationToken` à `/api/guesty/reservation`
+5. La route appelle `POST /reservations/quotes/{quoteId}/instant-charge`
+6. Guesty crée la réservation uniquement si la charge carte réussit
+7. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
+8. `payments.received` déclenche `booking-confirmation`, `payments.refunded` gère les annulations remboursées
+9. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
 
 Le template `booking-confirmation` embarque aussi un lien d’annulation signé, construit côté serveur avec `CANCEL_TOKEN_SECRET`.
 
 ## Table Supabase
 
-Schema dans `supabase/migrations/`. La table `inquiries` stocke un miroir léger des réservations (mode instant et inquiry), avec tracking du statut et des emails envoyés pour éviter les doublons. La table `guesty_webhook_events` déduplique les webhooks Svix.
+Schema dans `supabase/migrations/`. La table `inquiries` stocke un miroir léger des réservations instantanées, avec tracking du statut et des emails envoyés pour éviter les doublons. La table `guesty_webhook_events` déduplique les webhooks Svix.
 
 Appliquer les migrations :
 
@@ -77,6 +79,7 @@ Voir `.env.example`. À minima :
 ## Tests
 
 Tests Vitest dans `src/__tests__/` :
+
 - `formatters.test.ts` : dates / currency / nights
 - `email-dictionary.test.ts` : translate + interpolation
 - `guesty-webhook.test.ts` : signature Svix

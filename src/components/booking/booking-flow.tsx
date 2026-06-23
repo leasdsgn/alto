@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
+import { Elements, useElements, useStripe } from '@stripe/react-stripe-js'
+import type { StripeElementsOptions } from '@stripe/stripe-js'
 import { toast } from 'sonner'
 import { useLocale } from '@/components/providers/locale-provider'
 import { getStripeInstance } from '@/lib/stripe-client'
@@ -24,7 +25,6 @@ interface BookingFlowProps {
   ratePlanId: string
   amountCents: number
   currency: string
-  mode: 'instant' | 'inquiry'
 }
 
 export function BookingFlow(props: BookingFlowProps) {
@@ -83,6 +83,13 @@ export function BookingFlow(props: BookingFlowProps) {
   const stripePromise = paymentProviderState.ready
     ? getStripeInstance(paymentProviderState.connectedAccountId)
     : null
+  const stripeOptions: StripeElementsOptions = {
+    appearance: altoAppearance,
+    mode: 'payment',
+    amount: props.amountCents,
+    currency: props.currency,
+    paymentMethodTypes: ['card'],
+  }
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_420px]">
@@ -90,7 +97,7 @@ export function BookingFlow(props: BookingFlowProps) {
         <GuestForm locale={locale} values={guest} onChange={setGuest} disabled={false} />
 
         {stripePromise ? (
-          <Elements stripe={stripePromise} options={{ appearance: altoAppearance }}>
+          <Elements stripe={stripePromise} options={stripeOptions}>
             <PaymentSection locale={locale} guest={guest} {...props} />
           </Elements>
         ) : (
@@ -152,15 +159,16 @@ function PaymentSection(props: PaymentSectionProps) {
     setSubmitting(true)
 
     try {
-      const ccToken = await createCardToken()
-      await submitReservation(ccToken)
+      const paymentCredential = await createPaymentCredential()
+      await submitReservation(paymentCredential)
       setSuccess(true)
     } catch (err) {
       if (err instanceof ReservationError) {
         toast.error(err.title, { description: err.description })
       } else {
         toast.error(t(props.locale, 'errorPaymentFailedTitle'), {
-          description: err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc'),
+          description:
+            err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc'),
         })
       }
     } finally {
@@ -168,23 +176,35 @@ function PaymentSection(props: PaymentSectionProps) {
     }
   }
 
-  async function createCardToken(): Promise<string> {
+  async function createPaymentCredential(): Promise<string> {
     if (!stripe || !elements) throw new Error(t(props.locale, 'errorGenericDesc'))
 
-    const cardElement = elements.getElement(CardElement)
-    if (!cardElement) throw new Error(t(props.locale, 'errorGenericDesc'))
+    const submitResult = await elements.submit()
+    if (submitResult.error) {
+      throw new Error(submitResult.error.message ?? t(props.locale, 'errorInvalidCardDesc'))
+    }
 
-    const { error, token } = await stripe.createToken(cardElement, {
-      name: `${props.guest.firstName} ${props.guest.lastName}`.trim(),
+    const { error, confirmationToken } = await stripe.createConfirmationToken({
+      elements,
+      params: {
+        payment_method_data: {
+          billing_details: {
+            name: `${props.guest.firstName} ${props.guest.lastName}`.trim(),
+            email: props.guest.email,
+            phone: props.guest.phone,
+          },
+        },
+        return_url: window.location.href,
+      },
     })
 
     if (error) throw new Error(error.message ?? t(props.locale, 'errorInvalidCardDesc'))
-    if (!token?.id) throw new Error(t(props.locale, 'errorInvalidCardDesc'))
+    if (!confirmationToken?.id) throw new Error(t(props.locale, 'errorInvalidCardDesc'))
 
-    return token.id
+    return confirmationToken.id
   }
 
-  async function submitReservation(ccToken: string) {
+  async function submitReservation(paymentCredential: string) {
     const response = await fetch('/api/guesty/reservation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -201,8 +221,7 @@ function PaymentSection(props: PaymentSectionProps) {
         amountCents: props.amountCents,
         currency: props.currency,
         preferredLanguage: props.locale,
-        mode: props.mode,
-        ccToken,
+        confirmationToken: paymentCredential,
       }),
     })
 
@@ -222,23 +241,18 @@ function PaymentSection(props: PaymentSectionProps) {
   if (success) {
     return (
       <div className="border-divider bg-cream rounded-lg border p-6">
-        <p className="text-coffee text-lg font-semibold">
-          {props.mode === 'instant' ? t(props.locale, 'bookingSuccess') : t(props.locale, 'inquirySuccess')}
-        </p>
+        <p className="text-coffee text-lg font-semibold">{t(props.locale, 'bookingSuccess')}</p>
       </div>
     )
   }
 
   const canSubmit =
-    policy.privacy
-    && policy.terms
-    && isGuestValid(props.guest)
-    && !submitting
-    && Boolean(stripe)
-    && Boolean(elements)
-  const submitLabel =
-    props.mode === 'instant' ? t(props.locale, 'submitInstant') : t(props.locale, 'submitInquiry')
-
+    policy.privacy &&
+    policy.terms &&
+    isGuestValid(props.guest) &&
+    !submitting &&
+    Boolean(stripe) &&
+    Boolean(elements)
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentForm locale={props.locale} />
@@ -254,16 +268,12 @@ function PaymentSection(props: PaymentSectionProps) {
         disabled={submitting}
       />
 
-      {props.mode === 'inquiry' ? (
-        <p className="text-taupe text-xs italic">{t(props.locale, 'noCharge')}</p>
-      ) : null}
-
       <button
         type="submit"
         disabled={!canSubmit}
         className="bg-coffee text-cream hover:bg-coffee/90 disabled:bg-taupe w-full rounded-lg px-6 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed"
       >
-        {submitting ? `${t(props.locale, 'loading')}...` : submitLabel}
+        {submitting ? `${t(props.locale, 'loading')}...` : t(props.locale, 'submitInstant')}
       </button>
     </form>
   )
@@ -271,10 +281,10 @@ function PaymentSection(props: PaymentSectionProps) {
 
 function isGuestValid(guest: GuestFormValues) {
   return (
-    guest.firstName.trim().length > 0
-    && guest.lastName.trim().length > 0
-    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guest.email)
-    && guest.phone.trim().length > 0
+    guest.firstName.trim().length > 0 &&
+    guest.lastName.trim().length > 0 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guest.email) &&
+    guest.phone.trim().length > 0
   )
 }
 

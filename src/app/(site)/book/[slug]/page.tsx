@@ -18,8 +18,6 @@ interface PageProps {
   searchParams: Promise<{ check_in?: string; check_out?: string; guests?: string }>
 }
 
-const BOOKING_MODE = 'instant' as const
-
 const getCachedQuote = unstable_cache(
   (listingId: string, checkIn: string, checkOut: string, guestsCount: number) =>
     guestyClient.createQuote(listingId, checkIn, checkOut, guestsCount),
@@ -97,12 +95,21 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
   try {
     quote = await getCachedQuote(apartment.id, search.check_in, search.check_out, guestsCount)
   } catch (error) {
-    return <QuoteErrorView slug={slug} apartmentName={apartment.name} error={error} locale={locale} />
+    return (
+      <QuoteErrorView slug={slug} apartmentName={apartment.name} error={error} locale={locale} />
+    )
   }
 
   const firstRatePlan = quote.rates.ratePlans[0]
   if (!firstRatePlan) {
-    return <QuoteErrorView slug={slug} apartmentName={apartment.name} error={new Error('no_rate_plan')} locale={locale} />
+    return (
+      <QuoteErrorView
+        slug={slug}
+        apartmentName={apartment.name}
+        error={new Error('no_rate_plan')}
+        locale={locale}
+      />
+    )
   }
 
   const ratePlanId = firstRatePlan.ratePlan._id
@@ -128,7 +135,6 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
           ratePlanId={ratePlanId}
           amountCents={totalCents}
           currency={currency}
-          mode={BOOKING_MODE}
         />
       </main>
 
@@ -189,7 +195,7 @@ function QuoteErrorView({
   const parsed = parseGuestyError(error)
   const title = t(locale, parsed.titleKey)
   const description = t(locale, parsed.descriptionKey)
-  const backLabel = locale === 'en' ? 'Pick different dates' : 'Choisir d\'autres dates'
+  const backLabel = locale === 'en' ? 'Pick different dates' : "Choisir d'autres dates"
 
   console.warn('[reserver page] quote failed', { code: parsed.code, rawMessage: parsed.rawMessage })
 

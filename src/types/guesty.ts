@@ -89,19 +89,50 @@ export interface GuestyGuest {
 }
 
 export interface GuestyPolicyConsent {
-  accepted: boolean
-  acceptedAt: string
+  isAccepted: boolean
+  dateOfAcceptance: string
+  version?: number
 }
 
-export interface GuestyReservationRequest {
+interface GuestyReservationBaseRequest {
   quoteId: string
   ratePlanId: string
   guest: GuestyGuest
-  ccToken: string
   policy: {
     privacy: GuestyPolicyConsent
-    terms: GuestyPolicyConsent
+    termsAndConditions: GuestyPolicyConsent
   }
+}
+
+export interface GuestyInstantReservationRequest extends GuestyReservationBaseRequest {
+  confirmationToken: string
+  reuse?: boolean
+}
+
+export interface GuestyInstantChargeReservation {
+  reservation: {
+    _id: string
+    status: string
+    confirmationCode?: string
+    checkInDateLocalized?: string
+    checkOutDateLocalized?: string
+    guestsCount?: number
+  }
+  payment: {
+    _id: string
+    status: string
+    amount: number
+    currency: string
+    reservationId: string
+    paymentMethodId?: string
+    paidAt?: string
+    error?: string
+    processorError?: {
+      code?: string
+      message?: string
+    }
+  }
+  threeDSChallenge?: unknown
 }
 
 export interface GuestyReservation {

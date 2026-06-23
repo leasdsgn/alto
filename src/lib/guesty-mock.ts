@@ -1,7 +1,7 @@
 import {
   type GuestyListing,
   type GuestyQuote,
-  type GuestyReservation,
+  type GuestyInstantChargeReservation,
   type GuestyPaymentProvider,
   type GuestyCalendarDay,
 } from '@/types/guesty'
@@ -41,7 +41,7 @@ function listing(
     publicDescription: {
       summary: `Un appartement à ${city}, ambiance ${title}`,
       space: '50 m² environ',
-      access: 'Code d\'accès transmis par email',
+      access: "Code d'accès transmis par email",
       neighborhood: `Quartier emblématique de ${city}`,
       transit: 'Métro à 5 min',
       notes: 'Non-fumeur',
@@ -153,39 +153,36 @@ export const guestyMock = {
     })
   },
 
-  createInstantReservation(body: {
+  createInstantReservation(_body: {
     quoteId: string
     guest: { firstName: string; lastName: string; email: string; phone: string }
-  }): Promise<GuestyReservation> {
-    return Promise.resolve(buildReservation('confirmed', body))
-  },
-
-  createInquiry(body: {
-    quoteId: string
-    guest: { firstName: string; lastName: string; email: string; phone: string }
-  }): Promise<GuestyReservation> {
-    return Promise.resolve(buildReservation('reserved', body))
+  }): Promise<GuestyInstantChargeReservation> {
+    return Promise.resolve(buildInstantChargeReservation())
   },
 }
 
 export type GuestyMock = typeof guestyMock
 
-function buildReservation(
-  status: 'confirmed' | 'reserved',
-  body: {
-    quoteId: string
-    guest: { firstName: string; lastName: string; email: string; phone: string }
-  },
-): GuestyReservation {
+function buildInstantChargeReservation(): GuestyInstantChargeReservation {
+  const reservationId = `res-mock-${Date.now()}`
+
   return {
-    _id: `res-mock-${Date.now()}`,
-    confirmationCode: `MOCK-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-    status,
-    listingId: 'mock-faubourg',
-    checkIn: new Date().toISOString(),
-    checkOut: new Date(Date.now() + 3 * 86400000).toISOString(),
-    guestsCount: 2,
-    money: { totalPaid: 720, balanceDue: 0, currency: 'EUR' },
-    guest: body.guest,
+    reservation: {
+      _id: reservationId,
+      confirmationCode: `MOCK-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      status: 'confirmed',
+      checkInDateLocalized: new Date().toISOString().slice(0, 10),
+      checkOutDateLocalized: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
+      guestsCount: 2,
+    },
+    payment: {
+      _id: `pay-mock-${Date.now()}`,
+      status: 'done',
+      amount: 720,
+      currency: 'EUR',
+      reservationId,
+      paymentMethodId: 'pm_mock',
+      paidAt: new Date().toISOString(),
+    },
   }
 }

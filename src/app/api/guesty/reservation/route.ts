@@ -4,7 +4,10 @@ import { guestyClient } from '@/lib/guesty-client'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
 import { validateReservationInput } from '@/lib/reservation-validation'
-import type { GuestyReservationRequest } from '@/types/guesty'
+import type {
+  GuestyInstantChargeReservation,
+  GuestyInstantReservationRequest,
+} from '@/types/guesty'
 
 const guestSchema = z.object({
   firstName: z.string().min(1),
@@ -33,17 +36,9 @@ const baseSchema = z.object({
   preferredLanguage: z.enum(['fr', 'en']).default('fr'),
 })
 
-const instantSchema = baseSchema.extend({
-  mode: z.literal('instant'),
-  ccToken: z.string().min(1),
+const schema = baseSchema.extend({
+  confirmationToken: z.string().min(1),
 })
-
-const inquirySchema = baseSchema.extend({
-  mode: z.literal('inquiry'),
-  ccToken: z.string().min(1),
-})
-
-const schema = z.discriminatedUnion('mode', [instantSchema, inquirySchema])
 
 export async function POST(request: NextRequest) {
   const guard = assertSameOrigin(request)
@@ -61,19 +56,22 @@ export async function POST(request: NextRequest) {
         new Error('{"error":{"code":"VALIDATION_FAILED"}}'),
         locale,
       )
-      return NextResponse.json(
-        { ...errorBody, issues: parsed.error.issues },
-        { status },
-      )
+      return NextResponse.json({ ...errorBody, issues: parsed.error.issues }, { status })
     }
 
     const data = parsed.data
     locale = data.preferredLanguage
 
     const nowIso = new Date().toISOString()
-    const guestyPolicy: GuestyReservationRequest['policy'] = {
-      privacy: { accepted: data.policy.privacy, acceptedAt: nowIso },
-      terms: { accepted: data.policy.terms, acceptedAt: nowIso },
+    const guestyPolicy: GuestyInstantReservationRequest['policy'] = {
+      privacy: {
+        isAccepted: data.policy.privacy,
+        dateOfAcceptance: nowIso,
+      },
+      termsAndConditions: {
+        isAccepted: data.policy.terms,
+        dateOfAcceptance: nowIso,
+      },
     }
 
     const [listing, quote] = await Promise.all([
@@ -90,17 +88,22 @@ export async function POST(request: NextRequest) {
       guestsCount: data.guestsCount,
     })
 
-    const reservationPayload = {
+    const baseReservationPayload = {
       quoteId: validated.quote._id,
       ratePlanId: validated.ratePlan.ratePlan._id,
       guest: data.guest,
       policy: guestyPolicy,
-      ccToken: data.ccToken,
     }
 
-    const reservation = data.mode === 'instant'
-      ? await guestyClient.createInstantReservation(reservationPayload)
-      : await guestyClient.createInquiry(reservationPayload)
+    const reservation = await guestyClient.createInstantReservation({
+      ...baseReservationPayload,
+      confirmationToken: data.confirmationToken,
+      reuse: true,
+    })
+
+    if (!isPaidInstantCharge(reservation)) {
+      throw new Error('{"error":{"code":"PAYMENT_FAILED"}}')
+    }
 
     // Envoi des emails de réservation temporairement désactivé.
 
@@ -113,4 +116,17 @@ export async function POST(request: NextRequest) {
     })
     return NextResponse.json(body, { status })
   }
+}
+
+function isPaidInstantCharge(response: GuestyInstantChargeReservation): boolean {
+  const paymentStatus = response.payment.status?.toUpperCase()
+  const unresolvedStatuses = new Set(['FAILED', 'CANCELED', 'DECLINED', 'PENDING_AUTH'])
+
+  return Boolean(
+    response.reservation?._id &&
+    response.payment?._id &&
+    response.payment.amount > 0 &&
+    paymentStatus &&
+    !unresolvedStatuses.has(paymentStatus),
+  )
 }
