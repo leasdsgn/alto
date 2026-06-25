@@ -46,10 +46,11 @@ Le site crée uniquement des réservations instantanées. Le paiement doit être
 6. Le `confirmationToken` Stripe est créé avec `setupFutureUsage: 'off_session'`, car Guesty confirme le paiement avec un PaymentIntent configuré ainsi
 7. Le site ne demande pas `reuse` à Guesty, car Alto veut charger cette réservation maintenant plutôt que réutiliser la carte sur de futurs séjours
 8. Si Guesty retourne un paiement payé, la réservation est acceptée côté site
-9. Si Guesty retourne `FAILED` ou `PENDING_AUTH`, la route annule la réservation non payée via OpenAPI pour libérer les dates
-10. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
-11. `payments.received` déclenche `booking-confirmation`, `payments.refunded` gère les annulations remboursées
-12. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
+9. Si Guesty retourne `PENDING_AUTH`, le front termine l’authentification bancaire via Stripe puis appelle `/api/guesty/reservation/verify`
+10. Si Guesty retourne `FAILED`, ou si la vérification échoue, la route annule la réservation non payée via OpenAPI avec une raison valide pour libérer les dates
+11. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
+12. `payments.received` déclenche `booking-confirmation`, `payments.refunded` gère les annulations remboursées
+13. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
 
 Le template `booking-confirmation` embarque aussi un lien d’annulation signé, construit côté serveur avec `CANCEL_TOKEN_SECRET`.
 

@@ -118,6 +118,13 @@ export interface GuestyVerifyPaymentRequest {
   }
 }
 
+export interface GuestyThreeDSChallenge {
+  clientSecret?: string
+  client_secret?: string
+  paymentIntentClientSecret?: string
+  [key: string]: unknown
+}
+
 export interface GuestyInstantChargeReservation {
   reservation: {
     _id: string
@@ -141,7 +148,8 @@ export interface GuestyInstantChargeReservation {
       message?: string
     }
   }
-  threeDSChallenge?: unknown
+  threeDSChallenge?: GuestyThreeDSChallenge | string | null
+  attempts?: unknown[]
 }
 
 export interface GuestyReservation {

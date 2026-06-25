@@ -2,10 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
 import {
-  guestyOpenApi,
-  type GuestyCancellationReason,
-  type GuestyOpenApiReservation,
-} from '@/lib/guesty-openapi'
+  cancelUnpaidReservation,
+  extractStripeClientSecret,
+  isPaidInstantCharge,
+  redactStripeClientSecrets,
+} from '@/lib/instant-charge-payment'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
 import { validateReservationInput } from '@/lib/reservation-validation'
@@ -104,20 +105,38 @@ export async function POST(request: NextRequest) {
       ...baseReservationPayload,
       confirmationToken: data.confirmationToken,
     })
-    const reservation = await rejectUnsupportedPendingAuth(instantCharge).catch(async (error) => {
-      await cancelUnpaidReservation(instantCharge, 'Financial Issues')
-      throw error
-    })
 
-    if (!isPaidInstantCharge(reservation)) {
-      logInstantChargeNotPaid(reservation)
-      await cancelUnpaidReservation(reservation, 'Financial Issues')
+    if (isPaidInstantCharge(instantCharge)) {
+      // Envoi des emails de réservation temporairement désactivé.
+      return NextResponse.json(buildConfirmedResponse(instantCharge))
+    }
+
+    if (instantCharge.payment.status?.toUpperCase() === 'PENDING_AUTH') {
+      const reservationId = instantCharge.reservation?._id
+      const paymentId = instantCharge.payment?._id
+      const clientSecret = extractStripeClientSecret(instantCharge)
+
+      logPendingAuthPayload(instantCharge, Boolean(clientSecret))
+
+      if (!reservationId || !paymentId) {
+        throw new Error('{"error":{"code":"THREE_DS_REQUIRED"}}')
+      }
+
+      return NextResponse.json({
+        phase: 'requires_action',
+        reservationId,
+        paymentId,
+        clientSecret,
+      })
+    }
+
+    if (!isPaidInstantCharge(instantCharge)) {
+      logInstantChargeNotPaid(instantCharge)
+      await cancelUnpaidReservation(instantCharge, 'Others')
       throw new Error('{"error":{"code":"PAYMENT_FAILED"}}')
     }
 
-    // Envoi des emails de réservation temporairement désactivé.
-
-    return NextResponse.json(reservation)
+    return NextResponse.json(buildConfirmedResponse(instantCharge))
   } catch (error) {
     const { body, status } = toErrorResponse(error, locale)
     console.error('[reservation route] error', {
@@ -128,37 +147,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function rejectUnsupportedPendingAuth(
-  response: GuestyInstantChargeReservation,
-): Promise<GuestyInstantChargeReservation> {
-  if (response.payment.status?.toUpperCase() !== 'PENDING_AUTH') return response
-
-  const reservationId = response.reservation?._id
-  const paymentId = response.payment?._id
-
-  if (!reservationId || !paymentId) return response
-
-  console.error('[reservation route] unsupported pending auth payment', {
-    reservationId,
-    paymentId,
-    hasThreeDSChallenge: hasThreeDSChallenge(response.threeDSChallenge),
-    challengeKeys: getChallengeKeys(response.threeDSChallenge),
-  })
-
-  throw new Error('{"error":{"code":"THREE_DS_REQUIRED"}}')
-}
-
-function isPaidInstantCharge(response: GuestyInstantChargeReservation): boolean {
-  const paymentStatus = response.payment.status?.toUpperCase()
-  const paidStatuses = new Set(['DONE', 'PAID', 'SUCCEEDED', 'SUCCESS', 'SUCCESSFUL', 'COMPLETED'])
-
-  return Boolean(
-    response.reservation?._id &&
-    response.payment?._id &&
-    response.payment.amount > 0 &&
-    paymentStatus &&
-    paidStatuses.has(paymentStatus),
-  )
+function buildConfirmedResponse(response: GuestyInstantChargeReservation) {
+  return {
+    phase: 'confirmed',
+    reservation: response.reservation,
+    payment: response.payment,
+  }
 }
 
 function logInstantChargeNotPaid(response: GuestyInstantChargeReservation) {
@@ -176,57 +170,31 @@ function logInstantChargeNotPaid(response: GuestyInstantChargeReservation) {
   })
 }
 
-async function cancelUnpaidReservation(
+function logPendingAuthPayload(
   response: GuestyInstantChargeReservation,
-  reason: GuestyCancellationReason,
-): Promise<void> {
-  const reservationId = response.reservation?._id
-  if (!reservationId) return
-
-  const status = response.reservation.status?.toLowerCase()
-  if (status && ['canceled', 'cancelled', 'closed', 'declined'].includes(status)) return
-
-  try {
-    const currentReservation = await guestyOpenApi.getReservation(reservationId)
-
-    if (isOpenApiReservationPaid(currentReservation)) {
-      console.info('[reservation route] skip cleanup for paid reservation', {
-        reservationId,
-        status: currentReservation.status,
-      })
-      return
-    }
-
-    await guestyOpenApi.cancelReservation(reservationId, reason)
-    console.info('[reservation route] canceled unpaid reservation', {
-      reservationId,
-      reason,
-    })
-  } catch (cleanupError) {
-    console.error('[reservation route] cleanup reservation failed', {
-      reservationId,
-      cleanupError: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
-    })
-  }
+  clientSecretFound: boolean,
+) {
+  console.error('[reservation route] pending auth payment', {
+    reservationId: response.reservation?._id,
+    reservationStatus: response.reservation?.status,
+    paymentId: response.payment?._id,
+    paymentStatus: response.payment?.status,
+    paymentAmount: response.payment?.amount,
+    paymentCurrency: response.payment?.currency,
+    paymentMethodId: response.payment?.paymentMethodId,
+    hasThreeDSChallenge: hasThreeDSChallenge(response.threeDSChallenge),
+    challengeKeys: getChallengeKeys(response.threeDSChallenge),
+    clientSecretFound,
+  })
+  console.error(
+    '[reservation route] pending auth raw',
+    JSON.stringify(redactStripeClientSecrets(response)),
+  )
 }
 
-function isOpenApiReservationPaid(reservation: GuestyOpenApiReservation): boolean {
-  const payments = reservation.money?.payments ?? reservation.payments ?? []
-  const hasPaidTotal =
-    typeof reservation.money?.totalPaid === 'number' && reservation.money.totalPaid > 0
-
-  return (
-    hasPaidTotal ||
-    payments.some((payment) => {
-      const status = payment.status?.toUpperCase()
-      return Boolean(
-        payment.amount &&
-        payment.amount > 0 &&
-        status &&
-        ['DONE', 'PAID', 'SUCCEEDED', 'SUCCESS', 'COMPLETED'].includes(status),
-      )
-    })
-  )
+function getChallengeKeys(challenge: unknown): string[] {
+  if (!challenge || typeof challenge !== 'object' || Array.isArray(challenge)) return []
+  return Object.keys(challenge)
 }
 
 function hasThreeDSChallenge(challenge: unknown): boolean {
@@ -234,9 +202,4 @@ function hasThreeDSChallenge(challenge: unknown): boolean {
   if (typeof challenge === 'string') return challenge.length > 0
   if (typeof challenge !== 'object') return false
   return Object.keys(challenge).length > 0
-}
-
-function getChallengeKeys(challenge: unknown): string[] {
-  if (!challenge || typeof challenge !== 'object' || Array.isArray(challenge)) return []
-  return Object.keys(challenge)
 }

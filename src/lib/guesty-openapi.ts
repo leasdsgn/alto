@@ -1,3 +1,5 @@
+import type { GuestyCancellationReason } from '@/lib/instant-charge-payment'
+
 const OPENAPI_BASE_URL = 'https://open-api.guesty.com'
 const TOKEN_URL = `${OPENAPI_BASE_URL}/oauth2/token`
 
@@ -73,23 +75,6 @@ interface GuestyOpenApiPayment {
   status?: string
 }
 
-export type GuestyCancellationReason =
-  | 'No Reason Provided'
-  | 'Cancelled Due to Hold/Expiration'
-  | 'Not Comfortable For Owner'
-  | 'Not a Good Fit For Guest'
-  | 'Personal Circumstances'
-  | 'Guest Convenience'
-  | 'Policy Compliance'
-  | 'OTA Policy'
-  | 'Property Issues'
-  | 'Security & Legal Concerns'
-  | 'Management/Ownership Changes'
-  | 'Financial Issues'
-  | 'External Factors'
-  | 'Communication/Technical Issues'
-  | 'Others'
-
 export interface GuestyOpenApiReservation {
   _id?: string
   id?: string
@@ -121,10 +106,7 @@ export const guestyOpenApi = {
     return openApiFetch<GuestyOpenApiReservation>(`/v1/reservations/${reservationId}`)
   },
 
-  cancelReservation(
-    reservationId: string,
-    reason: GuestyCancellationReason = 'No Reason Provided',
-  ) {
+  cancelReservation(reservationId: string, reason: GuestyCancellationReason) {
     if (process.env.GUESTY_MOCK === 'true') {
       return Promise.resolve({ _id: reservationId, status: 'canceled', mock: true })
     }

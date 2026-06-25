@@ -139,11 +139,25 @@ class ReservationError extends Error {
   }
 }
 
+type ReservationApiResponse =
+  | {
+      phase: 'confirmed'
+      reservation: unknown
+      payment: unknown
+    }
+  | {
+      phase: 'requires_action'
+      reservationId: string
+      paymentId: string
+      clientSecret: string | null
+    }
+
 function PaymentSection(props: PaymentSectionProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [policy, setPolicy] = useState<PolicyValues>({ privacy: false, terms: false })
   const [submitting, setSubmitting] = useState(false)
+  const [paymentAuthenticating, setPaymentAuthenticating] = useState(false)
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(event: React.FormEvent) {
@@ -173,6 +187,7 @@ function PaymentSection(props: PaymentSectionProps) {
         })
       }
     } finally {
+      setPaymentAuthenticating(false)
       setSubmitting(false)
     }
   }
@@ -205,7 +220,7 @@ function PaymentSection(props: PaymentSectionProps) {
     return confirmationToken.id
   }
 
-  async function submitReservation(paymentCredential: string) {
+  async function submitReservation(paymentCredential: string): Promise<void> {
     const response = await fetch('/api/guesty/reservation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -226,17 +241,104 @@ function PaymentSection(props: PaymentSectionProps) {
       }),
     })
 
+    const body = (await response.json().catch(() => null)) as
+      | GuestyErrorBody
+      | ReservationApiResponse
+      | null
+
     if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as GuestyErrorBody | null
-      if (body?.error?.title && body.error.description) {
-        throw new ReservationError(body.error.code, body.error.title, body.error.description)
-      }
-      throw new ReservationError(
-        'UNKNOWN',
-        t(props.locale, 'errorGenericTitle'),
-        t(props.locale, 'errorGenericDesc'),
-      )
+      throwReservationApiError(body)
     }
+
+    if (isReservationApiResponse(body) && body.phase === 'confirmed') return
+
+    if (isReservationApiResponse(body) && body.phase === 'requires_action') {
+      await completePendingAuth(body)
+      return
+    }
+
+    throw new ReservationError(
+      'UNKNOWN',
+      t(props.locale, 'errorGenericTitle'),
+      t(props.locale, 'errorGenericDesc'),
+    )
+  }
+
+  async function completePendingAuth(
+    action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
+  ) {
+    if (!stripe) throw new Error(t(props.locale, 'errorGenericDesc'))
+
+    setPaymentAuthenticating(true)
+
+    if (action.clientSecret) {
+      const { error } = await stripe.handleNextAction({ clientSecret: action.clientSecret })
+
+      if (error) {
+        try {
+          await verifyPendingAuth(action)
+          return
+        } catch {
+          // L'erreur Stripe reste l'information la plus utile pour l'utilisateur.
+        }
+
+        throw new ReservationError(
+          'THREE_DS_REQUIRED',
+          t(props.locale, 'errorThreeDSRequiredTitle'),
+          error.message ?? t(props.locale, 'errorThreeDSRequiredDesc'),
+        )
+      }
+    }
+
+    await verifyPendingAuth(action)
+  }
+
+  async function verifyPendingAuth(
+    action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
+  ) {
+    const response = await fetch('/api/guesty/reservation/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reservationId: action.reservationId,
+        paymentId: action.paymentId,
+        preferredLanguage: props.locale,
+      }),
+    })
+
+    const body = (await response.json().catch(() => null)) as
+      | GuestyErrorBody
+      | ReservationApiResponse
+      | null
+
+    if (!response.ok) {
+      throwReservationApiError(body)
+    }
+
+    if (isReservationApiResponse(body) && body.phase === 'confirmed') return
+
+    throw new ReservationError(
+      'PAYMENT_FAILED',
+      t(props.locale, 'errorPaymentFailedTitle'),
+      t(props.locale, 'errorPaymentFailedDesc'),
+    )
+  }
+
+  function throwReservationApiError(body: GuestyErrorBody | ReservationApiResponse | null): never {
+    if (body && 'error' in body && body.error?.title && body.error.description) {
+      throw new ReservationError(body.error.code, body.error.title, body.error.description)
+    }
+    throw new ReservationError(
+      'UNKNOWN',
+      t(props.locale, 'errorGenericTitle'),
+      t(props.locale, 'errorGenericDesc'),
+    )
+  }
+
+  function isReservationApiResponse(
+    body: GuestyErrorBody | ReservationApiResponse | null,
+  ): body is ReservationApiResponse {
+    return Boolean(body && 'phase' in body)
   }
 
   if (success) {
@@ -274,7 +376,11 @@ function PaymentSection(props: PaymentSectionProps) {
         disabled={!canSubmit}
         className="bg-coffee text-cream hover:bg-coffee/90 disabled:bg-taupe w-full rounded-lg px-6 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed"
       >
-        {submitting ? `${t(props.locale, 'loading')}...` : t(props.locale, 'submitInstant')}
+        {paymentAuthenticating
+          ? `${t(props.locale, 'paymentAuthenticating')}...`
+          : submitting
+            ? `${t(props.locale, 'loading')}...`
+            : t(props.locale, 'submitInstant')}
       </button>
     </form>
   )
