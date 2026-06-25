@@ -47,6 +47,9 @@ export const bookingDictionary = {
     errorThreeDSRequiredTitle: 'Authentification bancaire requise',
     errorThreeDSRequiredDesc:
       'Votre banque demande une vérification supplémentaire qui n’a pas pu être finalisée. Réessayez ou utilisez une autre carte.',
+    errorBankAuthenticationFailedTitle: 'Vérification bancaire non finalisée',
+    errorBankAuthenticationFailedDesc:
+      'La vérification demandée par votre banque n’a pas fonctionné. La réservation n’a pas été confirmée. Réessayez ou utilisez une autre carte.',
     errorRateLimitedTitle: 'Service temporairement occupé',
     errorRateLimitedDesc: 'Merci de patienter quelques instants avant de réessayer.',
     errorValidationTitle: 'Informations invalides',
@@ -100,6 +103,9 @@ export const bookingDictionary = {
     errorThreeDSRequiredTitle: 'Bank authentication required',
     errorThreeDSRequiredDesc:
       'Your bank requires an additional verification step that could not be completed. Please try again or use another card.',
+    errorBankAuthenticationFailedTitle: 'Bank verification not completed',
+    errorBankAuthenticationFailedDesc:
+      'The verification requested by your bank did not go through. The booking was not confirmed. Please try again or use another card.',
     errorRateLimitedTitle: 'Service temporarily busy',
     errorRateLimitedDesc: 'Please wait a few moments before trying again.',
     errorValidationTitle: 'Invalid information',

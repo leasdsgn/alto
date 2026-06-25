@@ -152,12 +152,18 @@ type ReservationApiResponse =
       clientSecret: string | null
     }
 
+interface FormError {
+  title: string
+  description: string
+}
+
 function PaymentSection(props: PaymentSectionProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [policy, setPolicy] = useState<PolicyValues>({ privacy: false, terms: false })
   const [submitting, setSubmitting] = useState(false)
   const [paymentAuthenticating, setPaymentAuthenticating] = useState(false)
+  const [formError, setFormError] = useState<FormError | null>(null)
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(event: React.FormEvent) {
@@ -172,6 +178,7 @@ function PaymentSection(props: PaymentSectionProps) {
     }
 
     setSubmitting(true)
+    setFormError(null)
 
     try {
       const paymentCredential = await createPaymentCredential()
@@ -179,11 +186,17 @@ function PaymentSection(props: PaymentSectionProps) {
       setSuccess(true)
     } catch (err) {
       if (err instanceof ReservationError) {
+        setFormError({ title: err.title, description: err.description })
         toast.error(err.title, { description: err.description })
       } else {
+        const description =
+          err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc')
+        setFormError({
+          title: t(props.locale, 'errorPaymentFailedTitle'),
+          description,
+        })
         toast.error(t(props.locale, 'errorPaymentFailedTitle'), {
-          description:
-            err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc'),
+          description,
         })
       }
     } finally {
@@ -284,8 +297,8 @@ function PaymentSection(props: PaymentSectionProps) {
 
         throw new ReservationError(
           'THREE_DS_REQUIRED',
-          t(props.locale, 'errorThreeDSRequiredTitle'),
-          error.message ?? t(props.locale, 'errorThreeDSRequiredDesc'),
+          t(props.locale, 'errorBankAuthenticationFailedTitle'),
+          t(props.locale, 'errorBankAuthenticationFailedDesc'),
         )
       }
     }
@@ -359,6 +372,16 @@ function PaymentSection(props: PaymentSectionProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentForm locale={props.locale} />
+
+      {formError ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-950"
+        >
+          <p className="font-semibold">{formError.title}</p>
+          <p className="mt-1 leading-relaxed">{formError.description}</p>
+        </div>
+      ) : null}
 
       <p className="border-divider bg-cream text-coffee rounded-lg border p-4 text-sm leading-relaxed">
         {t(props.locale, 'depositNotice')}
