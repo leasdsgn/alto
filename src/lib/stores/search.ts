@@ -3,8 +3,8 @@ import { today, getLocalTimeZone } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 
 function getDefaultDates() {
-  const tomorrow = today(getLocalTimeZone()).add({ days: 1 })
-  return { start: tomorrow, end: tomorrow.add({ days: 1 }) }
+  const start = today(getLocalTimeZone())
+  return { start, end: start.add({ days: 1 }) }
 }
 
 interface DateRange {

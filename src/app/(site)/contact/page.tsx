@@ -1,11 +1,28 @@
 import Image from 'next/image'
+import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export default async function ContactPage() {
   const locale = await getServerLocale()
+  const story = await getStoryBySlug('pages/contact', locale)
+
+  if (
+    story &&
+    Array.isArray((story.content as { body?: unknown }).body) &&
+    (story.content as { body: unknown[] }).body.length > 0
+  ) {
+    return (
+      <>
+        <StoryblokStory story={story} />
+        <Footer />
+      </>
+    )
+  }
+
   const copy = CONTACT_COPY[locale]
   const siteImages = await getSiteImages(locale)
 
@@ -38,126 +55,27 @@ export default async function ContactPage() {
       <main className="mx-auto max-w-content px-gutter py-section md:px-gutter-md">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1fr_304px]">
           <div>
-            <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.formEyebrow}</p>
-            <h2 className="text-coffee mt-1 text-base font-medium leading-[24px]">{copy.formTitle}</h2>
+            <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">
+              {copy.formEyebrow}
+            </p>
+            <h2 className="text-coffee mt-1 text-base font-medium leading-[24px]">
+              {copy.formTitle}
+            </h2>
 
-            <form className="mt-8 space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <label htmlFor="firstName" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                    {copy.firstName}
-                  </label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    required
-                    className="border-divider text-coffee placeholder:text-taupe mt-2 block w-full rounded-sm border bg-transparent px-4 py-3 text-xs font-medium outline-none focus:border-coffee"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                    {copy.lastName}
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    required
-                    className="border-divider text-coffee placeholder:text-taupe mt-2 block w-full rounded-sm border bg-transparent px-4 py-3 text-xs font-medium outline-none focus:border-coffee"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="email" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="border-divider text-coffee placeholder:text-taupe mt-2 block w-full rounded-sm border bg-transparent px-4 py-3 text-xs font-medium outline-none focus:border-coffee"
-                />
-              </div>
-
-              <div>
-                  <label htmlFor="subject" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                  {copy.subject}
-                </label>
-                <select
-                  id="subject"
-                  name="subject"
-                  className="border-divider text-coffee mt-2 block w-full rounded-sm border bg-transparent px-4 py-3 text-xs font-medium outline-none focus:border-coffee"
-                >
-                  <option value="reservation">{copy.subjectReservation}</option>
-                  <option value="investissement">{copy.subjectInvestment}</option>
-                  <option value="partenariat">{copy.subjectPartnership}</option>
-                  <option value="autre">{copy.subjectOther}</option>
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="message" className="text-coffee text-xs font-bold tracking-[0.24px]">
-                  {copy.message}
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={5}
-                  required
-                  className="border-divider text-coffee placeholder:text-taupe mt-2 block w-full resize-none rounded-sm border bg-transparent px-4 py-3 text-xs font-medium leading-[22px] outline-none focus:border-coffee"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="bg-coffee text-cream btn-fill rounded-sm px-8 py-3 text-xs font-bold tracking-[0.24px]"
-              >
-                {copy.submit}
-              </button>
-            </form>
+            <p className="text-coffee mt-6 text-xs font-medium">
+              {copy.fallbackNote}
+            </p>
           </div>
 
           <aside className="space-y-8">
             <div>
               <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Email</p>
-              <a href="mailto:contact@alto-paris.com" className="text-coffee mt-2 block text-sm font-medium">
+              <a
+                href="mailto:contact@alto-paris.com"
+                className="text-coffee mt-2 block text-sm font-medium"
+              >
                 contact@alto-paris.com
               </a>
-            </div>
-
-            <div>
-              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.phone}</p>
-              <a href="tel:+33100000000" className="text-coffee mt-2 block text-sm font-medium">
-                +33 1 00 00 00 00
-              </a>
-            </div>
-
-            <div>
-              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.address}</p>
-              <p className="text-coffee mt-2 text-sm font-medium leading-[1.6]">
-                Paris, France
-              </p>
-            </div>
-
-            <div>
-              <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">{copy.socials}</p>
-              <div className="mt-3 flex gap-4">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-coffee">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5" />
-                    <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5" />
-                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
-                  </svg>
-                </a>
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-coffee">
-                  <svg width="12" height="20" viewBox="0 0 12 24" fill="currentColor">
-                    <path d="M7.5 13.5H10.5L12 8.5H7.5V6C7.5 4.97 7.5 4 9.5 4H12V0.14C11.622 0.097 10.362 0 8.962 0C6.038 0 4 1.657 4 4.7V8.5H0V13.5H4V24H7.5V13.5Z" />
-                  </svg>
-                </a>
-              </div>
             </div>
           </aside>
         </div>
@@ -174,35 +92,13 @@ const CONTACT_COPY = {
     heroText: 'Une question, un projet d’investissement, une réservation ? Écrivez-nous.',
     formEyebrow: 'Formulaire',
     formTitle: 'Envoyez-nous un message',
-    firstName: 'Prénom',
-    lastName: 'Nom',
-    subject: 'Sujet',
-    subjectReservation: 'Réservation',
-    subjectInvestment: 'Investissement',
-    subjectPartnership: 'Partenariat',
-    subjectOther: 'Autre',
-    message: 'Message',
-    submit: 'Envoyer',
-    phone: 'Téléphone',
-    address: 'Adresse',
-    socials: 'Réseaux',
+    fallbackNote: 'Le formulaire est en cours de migration vers le CMS.',
   },
   en: {
     imageAlt: 'Contact us',
     heroText: 'A question, an investment project, a booking? Write to us.',
     formEyebrow: 'Form',
     formTitle: 'Send us a message',
-    firstName: 'First name',
-    lastName: 'Last name',
-    subject: 'Subject',
-    subjectReservation: 'Booking',
-    subjectInvestment: 'Investment',
-    subjectPartnership: 'Partnership',
-    subjectOther: 'Other',
-    message: 'Message',
-    submit: 'Send',
-    phone: 'Phone',
-    address: 'Address',
-    socials: 'Social',
+    fallbackNote: 'The form is being migrated to the CMS.',
   },
 } as const

@@ -9,18 +9,15 @@ import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { ApartmentEditorialSections } from '@/components/sections/apartment-editorial-sections'
 import { Button } from '@/components/ui/button'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
-import type {
-  ApartmentEditorial,
-  ApartmentFaqItem,
-} from '@/lib/storyblok-apartment-editorial'
 import { type Apartment } from '@/types/apartment'
 import type { InquiryLocale } from '@/types/inquiry'
+import type { StoryblokFaqItem, StoryblokTestimonial } from '@/lib/storyblok-globals'
 
 interface Props {
   apartment: Apartment
   recommendations: Apartment[]
-  editorial?: ApartmentEditorial | null
-  globalFaq: ApartmentFaqItem[]
+  globalFaq: StoryblokFaqItem[]
+  globalTestimonials: StoryblokTestimonial[]
   locale: InquiryLocale
 }
 
@@ -210,52 +207,37 @@ const APARTMENT_COPY = {
   },
 } as const
 
-const REVIEW_BY_SLUG: Record<string, ReviewItem> = {
-  'le-faubourg': {
-    quote:
-      'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
-    name: 'Sofia & Léo',
-    stay: 'Le Faubourg | Mars 2026',
-  },
-  'l-opera': {
-    quote:
-      'Le check-in autonome à minuit, sans stress. Et le quartier est parfait pour découvrir Paris à pied.',
-    name: 'James W.',
-    stay: 'L’Opéra | Mars 2026',
-  },
-  'le-saint-germain': {
-    quote:
-      'Trois nuits, et on a déjà réservé pour l’été. Le Saint-Germain est devenu notre adresse parisienne.',
-    name: 'Marie & Thomas',
-    stay: 'Le Saint-Germain | Avril 2026',
-  },
+const FALLBACK_REVIEW: ReviewItem = {
+  quote:
+    'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
+  name: 'Sofia & Léo',
+  stay: 'Mars 2026',
 }
 
 export function ApartmentView({
   apartment,
   recommendations,
-  editorial,
   globalFaq,
+  globalTestimonials,
   locale,
 }: Props) {
   const copy = APARTMENT_COPY[locale]
   const cityName = getCityName(apartment)
-  const neighborhoodName =
-    editorial?.neighborhoodName ?? getNeighborhoodName(apartment, copy.fallbackNeighborhood)
+  const neighborhoodName = getNeighborhoodName(apartment, copy.fallbackNeighborhood)
   const coverImage = apartment.images[0] ?? apartment.image
   const galleryImages = getGalleryImages(apartment)
-  const featureItems = getFeatureItems(apartment, copy, editorial)
-  const faqItems = getFaqItems(apartment, globalFaq, copy, editorial)
-  const review = editorial?.review ?? REVIEW_BY_SLUG[apartment.slug] ?? REVIEW_BY_SLUG['le-faubourg']
+  const featureItems = getFeatureItems(apartment, copy)
+  const faqItems = getFaqItems(apartment, globalFaq, copy)
+  const review = pickReview(globalTestimonials)
   const recommendationItems = getRecommendationItems(
     apartment,
     recommendations,
     copy.fallbackNeighborhood,
   )
   const recommendationTitle = copy.apartmentsTitle(cityName)
-  const description = editorial?.description ?? apartment.description
-  const space = editorial?.space ?? apartment.space
-  const transit = editorial?.transit ?? apartment.transit
+  const description = apartment.description
+  const space = apartment.space
+  const transit = apartment.transit
 
   return (
     <>
@@ -274,10 +256,7 @@ export function ApartmentView({
               <MetaStat icon={<SurfaceIcon />} value={`${apartment.surface} m²`} />
             )}
             {apartment.bedrooms > 0 && (
-              <MetaStat
-                icon={<BedroomIcon />}
-                value={copy.bedroom(apartment.bedrooms)}
-              />
+              <MetaStat icon={<BedroomIcon />} value={copy.bedroom(apartment.bedrooms)} />
             )}
             <MetaStat icon={<RatingIcon />} value="4,9 (113)" />
             <MetaStat value={copy.trips} />
@@ -319,23 +298,9 @@ export function ApartmentView({
               </div>
 
               <div className="mt-6 max-w-3xl space-y-5 sm:mt-8">
-                {editorial?.intro && (
-                  <p className="text-coffee text-body-xl font-semibold leading-[1.5]">
-                    {editorial.intro}
-                  </p>
-                )}
                 <p className="text-ash text-body leading-[1.6]">{description}</p>
-                {space && (
-                  <p className="text-ash text-body leading-[1.6]">{space}</p>
-                )}
-                {editorial?.neighborhoodDescription && (
-                  <p className="text-ash text-body leading-[1.6]">
-                    {editorial.neighborhoodDescription}
-                  </p>
-                )}
-                {transit && (
-                  <p className="text-ash text-body leading-[1.6]">{transit}</p>
-                )}
+                {space && <p className="text-ash text-body leading-[1.6]">{space}</p>}
+                {transit && <p className="text-ash text-body leading-[1.6]">{transit}</p>}
               </div>
             </section>
 
@@ -359,11 +324,7 @@ export function ApartmentView({
             </section>
 
             <section className="pb-8">
-              <ApartmentFaq
-                items={faqItems}
-                title={copy.faqTitle}
-                heading={copy.faqHeading}
-              />
+              <ApartmentFaq items={faqItems} title={copy.faqTitle} heading={copy.faqHeading} />
             </section>
           </div>
 
@@ -408,13 +369,20 @@ export function ApartmentView({
   )
 }
 
+function pickReview(globalTestimonials: StoryblokTestimonial[]): ReviewItem {
+  const first = globalTestimonials[0]
+  if (!first) return FALLBACK_REVIEW
+  return {
+    quote: first.quote,
+    name: first.name,
+    stay: [first.apartment, first.stay].filter(Boolean).join(' | '),
+  }
+}
+
 function getFeatureItems(
   apartment: Apartment,
   copy: (typeof APARTMENT_COPY)[InquiryLocale],
-  editorial?: ApartmentEditorial | null,
 ): FeatureItem[] {
-  if (editorial?.features.length) return editorial.features
-
   const items: FeatureItem[] = []
   const seen = new Set<string>()
   const normalizedAmenities = apartment.amenities.map(normalizeValue)
@@ -449,9 +417,8 @@ function getGalleryImages(apartment: Apartment) {
 
 function getFaqItems(
   apartment: Apartment,
-  globalFaq: ApartmentFaqItem[],
+  globalFaq: StoryblokFaqItem[],
   copy: (typeof APARTMENT_COPY)[InquiryLocale],
-  editorial?: ApartmentEditorial | null,
 ) {
   const minNights = apartment.minNights > 0 ? apartment.minNights : 2
   const cityName = getCityName(apartment)
@@ -462,7 +429,6 @@ function getFaqItems(
       question: copy.minNightsQuestion,
       answer: copy.minNightsAnswer(minNights, cityName),
     },
-    ...(editorial?.faqExtra ?? []),
   ]
 }
 

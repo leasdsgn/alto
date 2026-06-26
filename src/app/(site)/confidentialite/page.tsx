@@ -1,6 +1,8 @@
+import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getServerLocale } from '@/lib/i18n/server'
+import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export const metadata = {
   title: 'Politique de confidentialité - Alto',
@@ -9,6 +11,22 @@ export const metadata = {
 
 export default async function ConfidentialitePage() {
   const locale = await getServerLocale()
+  const story = await getStoryBySlug('pages/confidentialite', locale)
+
+  if (
+    story &&
+    Array.isArray((story.content as { body?: unknown }).body) &&
+    (story.content as { body: unknown[] }).body.length > 0
+  ) {
+    return (
+      <>
+        <Header variant="dark" />
+        <StoryblokStory story={story} />
+        <Footer />
+      </>
+    )
+  }
+
   const copy = PRIVACY_COPY[locale]
 
   return (
@@ -17,9 +35,7 @@ export default async function ConfidentialitePage() {
       <main className="mx-auto w-full max-w-content px-gutter py-section md:px-gutter-md md:py-section-md">
         <div className="max-w-[720px]">
           <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Alto</p>
-          <h1 className="text-coffee mt-3 text-2xl font-bold md:text-4xl">
-            {copy.title}
-          </h1>
+          <h1 className="text-coffee mt-3 text-2xl font-bold md:text-4xl">{copy.title}</h1>
           <div className="text-coffee mt-10 space-y-6 text-sm leading-[1.8]">
             {copy.body.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>

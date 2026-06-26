@@ -10,35 +10,48 @@ import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
-import { getStoryblokVersion } from '@/lib/storyblok-preview'
-import { getStoryblokApi } from '@/lib/storyblok'
-import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 
 export default async function Home() {
   const locale = await getServerLocale()
-  const story = await getHomeStory(locale)
+  const story = await getStoryBySlug('pages/home', locale)
 
-  if (story) return <StoryblokStory story={story} />
+  if (story && Array.isArray((story.content as { body?: unknown }).body) && (story.content as { body: unknown[] }).body.length > 0) {
+    return (
+      <>
+        <StoryblokStory story={story} />
+        <Footer reserveStickyCtaSpace />
+        <StickyCta />
+      </>
+    )
+  }
 
-  const [apartments, blogArticles, siteImages] = await Promise.all([
+  const [apartments, blogArticles, globals] = await Promise.all([
     getApartments(),
     getBlogArticles(locale),
-    getSiteImages(locale),
+    getStoryblokGlobals(locale),
   ])
 
   return (
     <>
       <main>
         <HeroSection
-          backgroundImage={siteImages.home.heroBackground}
-          overlayImage={siteImages.home.heroOverlay}
+          backgroundImage="/images/hero-room.png"
+          overlayImage="/images/hero-overlay.png"
         />
         <AboutSection
-          locationAvatars={siteImages.shared.locationAvatars}
-          travelerAvatars={siteImages.shared.travelerAvatars}
+          locationAvatars={globals.sharedAssets.locationAvatars.map((a) => a.src)}
+          travelerAvatars={globals.sharedAssets.travelerAvatars.map((a) => a.src)}
         />
         <ApartmentsSection apartments={apartments} />
-        <ExperienceSection panelImages={siteImages.home.experience} />
+        <ExperienceSection
+          panelImages={{
+            arrival: '/images/experience-espaces.png',
+            checkin: '/images/experience-localisation.png',
+            checkout: '/images/blog-3.jpg',
+          }}
+        />
         <TestimonialsSection />
         <ServicesSection />
         <BlogSection articles={blogArticles} />
@@ -47,20 +60,4 @@ export default async function Home() {
       <StickyCta />
     </>
   )
-}
-
-async function getHomeStory(locale: string) {
-  try {
-    const storyblokApi = getStoryblokApi()
-    const version = await getStoryblokVersion()
-    const { data } = await storyblokApi.get('cdn/stories/site-images', {
-      version,
-      language: locale,
-      fallback_lang: 'fr',
-    })
-
-    return data.story
-  } catch {
-    return null
-  }
 }

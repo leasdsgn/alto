@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
+import { StoryblokStory } from '@storyblok/react/rsc'
 import { AboutView } from '@/components/about/about-view'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale()
@@ -12,6 +14,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function NotreHistoirePage() {
   const locale = await getServerLocale()
+  const story = await getStoryBySlug('pages/notre-histoire', locale)
+
+  if (
+    story &&
+    Array.isArray((story.content as { body?: unknown }).body) &&
+    (story.content as { body: unknown[] }).body.length > 0
+  ) {
+    return (
+      <>
+        <StoryblokStory story={story} />
+        <Footer />
+      </>
+    )
+  }
+
   const [siteImages, apartments] = await Promise.all([getSiteImages(locale), getApartments()])
 
   return (

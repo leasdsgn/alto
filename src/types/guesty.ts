@@ -42,7 +42,10 @@ export interface GuestyCalendarDay {
   status: 'available' | 'booked' | 'blocked'
   price?: number
   minNights: number
-  currency: string
+  maxNights?: number
+  currency?: string
+  cta?: boolean
+  ctd?: boolean
 }
 
 export interface GuestyQuoteMoney {
