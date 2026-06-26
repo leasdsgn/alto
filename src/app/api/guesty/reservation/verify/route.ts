@@ -3,11 +3,15 @@ import { z } from 'zod/v4'
 import { assertSameOrigin } from '@/lib/api-guard'
 import { parseGuestyError, toErrorResponse } from '@/lib/guesty-errors'
 import { guestyOpenApi, type GuestyOpenApiReservation } from '@/lib/guesty-openapi'
-import { isOpenApiReservationPaid } from '@/lib/instant-charge-payment'
+import {
+  isOpenApiReservationPaid,
+  type GuestyCancellationReason,
+} from '@/lib/instant-charge-payment'
 
 const schema = z.object({
   reservationId: z.string().min(1),
   paymentId: z.string().min(1),
+  authOutcome: z.enum(['succeeded', 'failed']).optional(),
   preferredLanguage: z.enum(['fr', 'en']).default('fr'),
 })
 
@@ -36,10 +40,18 @@ export async function POST(request: NextRequest) {
     const data = parsed.data
     locale = data.preferredLanguage
 
-    const reservation = await waitForOpenApiReservationPayment(data.reservationId)
+    const reservation =
+      data.authOutcome === 'failed'
+        ? await guestyOpenApi.getReservation(data.reservationId)
+        : await waitForOpenApiReservationPayment(data.reservationId)
 
     if (isOpenApiReservationPaid(reservation)) {
       return NextResponse.json(buildConfirmedResponse(reservation, data.paymentId))
+    }
+
+    if (data.authOutcome === 'failed') {
+      await cancelOpenApiReservationIfUnpaid(reservation, 'Cancelled Due to Hold/Expiration')
+      throw new Error('{"error":{"code":"THREE_DS_REQUIRED"}}')
     }
 
     console.info('[reservation verify route] payment not paid after open api sync', {
@@ -117,4 +129,20 @@ function buildConfirmedResponse(reservation: GuestyOpenApiReservation, paymentId
 function findPayment(reservation: GuestyOpenApiReservation, paymentId: string) {
   const payments = reservation.money?.payments ?? reservation.payments ?? []
   return payments.find((payment) => payment._id === paymentId || payment.id === paymentId)
+}
+
+async function cancelOpenApiReservationIfUnpaid(
+  reservation: GuestyOpenApiReservation,
+  reason: GuestyCancellationReason,
+) {
+  if (isOpenApiReservationPaid(reservation) || !isActiveReservation(reservation)) return
+
+  const reservationId = reservation._id ?? reservation.id
+  if (!reservationId) return
+
+  await guestyOpenApi.cancelReservation(reservationId, reason)
+  console.info('[reservation verify route] canceled unpaid failed auth reservation', {
+    reservationId,
+    reason,
+  })
 }

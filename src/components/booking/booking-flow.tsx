@@ -294,7 +294,7 @@ function PaymentSection(props: PaymentSectionProps) {
 
       if (error) {
         try {
-          await verifyPendingAuth(action)
+          await verifyPendingAuth(action, 'failed')
           return
         } catch {
           // L'erreur Stripe reste l'information la plus utile pour l'utilisateur.
@@ -308,11 +308,12 @@ function PaymentSection(props: PaymentSectionProps) {
       }
     }
 
-    await verifyPendingAuth(action)
+    await verifyPendingAuth(action, 'succeeded')
   }
 
   async function verifyPendingAuth(
     action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
+    authOutcome: 'succeeded' | 'failed',
   ) {
     for (let attempt = 0; attempt < 3; attempt++) {
       const response = await fetch('/api/guesty/reservation/verify', {
@@ -321,6 +322,7 @@ function PaymentSection(props: PaymentSectionProps) {
         body: JSON.stringify({
           reservationId: action.reservationId,
           paymentId: action.paymentId,
+          authOutcome,
           preferredLanguage: props.locale,
         }),
       })
