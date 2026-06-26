@@ -13,12 +13,12 @@
 
 import { ALL_COMPONENTS } from './schema'
 import {
+  blok,
   createStoryIfAbsent,
   ensureFolder,
   listComponents,
   sleep,
   upsertComponent,
-  type blok,
 } from './seed-utils'
 
 const SCHEMA_ONLY = process.argv.includes('--schema-only')
@@ -37,7 +37,7 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/home',
     realPath: '/',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent(buildHomeDefaultBody()),
   },
   {
     name: 'Lyon',
@@ -148,6 +148,109 @@ function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
     body,
     seo: [],
   }
+}
+
+function buildHomeDefaultBody() {
+  return [
+    blok('hero_section', {
+      title_mode: 'parts',
+      title_part_1: 'LIFTED',
+      title_part_2: 'MINDFUL',
+      title_part_3: 'HOME',
+      background_image: '',
+      overlay_image: '',
+      subtitle: '',
+      ctas: [],
+      show_search_bar: true,
+      height: 'svh',
+    }),
+    blok('home_about_section', {
+      kicker: 'Alto, c’est une nouvelle manière de penser l’hospitalité.',
+      quote:
+        'Nous transformons des espaces singuliers en lieux de vie élégants, bien pensés et confortables. Notre mission : permettre aux voyageurs de vivre des séjours sans frictions aux plus belles adresses.',
+      locations_label: '13 locations',
+      travelers_label: '4 500+ voyageurs',
+      rating_label: '4,9 de note moyenne',
+    }),
+    blok('apartments_grid_section', {
+      paris_title: 'Nos appartements à Paris',
+      lyon_title: 'Nos appartements à Lyon',
+      city_filter: 'all',
+      max_per_city: 0,
+      show_search_bar: false,
+      display_mode: 'carousel',
+    }),
+    blok('panels_section', {
+      eyebrow: 'À PROPOS',
+      button_label: 'En savoir plus',
+      button_link: { url: '/notre-histoire', linktype: 'url' },
+      panels: [
+        blok('panel', {
+          image: '',
+          label: 'Espaces',
+          title: 'Espaces de charme, singuliers, atypiques, et bien pensés.',
+        }),
+        blok('panel', {
+          image: '',
+          label: 'Localisation',
+          title: 'Bonnes adresses. Au cœur de l’action ou loin des sentiers battus.',
+        }),
+        blok('panel', {
+          image: '',
+          label: 'Confort',
+          title: 'Standards hôteliers. Soin des détails, équipements modernes.',
+        }),
+      ],
+    }),
+    blok('testimonials_section', {
+      eyebrow: '',
+      title: 'Témoignages',
+      source: 'global',
+      items: [],
+    }),
+    blok('services_section', {
+      eyebrow: '',
+      title: '',
+      intro: '',
+      items: [
+        blok('service_card', {
+          icon: '/images/icons/checkin.svg',
+          title: 'Self check-in',
+          description: 'Accès autonome à toute heure, sans attente ni comptoir.',
+        }),
+        blok('service_card', {
+          icon: '/images/icons/cleaning.svg',
+          title: 'Ménage',
+          description: 'Linge de maison inclus, ménage professionnel entre chaque séjour.',
+        }),
+        blok('service_card', {
+          icon: '/images/icons/support.svg',
+          title: 'Support 24/24',
+          description: 'Un gestionnaire disponible à tout moment pour vous accompagner.',
+        }),
+        blok('service_card', {
+          icon: '/images/icons/wallet.svg',
+          title: 'Pas de frais cachés',
+          description: 'Prix nets, sans surprise. Ce que vous voyez est ce que vous payez.',
+        }),
+      ],
+      variant: 'grid',
+    }),
+    blok('blog_grid_section', {
+      eyebrow: '',
+      title: '',
+      intro:
+        'Depuis 2017, nous accompagnons les voyageurs pour qu’ils vivent des expériences inoubliables aux plus belles adresses.',
+      max_items: 5,
+      section_filter: 'all',
+      cta_label: 'Tous nos conseils',
+      cta_link: { url: '/blog', linktype: 'url' },
+      fallback_subtitle: 'Un quartier vivant, une adresse au cœur des plus beaux quartiers.',
+      reading_time_label: '5 min de lecture',
+      pagination_previous_label: 'Précédent',
+      pagination_next_label: 'Suivant',
+    }),
+  ]
 }
 
 async function main() {

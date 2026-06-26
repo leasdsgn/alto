@@ -389,6 +389,19 @@ const SECTIONS: ComponentDefinition[] = [
     },
   },
   {
+    name: 'home_about_section',
+    display_name: 'Accueil - À propos (kicker + citation + stats)',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      kicker: textField('Phrase d’intro (haut)', 0),
+      quote: textareaField('Citation principale', 1, true),
+      locations_label: textField('Libellé stat - Lieux', 2),
+      travelers_label: textField('Libellé stat - Voyageurs', 3),
+      rating_label: textField('Libellé stat - Note', 4),
+    },
+  },
+  {
     name: 'image_text_section',
     display_name: 'Section - Image + Texte',
     is_root: false,
