@@ -10,6 +10,7 @@ import { useLocale } from '@/components/providers/locale-provider'
 import { useSearchStore } from '@/lib/stores/search'
 import { formatDateShort } from '@/lib/format-date'
 import { formatCurrency } from '@/lib/formatters'
+import { getQuoteAccommodationCents, getQuoteTotalCents } from '@/lib/guesty-pricing'
 import type { GuestyCalendarDay, GuestyQuote } from '@/types/guesty'
 
 interface BookingProps {
@@ -26,6 +27,7 @@ type QuoteStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 interface QuoteBreakdown {
   totalCents: number
+  accommodationCents: number
   currency: string
 }
 
@@ -476,7 +478,7 @@ function getNightlyLabel({
   if (!canShowFallbackPrice || nights <= 0 || quoteStatus === 'loading') return null
 
   if (quoteBreakdown) {
-    const averageNightCents = Math.round(quoteBreakdown.totalCents / nights)
+    const averageNightCents = Math.round(quoteBreakdown.accommodationCents / nights)
     const averageNight = formatCurrency(averageNightCents, quoteBreakdown.currency, locale)
 
     return locale === 'en' ? `${averageNight} / night` : `${averageNight} / nuit`
@@ -488,22 +490,16 @@ function getNightlyLabel({
 }
 
 function getQuoteBreakdown(quote: GuestyQuote): QuoteBreakdown | null {
-  const ratePlan = quote.rates.ratePlans[0]
-  if (!ratePlan) return null
+  const totalCents = getQuoteTotalCents(quote)
+  const accommodationCents = getQuoteAccommodationCents(quote)
 
-  const money = ratePlan.ratePlan.money
-  const totalCents = toCents(money.subTotalPrice)
-
-  if (!Number.isFinite(totalCents) || totalCents <= 0) return null
+  if (!totalCents || !accommodationCents) return null
 
   return {
     totalCents,
-    currency: money.currency?.toLowerCase() ?? 'eur',
+    accommodationCents,
+    currency: quote.rates.ratePlans[0]?.ratePlan.money.currency?.toLowerCase() ?? 'eur',
   }
-}
-
-function toCents(value: number | undefined) {
-  return Math.round((value ?? 0) * 100)
 }
 
 function getAvailabilityEnd(minDate: DateValue, selectedEnd: DateValue) {

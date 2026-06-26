@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { calculateNights } from '@/lib/reservation-validation'
+import { getQuoteAverageNightlyPrice } from '@/lib/guesty-pricing'
 import { type GuestyListing, type GuestyQuote } from '@/types/guesty'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { getServerLocale } from '@/lib/i18n/server'
@@ -410,12 +411,7 @@ async function mapWithConcurrency<T, R>(
 }
 
 function getQuoteNightlyPrice(quote: GuestyQuote, nights: number) {
-  const ratePlan = quote.rates.ratePlans[0]
-  const total = ratePlan?.ratePlan.money.subTotalPrice
-
-  if (!total || !Number.isFinite(total) || nights <= 0) return null
-
-  return Math.round(total / nights)
+  return getQuoteAverageNightlyPrice(quote, nights)
 }
 
 function isFallbackApartmentId(id: string) {
