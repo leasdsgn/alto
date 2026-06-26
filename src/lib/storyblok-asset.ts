@@ -70,6 +70,17 @@ export function numberOr(value: unknown, fallback: number): number {
   return fallback
 }
 
+export function richTextToPlainText(value: unknown): string {
+  if (typeof value === 'string') return value.trim()
+  if (!isRecord(value) || value.type !== 'doc' || !Array.isArray(value.content)) return ''
+
+  return value.content
+    .map((node) => richTextNodeToText(node))
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join('\n\n')
+}
+
 function normalizeUrl(value: string | null | undefined): string | null {
   if (!value) return null
   const trimmed = value.trim()
@@ -83,4 +94,12 @@ function normalizeUrl(value: string | null | undefined): string | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
+}
+
+function richTextNodeToText(value: unknown): string {
+  if (!isRecord(value)) return ''
+  if (typeof value.text === 'string') return value.text
+  if (value.type === 'hard_break') return '\n'
+  if (!Array.isArray(value.content)) return ''
+  return value.content.map((node) => richTextNodeToText(node)).join('')
 }

@@ -127,6 +127,13 @@ const PAGE_STORIES: StorySeed[] = [
     parent: 'pages',
     defaultContent: pageContent(buildLegalDefaultBody('Politique de confidentialité')),
   },
+  {
+    name: 'Annulation',
+    fullSlug: 'pages/annulation',
+    realPath: '/annulation',
+    parent: 'pages',
+    defaultContent: pageContent(buildLegalDefaultBody('Politique d’annulation')),
+  },
 ]
 
 const GLOBAL_STORIES: StorySeed[] = [
@@ -165,6 +172,37 @@ const GLOBAL_STORIES: StorySeed[] = [
     parent: 'globals',
     defaultContent: { component: 'shared_testimonials_global', items: [] },
   },
+  {
+    name: 'FAQ appartements',
+    fullSlug: 'globals/apartment-faq',
+    realPath: '/',
+    parent: 'globals',
+    defaultContent: {
+      component: 'faq_global',
+      eyebrow: 'FAQ',
+      title: 'Questions fréquentes',
+      items: [
+        blok('faq_item', {
+          question: 'Comment fonctionne le check-in ?',
+          answer: richTextParagraph(
+            'L’arrivée se fait en autonomie avec des instructions envoyées avant le séjour. L’équipe reste disponible si vous avez besoin d’aide.',
+          ),
+        }),
+        blok('faq_item', {
+          question: 'Le ménage est-il inclus ?',
+          answer: richTextParagraph(
+            'Le ménage de départ est prévu et l’appartement est préparé avant votre arrivée.',
+          ),
+        }),
+        blok('faq_item', {
+          question: 'Puis-je réserver en direct ?',
+          answer: richTextParagraph(
+            'Oui. La réservation peut se faire directement sur Alto avec un contact plus direct et un suivi plus simple.',
+          ),
+        }),
+      ],
+    },
+  },
 ]
 
 function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
@@ -202,6 +240,23 @@ function buildLegalDefaultBody(title: string) {
       max_width: 'prose',
     }),
   ]
+}
+
+function richTextParagraph(text: string) {
+  return {
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text,
+          },
+        ],
+      },
+    ],
+  }
 }
 
 function buildContactDefaultBody() {
@@ -248,15 +303,13 @@ function buildInvestirDefaultBody() {
     blok('hero_compact_section', {
       background_image: '',
       title: 'Investir avec nous',
-      body:
-        'Un modèle d’appartements haut de gamme, ancrés dans les quartiers les plus recherchés, pensé pour conjuguer rendement et excellence esthétique.',
+      body: 'Un modèle d’appartements haut de gamme, ancrés dans les quartiers les plus recherchés, pensé pour conjuguer rendement et excellence esthétique.',
       height: 'fixed-442',
     }),
     blok('text_section', {
       eyebrow: 'Les appartements',
       title: 'Une collection d’adresses à forte valeur patrimoniale',
-      body:
-        'Nous sélectionnons des biens situés dans des emplacements premium, au cœur de villes à forte attractivité culturelle et touristique.\n\nChaque appartement est soigneusement rénové, valorisé par une direction artistique exigeante, optimisé pour la location courte et moyenne durée.\n\nNotre approche repose sur un équilibre entre rentabilité, désirabilité et pérennité du patrimoine.',
+      body: 'Nous sélectionnons des biens situés dans des emplacements premium, au cœur de villes à forte attractivité culturelle et touristique.\n\nChaque appartement est soigneusement rénové, valorisé par une direction artistique exigeante, optimisé pour la location courte et moyenne durée.\n\nNotre approche repose sur un équilibre entre rentabilité, désirabilité et pérennité du patrimoine.',
       max_width: 'prose',
       alignment: 'left',
     }),
@@ -278,8 +331,7 @@ function buildInvestirDefaultBody() {
         }),
         blok('feature', {
           title: 'Expérience premium',
-          description:
-            'Une expérience client soignée, générant récurrence et recommandations.',
+          description: 'Une expérience client soignée, générant récurrence et recommandations.',
         }),
       ],
     }),
@@ -293,8 +345,7 @@ function buildInvestirDefaultBody() {
     blok('cta_section', {
       eyebrow: 'Nous contacter',
       title: 'Échangeons sur votre projet',
-      body:
-        'Vous souhaitez en savoir plus sur notre modèle ou étudier une opportunité d’investissement ?',
+      body: 'Vous souhaitez en savoir plus sur notre modèle ou étudier une opportunité d’investissement ?',
       ctas: [
         blok('cta_button', {
           label: 'Recevoir le dossier investisseur',
@@ -328,7 +379,8 @@ function buildLyonDefaultBody() {
       show_search_bar: true,
     }),
     blok('lyon_stats_section', {
-      title: '12 appartements soigneusement pensés,\n3 villes emblématiques, déjà 480 voyageurs conquis.',
+      title:
+        '12 appartements soigneusement pensés,\n3 villes emblématiques, déjà 480 voyageurs conquis.',
       body: 'Une collection intime d’adresses où l’on se sent chez soi, naturellement.',
       seen_on_label: 'Vu sur :',
       press_logo: '',
@@ -352,7 +404,8 @@ function buildLyonDefaultBody() {
         blok('lyon_service_item', { icon: 'cleaning', label: 'Linge et ménage inclus' }),
         blok('lyon_service_item', { icon: 'calendar', label: 'Réservation sans frais' }),
       ],
-      footer_text: 'Un parquet qui craque doucement.\nUn linge soigné.\nUn quartier qu’on apprend à connaître.',
+      footer_text:
+        'Un parquet qui craque doucement.\nUn linge soigné.\nUn quartier qu’on apprend à connaître.',
       cta_label: 'Réserver',
       cta_link: { url: '#disponibilites', linktype: 'url' },
     }),
@@ -384,7 +437,8 @@ function buildLyonDefaultBody() {
       eyebrow: 'Le blog',
       title: 'En découvrir plus',
       headline: 'Nos conseils pour améliorer votre voyage',
-      intro: 'Depuis 2016 nous aidons les voyageurs grâce à des logements premium au cœur des villes',
+      intro:
+        'Depuis 2016 nous aidons les voyageurs grâce à des logements premium au cœur des villes',
       max_items: 3,
       section_filter: 'lyon',
     }),

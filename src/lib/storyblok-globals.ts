@@ -5,6 +5,7 @@ import {
   boolOr,
   linkHref,
   numberOr,
+  richTextToPlainText,
   textOr,
   type StoryblokLinkField,
 } from '@/lib/storyblok-asset'
@@ -278,7 +279,7 @@ export function mapFaqItems(value: unknown): StoryblokFaqItem[] {
   return bloksOf<{ question?: unknown; answer?: unknown }>(value)
     .map((item) => {
       const question = textOr(item.question, '')
-      const answer = textOr(item.answer, '')
+      const answer = richTextToPlainText(item.answer)
       if (!question || !answer) return null
       return { question, answer }
     })
