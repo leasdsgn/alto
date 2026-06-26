@@ -87,15 +87,7 @@ export function ApartmentCard({
 
           <div className="flex flex-wrap items-center gap-x-[10px] gap-y-1">
             <span className="text-silver text-body leading-[1.5]">
-              {isDisplayablePrice(price) ? (
-                <>
-                  {priceSource === 'quote' ? '' : `${copy.from} `}
-                  {formatCurrency(price, locale)}
-                  {copy.perNight}
-                </>
-              ) : (
-                copy.checkAvailability
-              )}
+              {getPriceLabel({ price, priceSource, copy, locale })}
             </span>
           </div>
         </div>
@@ -108,14 +100,36 @@ const CARD_COPY = {
   fr: {
     from: 'Dès',
     perNight: '/nuit',
+    total: 'au total',
     checkAvailability: 'Voir disponibilités',
   },
   en: {
     from: 'From',
     perNight: '/night',
+    total: 'total',
     checkAvailability: 'Check availability',
   },
 } as const
+
+function getPriceLabel({
+  price,
+  priceSource,
+  copy,
+  locale,
+}: {
+  price: number | null
+  priceSource: ApartmentPriceSource
+  copy: (typeof CARD_COPY)[InquiryLocale]
+  locale: InquiryLocale
+}) {
+  if (!isDisplayablePrice(price)) return copy.checkAvailability
+
+  if (priceSource === 'total') {
+    return `${formatCurrency(price, locale)} ${copy.total}`
+  }
+
+  return `${copy.from} ${formatCurrency(price, locale)}${copy.perNight}`
+}
 
 function formatCurrency(value: number, locale: InquiryLocale) {
   return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {

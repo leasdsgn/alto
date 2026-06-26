@@ -357,6 +357,7 @@ const MAP_COPY = {
     from: 'Dès',
     fromShort: 'Dès',
     perNight: '/nuit',
+    total: 'au total',
     checkAvailability: 'Voir disponibilités',
     checkAvailabilityShort: 'Voir',
     discover: 'Découvrir',
@@ -369,6 +370,7 @@ const MAP_COPY = {
     from: 'From',
     fromShort: 'From',
     perNight: '/night',
+    total: 'total',
     checkAvailability: 'Check availability',
     checkAvailabilityShort: 'View',
     discover: 'Discover',
@@ -381,16 +383,14 @@ const MAP_COPY = {
 
 function getPinLabel(apartment: Apartment, copy: (typeof MAP_COPY)[keyof typeof MAP_COPY]) {
   if (!isDisplayablePrice(apartment.price)) return copy.checkAvailabilityShort
-  return `${getPricePrefix(apartment.priceSource, copy.fromShort)}${Math.round(apartment.price)}€`
+  if (apartment.priceSource === 'total') return `${Math.round(apartment.price)}€`
+  return `${copy.fromShort} ${Math.round(apartment.price)}€`
 }
 
 function getPriceLabel(apartment: Apartment, copy: (typeof MAP_COPY)[keyof typeof MAP_COPY]) {
   if (!isDisplayablePrice(apartment.price)) return copy.checkAvailability
-  return `${getPricePrefix(apartment.priceSource, copy.from)}${Math.round(apartment.price)}€${copy.perNight}`
-}
-
-function getPricePrefix(priceSource: ApartmentPriceSource | undefined, from: string) {
-  return priceSource === 'quote' ? '' : `${from} `
+  if (apartment.priceSource === 'total') return `${Math.round(apartment.price)}€ ${copy.total}`
+  return `${copy.from} ${Math.round(apartment.price)}€${copy.perNight}`
 }
 
 function isDisplayablePrice(value: number | null): value is number {

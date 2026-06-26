@@ -1,9 +1,8 @@
 import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
-import { calculateNights } from '@/lib/reservation-validation'
-import { getCalendarMinimumNightlyPrice, getQuoteAverageNightlyPrice } from '@/lib/guesty-pricing'
-import { type GuestyListing, type GuestyQuote } from '@/types/guesty'
+import { getCalendarMinimumNightlyPrice, getQuoteTotalCents } from '@/lib/guesty-pricing'
+import { type GuestyListing } from '@/types/guesty'
 import {
   type Apartment,
   type ApartmentCardData,
@@ -76,20 +75,20 @@ function mapListing(listing: GuestyListing): Apartment {
   }
 }
 
-function mapListingCard(listing: GuestyListing, nights?: number): ApartmentCardData {
+function mapListingCard(listing: GuestyListing): ApartmentCardData {
   const city = listing.address?.city
   const slug = slugify(listing.nickname || listing.title || listing._id)
   const neighborhoodLabel = getNeighborhoodBySlug(slug)
   const image = normalizeGuestyImageUrl(
     listing.pictures?.[0]?.original || listing.pictures?.[0]?.thumbnail,
   )
-  const totalNightlyPrice = getTotalPriceNightlyPrice(listing.totalPrice, nights)
+  const totalPrice = getTotalPrice(listing.totalPrice)
 
   return {
     id: listing._id,
     name: listing.title || listing.nickname || 'Appartement Alto',
-    price: totalNightlyPrice,
-    priceSource: totalNightlyPrice ? 'quote' : 'starting',
+    price: totalPrice,
+    priceSource: totalPrice ? 'total' : 'starting',
     currency: listing.prices?.currency ?? 'EUR',
     guests: listing.accommodates ?? 0,
     surface: 0,
@@ -392,17 +391,16 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
 
   if (hasDates && checkIn && checkOut) {
     try {
-      const nights = calculateNights(checkIn, checkOut)
       const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests, {
         fields: LISTING_SEARCH_FIELDS,
       })
       const apartments = city
         ? applyCityFilter(
-            results.map((listing) => mapListingCard(listing, nights)),
+            results.map((listing) => mapListingCard(listing)),
             city,
           )
-        : results.map((listing) => mapListingCard(listing, nights))
-      const hasTotalPrice = apartments.some((apartment) => apartment.priceSource === 'quote')
+        : results.map((listing) => mapListingCard(listing))
+      const hasTotalPrice = apartments.some((apartment) => apartment.priceSource === 'total')
 
       return {
         apartments: hasTotalPrice
@@ -494,26 +492,18 @@ async function withQuotePrices<T extends { id: string; price: number | null }>(
     guestsCount: number
   },
 ) {
-  let nights = 0
-
-  try {
-    nights = calculateNights(checkIn, checkOut)
-  } catch {
-    return apartments
-  }
-
   return mapWithConcurrency(apartments, 3, async (apartment) => {
     if (isFallbackApartmentId(apartment.id)) return apartment
 
     try {
       const quote = await getCachedSearchQuote(apartment.id, checkIn, checkOut, guestsCount)
-      const nightlyPrice = getQuoteNightlyPrice(quote, nights)
-      if (!nightlyPrice) return apartment
+      const totalCents = getQuoteTotalCents(quote)
+      if (!totalCents) return apartment
 
       return {
         ...apartment,
-        price: nightlyPrice,
-        priceSource: 'quote' as const,
+        price: Math.round(totalCents / 100),
+        priceSource: 'total' as const,
       }
     } catch {
       return apartment
@@ -537,14 +527,9 @@ async function mapWithConcurrency<T, R>(
   return results
 }
 
-function getQuoteNightlyPrice(quote: GuestyQuote, nights: number) {
-  return getQuoteAverageNightlyPrice(quote, nights)
-}
-
-function getTotalPriceNightlyPrice(totalPrice: number | undefined, nights: number | undefined) {
-  if (!nights || nights <= 0) return null
+function getTotalPrice(totalPrice: number | undefined) {
   if (!Number.isFinite(totalPrice) || !totalPrice || totalPrice <= 0) return null
-  return Math.round(totalPrice / nights)
+  return Math.round(totalPrice)
 }
 
 function toApartmentCardData(apartment: (typeof FALLBACK_APARTMENTS)[number]): ApartmentCardData {

@@ -335,15 +335,7 @@ function MapApartmentResult({
 
         <div className="flex min-w-0 items-center justify-end gap-3">
           <span className="text-silver text-body whitespace-nowrap">
-            {isDisplayablePrice(apartment.price) ? (
-              <>
-                {apartment.priceSource === 'quote' ? '' : `${copy.from} `}
-                {formatCurrency(Math.round(apartment.price), locale)}
-                {copy.perNight}
-              </>
-            ) : (
-              copy.checkAvailability
-            )}
+            {getPriceLabel(apartment, copy, locale)}
           </span>
         </div>
       </article>
@@ -365,6 +357,7 @@ const APARTMENTS_GRID_COPY = {
       'La recherche datée n’a pas pu être vérifiée. Merci de réessayer dans un instant.',
     from: 'Dès',
     perNight: '/nuit',
+    total: 'au total',
     checkAvailability: 'Voir disponibilités',
   },
   en: {
@@ -379,9 +372,23 @@ const APARTMENTS_GRID_COPY = {
     availabilityErrorBody: 'The dated search could not be verified. Please try again in a moment.',
     from: 'From',
     perNight: '/night',
+    total: 'total',
     checkAvailability: 'Check availability',
   },
 } as const
+
+function getPriceLabel(
+  apartment: Apartment,
+  copy: (typeof APARTMENTS_GRID_COPY)[InquiryLocale],
+  locale: InquiryLocale,
+) {
+  if (!isDisplayablePrice(apartment.price)) return copy.checkAvailability
+  const price = formatCurrency(Math.round(apartment.price), locale)
+
+  if (apartment.priceSource === 'total') return `${price} ${copy.total}`
+
+  return `${copy.from} ${price}${copy.perNight}`
+}
 
 function formatCurrency(value: number, locale: InquiryLocale) {
   return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {

@@ -25,7 +25,7 @@ export interface Apartment {
   priceSource?: ApartmentPriceSource
 }
 
-export type ApartmentPriceSource = 'starting' | 'quote'
+export type ApartmentPriceSource = 'starting' | 'total'
 
 export interface ApartmentCardData {
   id: string
