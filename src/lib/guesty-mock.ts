@@ -159,13 +159,6 @@ export const guestyMock = {
   }): Promise<GuestyInstantChargeReservation> {
     return Promise.resolve(buildInstantChargeReservation())
   },
-
-  verifyReservationPayment(_body: {
-    reservationId: string
-    paymentId: string
-  }): Promise<GuestyInstantChargeReservation> {
-    return Promise.resolve(buildInstantChargeReservation())
-  },
 }
 
 export type GuestyMock = typeof guestyMock

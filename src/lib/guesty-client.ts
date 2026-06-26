@@ -6,7 +6,6 @@ import {
   type GuestyPaymentProvider,
   type GuestyInstantChargeReservation,
   type GuestyInstantReservationRequest,
-  type GuestyVerifyPaymentRequest,
 } from '@/types/guesty'
 import { type GuestyMock } from './guesty-mock'
 import {
@@ -308,18 +307,6 @@ export const guestyClient = {
     if (USE_MOCK) return mock('createInstantReservation').then((fn) => fn(body))
     return guestyFetch<GuestyInstantChargeReservation>(
       `/reservations/quotes/${quoteId}/instant-charge`,
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      },
-    )
-  },
-
-  verifyReservationPayment(body: GuestyVerifyPaymentRequest) {
-    const { reservationId, ...payload } = body
-    if (USE_MOCK) return mock('verifyReservationPayment').then((fn) => fn(body))
-    return guestyFetch<GuestyInstantChargeReservation>(
-      `/reservations/${reservationId}/verify-payment`,
       {
         method: 'POST',
         body: JSON.stringify(payload),
