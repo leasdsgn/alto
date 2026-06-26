@@ -316,6 +316,7 @@ export const guestyClient = {
   },
 
   verifyReservationPayment(body: GuestyVerifyPaymentRequest) {
+    // GuestyPay uniquement. Le flow Stripe direct finalise le 3DS via Stripe.js.
     const { reservationId, ...payload } = body
     if (USE_MOCK) return mock('verifyReservationPayment').then((fn) => fn(body))
     return guestyFetch<GuestyInstantChargeReservation>(

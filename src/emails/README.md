@@ -46,11 +46,12 @@ Le site crée uniquement des réservations instantanées. Le paiement doit être
 6. Le `confirmationToken` Stripe est créé avec `setupFutureUsage: 'off_session'`, car Guesty confirme le paiement avec un PaymentIntent configuré ainsi
 7. Le site ne demande pas `reuse` à Guesty, car Alto veut charger cette réservation maintenant plutôt que réutiliser la carte sur de futurs séjours
 8. Si Guesty retourne un paiement payé, la réservation est acceptée côté site
-9. Si Guesty retourne `PENDING_AUTH`, le front termine l’authentification bancaire via Stripe puis appelle `/api/guesty/reservation/verify`
-10. Si Guesty retourne `FAILED`, ou si la vérification échoue, la route annule la réservation non payée via OpenAPI avec une raison valide pour libérer les dates
-11. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
-12. `payments.received` déclenche `booking-confirmation`, `payments.refunded` gère les annulations remboursées
-13. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
+9. Si Guesty retourne `PENDING_AUTH`, le front stocke temporairement `reservationId`, `paymentId` et le `clientSecret`, puis termine l’authentification bancaire via Stripe
+10. Après le 3DS, `/api/guesty/reservation/verify` lit Guesty Open API pour confirmer le paiement ou annuler la réservation non payée. Le flow Stripe n’appelle pas le `verify-payment` BEAPI, réservé au chemin GuestyPay
+11. Si la banque redirige hors du site, Stripe revient sur `/book/payment-return`, qui reprend la tentative stockée sans relancer un devis ni bloquer sur le calendrier
+12. Guesty envoie ses webhooks signés Svix vers `/api/webhooks/guesty`
+13. `payments.received` déclenche `booking-confirmation`, `payments.refunded` gère les annulations remboursées
+14. Une caution Swikly peut être demandée avant l’arrivée. Alto peut annuler la réservation si la caution n’est pas complétée dans les délais indiqués.
 
 Le template `booking-confirmation` embarque aussi un lien d’annulation signé, construit côté serveur avec `CANCEL_TOKEN_SECRET`.
 

@@ -144,7 +144,7 @@ describe('guesty-client', () => {
     })
   })
 
-  it('appelle l’endpoint verify-payment pour une réservation en pending auth', async () => {
+  it('appelle l’endpoint verify-payment réservé au flow GuestyPay', async () => {
     process.env.GUESTY_BEAPI_CLIENT_ID = 'test-id'
     process.env.GUESTY_BEAPI_CLIENT_SECRET = 'test-secret'
 

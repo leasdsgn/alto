@@ -8,6 +8,7 @@ import { useLocale } from '@/components/providers/locale-provider'
 import { getStripeInstance } from '@/lib/stripe-client'
 import { nightsBetween } from '@/lib/formatters'
 import { t } from '@/lib/i18n/booking-dictionary'
+import { clearPendingBankAuth, savePendingBankAuth } from '@/lib/pending-bank-auth'
 import { QuoteSummary } from './quote-summary'
 import { GuestForm, type GuestFormValues } from './guest-form'
 import { PolicyCheckboxes, type PolicyValues } from './policy-checkboxes'
@@ -99,7 +100,12 @@ export function BookingFlow(props: BookingFlowProps) {
 
         {stripePromise ? (
           <Elements stripe={stripePromise} options={stripeOptions}>
-            <PaymentSection locale={locale} guest={guest} {...props} />
+            <PaymentSection
+              locale={locale}
+              guest={guest}
+              connectedAccountId={paymentProviderState.connectedAccountId}
+              {...props}
+            />
           </Elements>
         ) : (
           <p className="text-taupe text-sm">{t(locale, 'loading')}...</p>
@@ -127,6 +133,7 @@ export function BookingFlow(props: BookingFlowProps) {
 interface PaymentSectionProps extends BookingFlowProps {
   locale: InquiryLocale
   guest: GuestFormValues
+  connectedAccountId: string | null
 }
 
 class ReservationError extends Error {
@@ -151,6 +158,16 @@ type ReservationApiResponse =
       paymentId: string
       clientSecret: string | null
     }
+  | {
+      phase: 'processing'
+      reservationId: string
+      paymentId: string
+    }
+
+interface FormError {
+  title: string
+  description: string
+}
 
 function PaymentSection(props: PaymentSectionProps) {
   const stripe = useStripe()
@@ -158,11 +175,13 @@ function PaymentSection(props: PaymentSectionProps) {
   const [policy, setPolicy] = useState<PolicyValues>({ privacy: false, terms: false })
   const [submitting, setSubmitting] = useState(false)
   const [paymentAuthenticating, setPaymentAuthenticating] = useState(false)
+  const [formError, setFormError] = useState<FormError | null>(null)
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!stripe || !elements) return
+    setFormError(null)
 
     if (!isGuestValid(props.guest)) {
       toast.error(t(props.locale, 'errorValidationTitle'), {
@@ -179,12 +198,13 @@ function PaymentSection(props: PaymentSectionProps) {
       setSuccess(true)
     } catch (err) {
       if (err instanceof ReservationError) {
+        setFormError({ title: err.title, description: err.description })
         toast.error(err.title, { description: err.description })
       } else {
-        toast.error(t(props.locale, 'errorPaymentFailedTitle'), {
-          description:
-            err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc'),
-        })
+        const description =
+          err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc')
+        setFormError({ title: t(props.locale, 'errorPaymentFailedTitle'), description })
+        toast.error(t(props.locale, 'errorPaymentFailedTitle'), { description })
       }
     } finally {
       setPaymentAuthenticating(false)
@@ -210,7 +230,7 @@ function PaymentSection(props: PaymentSectionProps) {
             phone: props.guest.phone,
           },
         },
-        return_url: window.location.href,
+        return_url: buildBankAuthReturnUrl(),
       },
     })
 
@@ -272,29 +292,99 @@ function PaymentSection(props: PaymentSectionProps) {
     setPaymentAuthenticating(true)
 
     if (action.clientSecret) {
-      const { error } = await stripe.handleNextAction({ clientSecret: action.clientSecret })
+      savePendingBankAuth({
+        reservationId: action.reservationId,
+        paymentId: action.paymentId,
+        clientSecret: action.clientSecret,
+        connectedAccountId: props.connectedAccountId,
+        locale: props.locale,
+        returnTo: window.location.href,
+      })
 
-      if (error) {
-        try {
-          await verifyPendingAuth(action)
-          return
-        } catch {
-          // L'erreur Stripe reste l'information la plus utile pour l'utilisateur.
-        }
+      const result = await stripe.handleNextAction({ clientSecret: action.clientSecret })
+
+      if (result.error) {
+        const status = await retrievePaymentIntentStatus(action.clientSecret)
+        await cleanupFailedPendingAuth(action, status)
+        clearPendingBankAuth()
 
         throw new ReservationError(
           'THREE_DS_REQUIRED',
           t(props.locale, 'errorThreeDSRequiredTitle'),
-          error.message ?? t(props.locale, 'errorThreeDSRequiredDesc'),
+          result.error.message ?? t(props.locale, 'errorThreeDSRequiredDesc'),
         )
       }
+
+      const stripeStatus = result.paymentIntent?.status ?? result.setupIntent?.status ?? null
+
+      if (!isStripeContinuableStatus(stripeStatus)) {
+        await cleanupFailedPendingAuth(action, stripeStatus)
+        clearPendingBankAuth()
+        throw new ReservationError(
+          'THREE_DS_REQUIRED',
+          t(props.locale, 'errorThreeDSRequiredTitle'),
+          t(props.locale, 'errorThreeDSRequiredDesc'),
+        )
+      }
+
+      await verifyPendingAuth(action, stripeStatus)
+      clearPendingBankAuth()
+      return
     }
 
-    await verifyPendingAuth(action)
+    await cleanupFailedPendingAuth(action, 'requires_action')
+    throw new ReservationError(
+      'THREE_DS_REQUIRED',
+      t(props.locale, 'errorThreeDSRequiredTitle'),
+      t(props.locale, 'errorThreeDSRequiredDesc'),
+    )
   }
 
   async function verifyPendingAuth(
     action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
+    stripePaymentStatus: string | null,
+  ) {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const response = await fetch('/api/guesty/reservation/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reservationId: action.reservationId,
+          paymentId: action.paymentId,
+          stripePaymentStatus,
+          preferredLanguage: props.locale,
+        }),
+      })
+
+      const body = (await response.json().catch(() => null)) as
+        | GuestyErrorBody
+        | ReservationApiResponse
+        | null
+
+      if (!response.ok) {
+        throwReservationApiError(body)
+      }
+
+      if (isReservationApiResponse(body) && body.phase === 'confirmed') return
+
+      if (isReservationApiResponse(body) && body.phase === 'processing') {
+        await wait(2000)
+        continue
+      }
+
+      break
+    }
+
+    throw new ReservationError(
+      'PAYMENT_FAILED',
+      t(props.locale, 'errorPaymentFailedTitle'),
+      t(props.locale, 'errorPaymentFailedDesc'),
+    )
+  }
+
+  async function cleanupFailedPendingAuth(
+    action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
+    stripePaymentStatus: string | null,
   ) {
     const response = await fetch('/api/guesty/reservation/verify', {
       method: 'POST',
@@ -302,26 +392,24 @@ function PaymentSection(props: PaymentSectionProps) {
       body: JSON.stringify({
         reservationId: action.reservationId,
         paymentId: action.paymentId,
+        stripePaymentStatus: stripePaymentStatus ?? 'requires_payment_method',
+        authOutcome: 'failed',
         preferredLanguage: props.locale,
       }),
     })
 
-    const body = (await response.json().catch(() => null)) as
-      | GuestyErrorBody
-      | ReservationApiResponse
-      | null
+    if (!response.ok) return
+  }
 
-    if (!response.ok) {
-      throwReservationApiError(body)
+  async function retrievePaymentIntentStatus(clientSecret: string): Promise<string | null> {
+    if (!stripe) return null
+
+    try {
+      const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret)
+      return paymentIntent?.status ?? null
+    } catch {
+      return null
     }
-
-    if (isReservationApiResponse(body) && body.phase === 'confirmed') return
-
-    throw new ReservationError(
-      'PAYMENT_FAILED',
-      t(props.locale, 'errorPaymentFailedTitle'),
-      t(props.locale, 'errorPaymentFailedDesc'),
-    )
   }
 
   function throwReservationApiError(body: GuestyErrorBody | ReservationApiResponse | null): never {
@@ -339,6 +427,10 @@ function PaymentSection(props: PaymentSectionProps) {
     body: GuestyErrorBody | ReservationApiResponse | null,
   ): body is ReservationApiResponse {
     return Boolean(body && 'phase' in body)
+  }
+
+  function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
   if (success) {
@@ -359,6 +451,16 @@ function PaymentSection(props: PaymentSectionProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentForm locale={props.locale} />
+
+      {formError ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-950"
+        >
+          <p className="font-semibold">{formError.title}</p>
+          <p className="mt-1 leading-relaxed">{formError.description}</p>
+        </div>
+      ) : null}
 
       <p className="border-divider bg-cream text-coffee rounded-lg border p-4 text-sm leading-relaxed">
         {t(props.locale, 'depositNotice')}
@@ -393,6 +495,15 @@ function isGuestValid(guest: GuestFormValues) {
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guest.email) &&
     guest.phone.trim().length > 0
   )
+}
+
+function buildBankAuthReturnUrl() {
+  const url = new URL('/book/payment-return', window.location.origin)
+  return url.toString()
+}
+
+function isStripeContinuableStatus(status: string | null): boolean {
+  return status === 'succeeded' || status === 'processing' || status === 'requires_capture'
 }
 
 const altoAppearance = {

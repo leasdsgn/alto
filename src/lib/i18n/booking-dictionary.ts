@@ -31,6 +31,9 @@ export const bookingDictionary = {
     policyTermsLink: 'conditions de réservation',
     submitInstant: 'Réserver et payer',
     paymentAuthenticating: 'Authentification bancaire en cours',
+    paymentProcessingTitle: 'Paiement en cours de confirmation',
+    paymentProcessingDesc:
+      'Votre banque a renvoyé la confirmation. Nous finalisons la réservation, cela peut prendre quelques instants.',
     bookingSuccess: 'Réservation confirmée',
     loading: 'Chargement',
     error: 'Une erreur est survenue',
@@ -47,6 +50,9 @@ export const bookingDictionary = {
     errorThreeDSRequiredTitle: 'Authentification bancaire requise',
     errorThreeDSRequiredDesc:
       'Votre banque demande une vérification supplémentaire qui n’a pas pu être finalisée. Réessayez ou utilisez une autre carte.',
+    errorPaymentReturnMissingTitle: 'Vérification interrompue',
+    errorPaymentReturnMissingDesc:
+      "Nous n'avons pas retrouvé la tentative de paiement. Revenez au formulaire et réessayez.",
     errorRateLimitedTitle: 'Service temporairement occupé',
     errorRateLimitedDesc: 'Merci de patienter quelques instants avant de réessayer.',
     errorValidationTitle: 'Informations invalides',
@@ -85,6 +91,9 @@ export const bookingDictionary = {
     policyTermsLink: 'booking terms',
     submitInstant: 'Book and pay',
     paymentAuthenticating: 'Bank authentication in progress',
+    paymentProcessingTitle: 'Payment confirmation in progress',
+    paymentProcessingDesc:
+      'Your bank returned the confirmation. We are finalising the booking, this can take a few moments.',
     bookingSuccess: 'Booking confirmed',
     loading: 'Loading',
     error: 'An error occurred',
@@ -100,6 +109,9 @@ export const bookingDictionary = {
     errorThreeDSRequiredTitle: 'Bank authentication required',
     errorThreeDSRequiredDesc:
       'Your bank requires an additional verification step that could not be completed. Please try again or use another card.',
+    errorPaymentReturnMissingTitle: 'Verification interrupted',
+    errorPaymentReturnMissingDesc:
+      'We could not find the payment attempt. Please return to the form and try again.',
     errorRateLimitedTitle: 'Service temporarily busy',
     errorRateLimitedDesc: 'Please wait a few moments before trying again.',
     errorValidationTitle: 'Invalid information',
