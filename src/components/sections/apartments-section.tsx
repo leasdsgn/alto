@@ -12,6 +12,8 @@ import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 
 const PRICE_LOOKAHEAD_DAYS = 180
+const STARTING_PRICE_REVALIDATE_SECONDS = 12 * 60 * 60
+const APARTMENT_STARTING_PRICES_CACHE_TAG = 'guesty-apartment-starting-prices'
 const LISTING_CARD_FIELDS = [
   '_id',
   'title',
@@ -127,7 +129,10 @@ const getCachedListingCalendarForPrice = unstable_cache(
   (listingId: string, from: string, to: string) =>
     guestyClient.getListingCalendar(listingId, from, to),
   ['guesty-listing-calendar-price'],
-  { revalidate: 43200 },
+  {
+    revalidate: STARTING_PRICE_REVALIDATE_SECONDS,
+    tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
+  },
 )
 
 const getCachedListings = unstable_cache(() => guestyClient.getListings(), ['guesty-listings'], {
@@ -138,6 +143,15 @@ const getCachedListingCards = unstable_cache(
   () => guestyClient.getListings({ fields: LISTING_CARD_FIELDS }),
   ['guesty-listing-cards'],
   { revalidate: 300 },
+)
+
+const getCachedApartmentCardSnapshot = unstable_cache(
+  loadApartmentCardSnapshot,
+  ['guesty-apartment-card-starting-price-snapshot'],
+  {
+    revalidate: STARTING_PRICE_REVALIDATE_SECONDS,
+    tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
+  },
 )
 
 const FALLBACK_APARTMENTS = [
@@ -361,6 +375,10 @@ async function getApartments(): Promise<Apartment[]> {
 }
 
 async function getApartmentCards(): Promise<ApartmentCardData[]> {
+  return getCachedApartmentCardSnapshot()
+}
+
+async function loadApartmentCardSnapshot(): Promise<ApartmentCardData[]> {
   try {
     const { results } = await getCachedListingCards()
     if (results.length > 0)
@@ -370,6 +388,17 @@ async function getApartmentCards(): Promise<ApartmentCardData[]> {
   }
 
   return FALLBACK_APARTMENTS.map(toApartmentCardData)
+}
+
+async function preloadApartmentStartingPrices() {
+  const apartments = await getApartmentCards()
+
+  return {
+    count: apartments.length,
+    pricedCount: apartments.filter((apartment) => isDisplayablePrice(apartment.price)).length,
+    startingPriceCount: apartments.filter((apartment) => apartment.priceSource === 'starting')
+      .length,
+  }
 }
 
 export interface SearchCriteria {
@@ -563,6 +592,10 @@ function isFallbackApartmentId(id: string) {
   return id.startsWith('fb-') || id.startsWith('ly-')
 }
 
+function isDisplayablePrice(value: number | null): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+}
+
 function getPriceCalendarWindow() {
   const fromDate = new Date()
   fromDate.setDate(fromDate.getDate() + 1)
@@ -580,7 +613,14 @@ function formatDateKey(date: Date) {
   return date.toISOString().slice(0, 10)
 }
 
-export { getApartments, getApartmentCards, getApartmentsForSearch, getApartmentSearchResult }
+export {
+  APARTMENT_STARTING_PRICES_CACHE_TAG,
+  getApartments,
+  getApartmentCards,
+  getApartmentsForSearch,
+  getApartmentSearchResult,
+  preloadApartmentStartingPrices,
+}
 
 export async function ApartmentsSection({
   apartments,

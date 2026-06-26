@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/reservation-emails",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/apartment-starting-prices",
+      "schedule": "0 */12 * * *"
     }
   ]
 }
