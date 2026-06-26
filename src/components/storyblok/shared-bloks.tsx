@@ -267,5 +267,21 @@ export function InvestStatsSectionBlok({ blok }: { blok: Blok }) {
   )
 }
 
+import { renderRichText } from '@/components/storyblok/rich-text'
+
+export function RichTextSectionBlok({ blok }: { blok: Blok }) {
+  const maxWidth = textOr(blok.max_width, 'prose') === 'prose' ? 'max-w-prose' : 'max-w-content'
+  const body = blok.body
+
+  return (
+    <section
+      {...editable(blok)}
+      className="max-w-content px-gutter md:px-gutter-md py-section md:py-section-md mx-auto"
+    >
+      <div className={`${maxWidth} mx-auto`}>{renderRichText(body)}</div>
+    </section>
+  )
+}
+
 // Re-export to expose unused imports to the linter for downstream wrappers
 export { useSharedAssetsGlobals }

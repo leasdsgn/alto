@@ -118,21 +118,14 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/cgv',
     realPath: '/cgv',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent(buildLegalDefaultBody('Conditions générales de vente')),
   },
   {
     name: 'Confidentialité',
     fullSlug: 'pages/confidentialite',
     realPath: '/confidentialite',
     parent: 'pages',
-    defaultContent: pageContent([]),
-  },
-  {
-    name: 'Annulation',
-    fullSlug: 'pages/annulation',
-    realPath: '/annulation',
-    parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent(buildLegalDefaultBody('Politique de confidentialité')),
   },
 ]
 
@@ -180,6 +173,35 @@ function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
     body,
     seo: [],
   }
+}
+
+function buildLegalDefaultBody(title: string) {
+  return [
+    blok('hero_compact_section', {
+      background_image: '',
+      eyebrow: 'Légal',
+      title,
+      body: '',
+      height: 'fixed-442',
+    }),
+    blok('rich_text_section', {
+      body: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: 'Contenu à remplir depuis Storyblok.',
+              },
+            ],
+          },
+        ],
+      },
+      max_width: 'prose',
+    }),
+  ]
 }
 
 function buildContactDefaultBody() {

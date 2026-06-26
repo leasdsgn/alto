@@ -25,6 +25,7 @@ import {
   FaqSectionBlok,
   InvestModelSectionBlok,
   InvestStatsSectionBlok,
+  RichTextSectionBlok,
   TextSectionBlok,
 } from '@/components/storyblok/shared-bloks'
 import { ContactFormSectionBlok } from '@/components/storyblok/contact-bloks'
@@ -59,6 +60,7 @@ export const getStoryblokApi = storyblokInit({
     invest_stats_section: InvestStatsSectionBlok,
     contact_form_section: ContactFormSectionBlok,
     blog_index_section: BlogIndexSectionBlok,
+    rich_text_section: RichTextSectionBlok,
   },
   apiOptions: {
     region: 'eu',
