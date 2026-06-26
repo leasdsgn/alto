@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Manrope } from 'next/font/google'
-import { Agentation } from 'agentation'
 import { Toaster } from 'sonner'
+import { DevelopmentAgentation } from '@/components/providers/development-agentation'
 import { I18nProvider } from '@/components/providers/i18n-provider'
 import { LocaleProvider } from '@/components/providers/locale-provider'
 import { StoryblokProvider } from '@/components/providers/storyblok-provider'
@@ -63,7 +63,7 @@ export default async function RootLayout({
               },
             }}
           />
-          {process.env.NODE_ENV === 'development' && <Agentation />}
+          <DevelopmentAgentation />
         </body>
       </html>
     </StoryblokProvider>
