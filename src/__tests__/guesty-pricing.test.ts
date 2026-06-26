@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  findFirstAvailableCalendarStay,
+  getCalendarMinimumNightlyPrice,
+  getDisplayNightlyPrice,
   getQuoteAccommodationCents,
   getQuoteAverageNightlyPrice,
   getQuoteTotalCents,
@@ -31,6 +34,40 @@ describe('guesty-pricing', () => {
     })
 
     expect(getQuoteAverageNightlyPrice(quote, 3)).toBe(130)
+  })
+
+  it('corrige les prix de base Guesty trop élevés sans augmenter un prix dès', () => {
+    expect(getDisplayNightlyPrice(1000, 134)).toBe(134)
+    expect(getDisplayNightlyPrice(250, 605)).toBe(250)
+  })
+
+  it('lit le prix minimum des nuits disponibles du calendrier', () => {
+    expect(
+      getCalendarMinimumNightlyPrice([
+        { date: '2027-01-13', status: 'booked', price: 120, minNights: 1, currency: 'EUR' },
+        { date: '2027-01-14', status: 'available', price: 177, minNights: 1, currency: 'EUR' },
+        { date: '2027-01-15', status: 'available', price: 190, minNights: 1, currency: 'EUR' },
+        { date: '2027-01-16', status: 'blocked', price: 80, minNights: 1, currency: 'EUR' },
+      ]),
+    ).toBe(177)
+  })
+
+  it('trouve la première période disponible réservable dans le calendrier', () => {
+    expect(
+      findFirstAvailableCalendarStay(
+        [
+          { date: '2027-01-13', status: 'booked', minNights: 1, currency: 'EUR' },
+          { date: '2027-01-14', status: 'available', minNights: 2, currency: 'EUR' },
+          { date: '2027-01-15', status: 'available', minNights: 1, currency: 'EUR' },
+          { date: '2027-01-16', status: 'booked', minNights: 1, currency: 'EUR' },
+        ],
+        1,
+      ),
+    ).toEqual({
+      checkIn: '2027-01-14',
+      checkOut: '2027-01-16',
+      nights: 2,
+    })
   })
 })
 
