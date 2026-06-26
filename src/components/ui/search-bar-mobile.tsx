@@ -43,7 +43,11 @@ const MOBILE_SEARCH_COPY = {
   },
 } as const
 
-export function SearchBarMobile() {
+export function SearchBarMobile({
+  calendarPlacement = 'bottom start',
+}: {
+  calendarPlacement?: 'bottom start' | 'top start' | 'bottom' | 'top'
+} = {}) {
   const router = useRouter()
   const locale = useLocale()
   const copy = MOBILE_SEARCH_COPY[locale]
@@ -85,7 +89,7 @@ export function SearchBarMobile() {
             className="w-auto"
           >
             <Label className="sr-only">{copy.city}</Label>
-            <HeroUISelect.Trigger className="bg-ash text-cream flex h-[44px] items-center gap-1.5 rounded-md px-5 text-xs font-bold tracking-[0.24px]">
+            <HeroUISelect.Trigger className="bg-coffee text-cream flex h-[44px] items-center gap-1.5 rounded-md px-5 text-xs font-bold tracking-[0.24px]">
               <HeroUISelect.Value>{({ selectedText }) => selectedText}</HeroUISelect.Value>
               <HeroUISelect.Indicator>
                 <ChevronIcon />
@@ -173,14 +177,18 @@ export function SearchBarMobile() {
             </DateField.Group>
           </div>
           <DateRangePicker.Popover
-            className="bg-cream border-divider rounded-lg border p-5 shadow-none"
-            placement="bottom start"
+            className="bg-cream border-divider w-[calc(100vw-2rem)] max-w-sm rounded-lg border p-5 shadow-none"
+            placement={calendarPlacement}
           >
-            <div className="relative" aria-busy={searchAvailability.isLoading}>
+            <div
+              className="relative mx-auto flex w-full justify-center"
+              aria-busy={searchAvailability.isLoading}
+            >
               <RangeCalendar
                 aria-label={copy.stayDates}
                 minValue={minDate}
                 isDateUnavailable={searchAvailability.isDateUnavailable}
+                className="mx-auto"
               >
                 <RangeCalendar.Header>
                   <RangeCalendar.Heading className="text-coffee text-sm font-bold" />
@@ -215,7 +223,10 @@ export function SearchBarMobile() {
         </DateRangePicker>
       </div>
 
-      <Button type="submit" className="h-[50px] w-full rounded-xl">
+      <Button
+        type="submit"
+        className="bg-coffee text-cream hover:bg-taupe h-[50px] w-full rounded-xl"
+      >
         {copy.search}
       </Button>
     </form>

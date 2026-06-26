@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useStickyCtaGlobals } from '@/components/providers/storyblok-globals-provider'
 import { SearchBar } from '@/components/ui/search-bar'
+import { SearchBarMobile } from '@/components/ui/search-bar-mobile'
 
 export function StickyCta() {
   const { enabled, thresholdVh } = useStickyCtaGlobals()
@@ -27,8 +28,13 @@ export function StickyCta() {
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
-      <div className="mx-auto w-full max-w-[900px] px-gutter py-4 md:px-gutter-md">
-        <SearchBar calendarPlacement="top start" />
+      <div className="mx-auto w-full max-w-[900px] px-4 py-3 md:px-gutter-md md:py-4">
+        <div className="md:hidden">
+          <SearchBarMobile calendarPlacement="top" />
+        </div>
+        <div className="hidden md:block">
+          <SearchBar calendarPlacement="top start" />
+        </div>
       </div>
     </div>
   )
