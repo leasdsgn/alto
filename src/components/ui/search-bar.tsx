@@ -8,8 +8,6 @@ import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import { useLocale } from '@/components/providers/locale-provider'
 import { useSearchStore } from '@/lib/stores/search'
-import { useSearchDateAvailability } from '@/lib/use-search-date-availability'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const CITIES = ['Paris', 'Lyon']
 const DATE_COPY = {
@@ -17,8 +15,6 @@ const DATE_COPY = {
     city: 'Ville',
     guests: 'Voyageurs',
     search: 'Rechercher',
-    availabilityLoading: 'Vérification des dates',
-    availabilityError: 'Disponibilités momentanément indisponibles',
     removeGuest: 'Retirer un voyageur',
     addGuest: 'Ajouter un voyageur',
     months: [
@@ -41,8 +37,6 @@ const DATE_COPY = {
     city: 'City',
     guests: 'Guests',
     search: 'Search',
-    availabilityLoading: 'Checking dates',
-    availabilityError: 'Availability temporarily unavailable',
     removeGuest: 'Remove one guest',
     addGuest: 'Add one guest',
     months: [
@@ -94,14 +88,6 @@ export function SearchBar({
   const [viewYear, setViewYear] = useState(dates.start.year)
   const [viewMonth, setViewMonth] = useState(dates.start.month)
   const calendarRef = useRef<HTMLDivElement>(null)
-  const searchAvailability = useSearchDateAvailability({
-    city,
-    guests,
-    dates,
-    viewYear,
-    viewMonth,
-    enabled: dateOpen,
-  })
 
   useEffect(() => {
     if (!dateOpen) return
@@ -118,7 +104,6 @@ export function SearchBar({
 
   function handleDayClick(date: CalendarDate) {
     if (date.compare(minDate) < 0) return
-    if (!selectingEnd && searchAvailability.isDateUnavailable(date)) return
     if (!selectingEnd) {
       setDates({ start: date, end: date })
       setSelectingEnd(true)
@@ -257,7 +242,7 @@ export function SearchBar({
                 ))}
               </div>
 
-              <div className="relative grid grid-cols-7" aria-busy={searchAvailability.isLoading}>
+              <div className="relative grid grid-cols-7">
                 {Array.from({ length: firstDay }).map((_, i) => (
                   <div key={`e${i}`} className="size-8" />
                 ))}
@@ -265,8 +250,7 @@ export function SearchBar({
                   const isStart = date.compare(dates.start) === 0
                   const isEnd = date.compare(effectiveEnd) === 0
                   const inRange = date.compare(dates.start) > 0 && date.compare(effectiveEnd) < 0
-                  const unavailable = searchAvailability.isDateUnavailable(date)
-                  const disabled = date.compare(minDate) < 0 || (!selectingEnd && unavailable)
+                  const disabled = date.compare(minDate) < 0
                   return (
                     <button
                       key={date.day}
@@ -290,16 +274,6 @@ export function SearchBar({
                   )
                 })}
               </div>
-              {searchAvailability.isLoading && (
-                <div className="mt-3">
-                  <LoadingSpinner label={copy.availabilityLoading} />
-                </div>
-              )}
-              {searchAvailability.hasError && (
-                <p className="text-taupe mt-3 text-[11px] font-bold tracking-[0.24px]">
-                  {copy.availabilityError}
-                </p>
-              )}
             </div>
           )}
         </div>

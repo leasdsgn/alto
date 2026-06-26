@@ -15,9 +15,7 @@ import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
 import { useLocale } from '@/components/providers/locale-provider'
 import { useSearchStore } from '@/lib/stores/search'
-import { useSearchDateAvailability } from '@/lib/use-search-date-availability'
 import { Button } from '@/components/ui/button'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const CITIES = ['Paris', 'Lyon']
 const MOBILE_SEARCH_COPY = {
@@ -25,7 +23,6 @@ const MOBILE_SEARCH_COPY = {
     city: 'Ville',
     stayDates: 'Dates du séjour',
     search: 'Rechercher',
-    availabilityLoading: 'Vérification des dates',
     guest: 'voyageur',
     guests: 'voyageurs',
     removeGuest: 'Retirer un voyageur',
@@ -35,7 +32,6 @@ const MOBILE_SEARCH_COPY = {
     city: 'City',
     stayDates: 'Stay dates',
     search: 'Search',
-    availabilityLoading: 'Checking dates',
     guest: 'guest',
     guests: 'guests',
     removeGuest: 'Remove one guest',
@@ -53,14 +49,6 @@ export function SearchBarMobile({
   const copy = MOBILE_SEARCH_COPY[locale]
   const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
   const [dateOpen, setDateOpen] = useState(false)
-  const searchAvailability = useSearchDateAvailability({
-    city,
-    guests,
-    dates,
-    viewYear: dates.start.year,
-    viewMonth: dates.start.month,
-    enabled: dateOpen,
-  })
 
   const minDate = today(getLocalTimeZone())
 
@@ -144,7 +132,6 @@ export function SearchBarMobile({
           isOpen={dateOpen}
           onOpenChange={setDateOpen}
           className="date-picker"
-          isDateUnavailable={searchAvailability.isDateUnavailable}
         >
           <Label className="sr-only">{copy.stayDates}</Label>
           <div className="cursor-pointer px-4 py-4" onClick={() => setDateOpen(true)}>
@@ -182,12 +169,10 @@ export function SearchBarMobile({
           >
             <div
               className="relative mx-auto flex w-full justify-center"
-              aria-busy={searchAvailability.isLoading}
             >
               <RangeCalendar
                 aria-label={copy.stayDates}
                 minValue={minDate}
-                isDateUnavailable={searchAvailability.isDateUnavailable}
                 className="mx-auto"
               >
                 <RangeCalendar.Header>
@@ -214,11 +199,6 @@ export function SearchBarMobile({
                 </RangeCalendar.Grid>
               </RangeCalendar>
             </div>
-            {searchAvailability.isLoading && (
-              <div className="mt-3">
-                <LoadingSpinner label={copy.availabilityLoading} />
-              </div>
-            )}
           </DateRangePicker.Popover>
         </DateRangePicker>
       </div>
