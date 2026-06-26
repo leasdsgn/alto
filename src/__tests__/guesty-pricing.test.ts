@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   findFirstAvailableCalendarStay,
   getCalendarMinimumNightlyPrice,
-  getDisplayNightlyPrice,
   getQuoteAccommodationCents,
   getQuoteAverageNightlyPrice,
   getQuoteTotalCents,
@@ -34,11 +33,6 @@ describe('guesty-pricing', () => {
     })
 
     expect(getQuoteAverageNightlyPrice(quote, 3)).toBe(130)
-  })
-
-  it('corrige les prix de base Guesty trop élevés sans augmenter un prix dès', () => {
-    expect(getDisplayNightlyPrice(1000, 134)).toBe(134)
-    expect(getDisplayNightlyPrice(250, 605)).toBe(250)
   })
 
   it('lit le prix minimum des nuits disponibles du calendrier', () => {

@@ -19,6 +19,7 @@ interface Props {
   globalFaq: StoryblokFaqItem[]
   globalTestimonials: StoryblokTestimonial[]
   locale: InquiryLocale
+  initialShouldVerifyQuote?: boolean
 }
 
 interface ReviewItem {
@@ -156,15 +157,18 @@ const FEATURE_LIBRARY_EN = [
 const FALLBACK_FEATURES_EN: FeatureItem[] = [
   {
     title: 'Easy arrival',
-    description: 'The booking and arrival flow is designed to stay simple, even for late check-ins.',
+    description:
+      'The booking and arrival flow is designed to stay simple, even for late check-ins.',
   },
   {
     title: 'Lively neighborhood',
-    description: 'The location keeps restaurants, transport, and points of interest within easy reach.',
+    description:
+      'The location keeps restaurants, transport, and points of interest within easy reach.',
   },
   {
     title: 'Independent stay',
-    description: 'You keep the privacy and freedom of an apartment, with the expected level of care.',
+    description:
+      'You keep the privacy and freedom of an apartment, with the expected level of care.',
   },
 ]
 
@@ -220,6 +224,7 @@ export function ApartmentView({
   globalFaq,
   globalTestimonials,
   locale,
+  initialShouldVerifyQuote = false,
 }: Props) {
   const copy = APARTMENT_COPY[locale]
   const cityName = getCityName(apartment)
@@ -238,6 +243,7 @@ export function ApartmentView({
   const description = apartment.description
   const space = apartment.space
   const transit = apartment.transit
+  const mobilePriceLabel = getMobilePriceLabel(apartment.price, locale, copy)
 
   return (
     <>
@@ -248,7 +254,7 @@ export function ApartmentView({
         style={{ background: 'var(--Floral-white, #FFFFF8)' }}
       >
         <section>
-          <h1 className="text-coffee text-h4 max-w-4xl font-bold sm:text-h3">{apartment.name}</h1>
+          <h1 className="text-coffee text-h4 sm:text-h3 max-w-4xl font-bold">{apartment.name}</h1>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
             <MetaStat icon={<GuestsIcon />} value={copy.guests(apartment.guests)} />
@@ -289,8 +295,8 @@ export function ApartmentView({
                   </div>
 
                   <div className="flex flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-3">
-                    <p className="text-coffee text-body-xl font-bold sm:text-h5">{cityName}</p>
-                    <p className="text-coffee text-body-xl font-bold sm:text-h5">
+                    <p className="text-coffee text-body-xl sm:text-h5 font-bold">{cityName}</p>
+                    <p className="text-coffee text-body-xl sm:text-h5 font-bold">
                       {neighborhoodName}
                     </p>
                   </div>
@@ -336,6 +342,7 @@ export function ApartmentView({
               capacity={apartment.guests}
               minNights={apartment.minNights}
               maxNights={apartment.maxNights}
+              initialShouldVerifyQuote={initialShouldVerifyQuote}
             />
           </aside>
         </div>
@@ -356,17 +363,34 @@ export function ApartmentView({
       <div className="bg-cream/95 border-divider fixed inset-x-0 bottom-0 z-40 border-t p-4 backdrop-blur-md lg:hidden">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <span className="text-coffee text-body-xl font-semibold">
-              {copy.from} {apartment.price.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-GB')}
-              &euro;
-            </span>
-            <span className="text-taupe text-body-sm"> {copy.perNight}</span>
+            <span className="text-coffee text-body-xl font-semibold">{mobilePriceLabel.title}</span>
+            {mobilePriceLabel.suffix && (
+              <span className="text-taupe text-body-sm"> {mobilePriceLabel.suffix}</span>
+            )}
           </div>
           <Button href={`/book/${apartment.slug}`}>{copy.book}</Button>
         </div>
       </div>
     </>
   )
+}
+
+function getMobilePriceLabel(
+  price: number | null,
+  locale: InquiryLocale,
+  copy: (typeof APARTMENT_COPY)[InquiryLocale],
+) {
+  if (typeof price === 'number' && Number.isFinite(price) && price > 0) {
+    return {
+      title: `${copy.from} ${price.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-GB')}€`,
+      suffix: copy.perNight,
+    }
+  }
+
+  return {
+    title: locale === 'en' ? 'Check availability' : 'Voir disponibilités',
+    suffix: null,
+  }
 }
 
 function pickReview(globalTestimonials: StoryblokTestimonial[]): ReviewItem {

@@ -209,6 +209,7 @@ function QuoteErrorView({
           <p className="text-taupe mt-3 text-sm">{description}</p>
           <Link
             href={`/appartements/${slug}`}
+            prefetch={false}
             className="bg-coffee text-cream hover:bg-coffee/90 mt-6 inline-block rounded-lg px-6 py-3 text-sm font-semibold transition-colors"
           >
             {backLabel}

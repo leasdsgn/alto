@@ -11,13 +11,7 @@ import {
   useSharedAssetsGlobals,
   useSharedTestimonialsGlobals,
 } from '@/components/providers/storyblok-globals-provider'
-import {
-  assetUrl,
-  bloksOf,
-  linkHref,
-  textOr,
-  type StoryblokLinkField,
-} from '@/lib/storyblok-asset'
+import { assetUrl, bloksOf, linkHref, textOr, type StoryblokLinkField } from '@/lib/storyblok-asset'
 import { PLACEHOLDER_IMAGE } from '@/lib/storyblok-defaults'
 import type { BlogArticle } from '@/lib/blog-data'
 
@@ -37,17 +31,13 @@ export function HeroSectionBlok({ blok }: { blok: Blok }) {
           textOr(blok.title_part_2, TITLE_DEFAULTS[1]),
           textOr(blok.title_part_3, TITLE_DEFAULTS[2]),
         ] as const)
-      : ([
-          textOr(blok.title, TITLE_DEFAULTS[0]),
-          TITLE_DEFAULTS[1],
-          TITLE_DEFAULTS[2],
-        ] as const)
+      : ([textOr(blok.title, TITLE_DEFAULTS[0]), TITLE_DEFAULTS[1], TITLE_DEFAULTS[2]] as const)
 
   return (
     <div {...editable(blok)}>
       <HeroSection
         backgroundImage={assetUrl(blok.background_image, PLACEHOLDER_IMAGE)}
-        overlayImage={assetUrl(blok.overlay_image, '/images/hero-overlay.png')}
+        overlayImage={assetUrl(blok.overlay_image, '/images/hero-overlay.webp')}
         titleParts={titleParts}
       />
     </div>
@@ -62,10 +52,7 @@ export function HomeAboutSectionBlok({ blok }: { blok: Blok }) {
         locationAvatars={sharedAssets.locationAvatars.map((avatar) => avatar.src)}
         travelerAvatars={sharedAssets.travelerAvatars.map((avatar) => avatar.src)}
         copy={{
-          kicker: textOr(
-            blok.kicker,
-            'Alto, c’est une nouvelle manière de penser l’hospitalité.',
-          ),
+          kicker: textOr(blok.kicker, 'Alto, c’est une nouvelle manière de penser l’hospitalité.'),
           quote: textOr(
             blok.quote,
             'Nous transformons des espaces singuliers en lieux de vie élégants, bien pensés et confortables. Notre mission : permettre aux voyageurs de vivre des séjours sans frictions aux plus belles adresses.',
@@ -97,15 +84,24 @@ export function PanelsSectionBlok({ blok }: { blok: Blok }) {
           panels: [
             {
               label: textOr(first?.label, 'Espaces'),
-              title: textOr(first?.title, 'Espaces de charme, singuliers, atypiques, et bien pensés.'),
+              title: textOr(
+                first?.title,
+                'Espaces de charme, singuliers, atypiques, et bien pensés.',
+              ),
             },
             {
               label: textOr(second?.label, 'Localisation'),
-              title: textOr(second?.title, 'Bonnes adresses. Au cœur de l’action ou loin des sentiers battus.'),
+              title: textOr(
+                second?.title,
+                'Bonnes adresses. Au cœur de l’action ou loin des sentiers battus.',
+              ),
             },
             {
               label: textOr(third?.label, 'Confort'),
-              title: textOr(third?.title, 'Standards hôteliers. Soin des détails, équipements modernes.'),
+              title: textOr(
+                third?.title,
+                'Standards hôteliers. Soin des détails, équipements modernes.',
+              ),
             },
           ],
         }}
@@ -215,20 +211,20 @@ export function HeroCompactSectionBlok({ blok }: { blok: Blok }) {
         backgroundPosition: 'center',
       }}
     >
-      <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-coffee/75 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-coffee/75 to-transparent" />
+      <div className="from-coffee/75 absolute inset-x-0 top-0 h-24 bg-gradient-to-b to-transparent" />
+      <div className="from-coffee/75 absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t to-transparent" />
       <div className="absolute inset-0 flex items-end">
-        <div className="mx-auto w-full max-w-content px-gutter pb-10 md:px-gutter-md">
+        <div className="max-w-content px-gutter md:px-gutter-md mx-auto w-full pb-10">
           {blok.eyebrow ? (
             <p className="text-cream/80 text-overline mb-2 font-bold tracking-[0.24px] uppercase">
               {textOr(blok.eyebrow, '')}
             </p>
           ) : null}
-          <h1 className="text-cream text-base font-bold leading-[18px]">
+          <h1 className="text-cream text-base leading-[18px] font-bold">
             {textOr(blok.title, '')}
           </h1>
           {blok.body ? (
-            <p className="text-cream/80 mt-3 max-w-[505px] text-xs font-medium leading-[20px]">
+            <p className="text-cream/80 mt-3 max-w-[505px] text-xs leading-[20px] font-medium">
               {textOr(blok.body, '')}
             </p>
           ) : null}

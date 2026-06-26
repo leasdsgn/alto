@@ -4,10 +4,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useLocale } from '@/components/providers/locale-provider'
 import { type InquiryLocale } from '@/types/inquiry'
+import { type ApartmentPriceSource } from '@/types/apartment'
 
 interface ApartmentCardProps {
   name: string
-  price: number
+  price: number | null
   guests: number
   surface: number
   bedrooms: number
@@ -15,7 +16,7 @@ interface ApartmentCardProps {
   image?: string
   city?: string
   neighborhood?: string
-  priceSource?: 'base' | 'quote'
+  priceSource?: ApartmentPriceSource
 }
 
 export function ApartmentCard({
@@ -28,7 +29,7 @@ export function ApartmentCard({
   image,
   city,
   neighborhood,
-  priceSource = 'base',
+  priceSource = 'starting',
 }: ApartmentCardProps) {
   const locale = useLocale()
   const copy = CARD_COPY[locale]
@@ -39,7 +40,7 @@ export function ApartmentCard({
   ]
 
   return (
-    <Link href={`/appartements/${slug}`} className="group block">
+    <Link href={`/appartements/${slug}`} prefetch={false} className="group block">
       <article className="flex flex-col gap-[9px]">
         <div className="relative h-60 w-full overflow-hidden rounded-lg md:h-[278px]">
           {image ? (
@@ -56,12 +57,8 @@ export function ApartmentCard({
 
           {(city || neighborhood) && (
             <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2 md:top-5 md:left-5 md:gap-[10px]">
-              {city && (
-                <LocationBadge>{city}</LocationBadge>
-              )}
-              {neighborhood && (
-                <LocationBadge>{neighborhood}</LocationBadge>
-              )}
+              {city && <LocationBadge>{city}</LocationBadge>}
+              {neighborhood && <LocationBadge>{neighborhood}</LocationBadge>}
             </div>
           )}
         </div>
@@ -90,8 +87,15 @@ export function ApartmentCard({
 
           <div className="flex flex-wrap items-center gap-x-[10px] gap-y-1">
             <span className="text-silver text-body leading-[1.5]">
-              {priceSource === 'quote' ? '' : `${copy.from} `}
-              {formatCurrency(price, locale)}{copy.perNight}
+              {isDisplayablePrice(price) ? (
+                <>
+                  {priceSource === 'quote' ? '' : `${copy.from} `}
+                  {formatCurrency(price, locale)}
+                  {copy.perNight}
+                </>
+              ) : (
+                copy.checkAvailability
+              )}
             </span>
           </div>
         </div>
@@ -104,10 +108,12 @@ const CARD_COPY = {
   fr: {
     from: 'Dès',
     perNight: '/nuit',
+    checkAvailability: 'Voir disponibilités',
   },
   en: {
     from: 'From',
     perNight: '/night',
+    checkAvailability: 'Check availability',
   },
 } as const
 
@@ -117,6 +123,10 @@ function formatCurrency(value: number, locale: InquiryLocale) {
     currency: 'EUR',
     maximumFractionDigits: 0,
   }).format(value)
+}
+
+function isDisplayablePrice(value: number | null): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
 }
 
 function LocationBadge({ children }: { children: React.ReactNode }) {

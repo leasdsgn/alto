@@ -53,6 +53,7 @@ interface ButtonAsLink extends CommonProps {
   isDisabled?: boolean
   target?: React.HTMLAttributeAnchorTarget
   rel?: string
+  prefetch?: boolean | null
 }
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink
@@ -70,7 +71,7 @@ export function Button(props: ButtonProps) {
   )
 
   if ('href' in props && props.href) {
-    const { href, target, rel, isDisabled } = props
+    const { href, target, rel, isDisabled, prefetch } = props
     if (isDisabled) {
       return (
         <span className={cls} aria-disabled="true">
@@ -79,7 +80,7 @@ export function Button(props: ButtonProps) {
       )
     }
     return (
-      <Link href={href} target={target} rel={rel} className={cls}>
+      <Link href={href} target={target} rel={rel} prefetch={prefetch ?? false} className={cls}>
         {content}
       </Link>
     )

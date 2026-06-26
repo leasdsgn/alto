@@ -536,6 +536,7 @@ export function QuartiersSection({ apartments = [] }: QuartiersSectionProps) {
                   </div>
                   <Link
                     href={`/appartements/${apt.slug}`}
+                    prefetch={false}
                     className="text-coffee text-caption font-bold underline underline-offset-2"
                     onClick={(e) => e.stopPropagation()}
                   >

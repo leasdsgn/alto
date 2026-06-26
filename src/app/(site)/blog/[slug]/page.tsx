@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { ArticleView } from '@/components/blog/article-view'
 import { Footer } from '@/components/layout/footer'
-import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
+import { ApartmentsSection, getApartmentCards } from '@/components/sections/apartments-section'
 import { getBlogEditorialMeta } from '@/lib/blog-page'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
@@ -10,7 +10,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
   const locale = getStaticServerLocale()
   const articles = await getBlogArticles(locale)
-  const apartments = await getApartments()
+  const apartments = await getApartmentCards()
   const article = articles.find((entry) => entry.slug === slug)
 
   if (!article) notFound()

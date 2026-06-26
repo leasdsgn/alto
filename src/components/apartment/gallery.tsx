@@ -12,13 +12,30 @@ const PLACEHOLDER_IMAGES = Array(5).fill(null)
 
 export function ApartmentGallery({ name, images }: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
-  const photos = (images ?? PLACEHOLDER_IMAGES).slice(0, 5)
+  const providedPhotos = (images ?? []).filter(Boolean)
+  const photos = (providedPhotos.length > 0 ? providedPhotos : PLACEHOLDER_IMAGES).slice(0, 5)
   const orderedIndexes = [
     activeIndex,
     ...photos.map((_, index) => index).filter((index) => index !== activeIndex),
   ]
   const mainIndex = orderedIndexes[0] ?? 0
   const thumbIndexes = orderedIndexes.slice(1, 5)
+
+  if (providedPhotos.length === 1) {
+    return (
+      <div className="relative aspect-[16/9] min-h-[320px] w-full overflow-hidden rounded-lg sm:min-h-[440px] lg:min-h-[560px]">
+        <Image
+          src={providedPhotos[0]!}
+          alt={name}
+          fill
+          sizes="(max-width: 1024px) 100vw, 1132px"
+          quality={85}
+          className="object-cover"
+          priority
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,2.05fr)_minmax(0,1fr)]">

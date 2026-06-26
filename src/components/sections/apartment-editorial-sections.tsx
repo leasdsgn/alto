@@ -47,7 +47,7 @@ export function ApartmentEditorialSections({ review = DEFAULT_REVIEW }: { review
           checkout: '/images/blog-3.jpg',
         }}
       />
-      <div className="mx-auto max-w-content px-gutter md:px-gutter-md">
+      <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
         <ApartmentTrustSection review={review} />
       </div>
     </section>
@@ -60,7 +60,7 @@ function ApartmentTrustSection({ review }: { review: Review }) {
       <div className="border-divider border-b pb-14">
         <p className="text-silver text-overline font-bold uppercase">Témoignages</p>
 
-        <blockquote className="text-coffee mt-10 max-w-[1192px] text-h4 font-bold leading-[1.3] tracking-[-0.72px] md:text-h2">
+        <blockquote className="text-coffee text-h4 md:text-h2 mt-10 max-w-[1192px] leading-[1.3] font-bold tracking-[-0.72px]">
           &ldquo;{review.quote}&rdquo;
         </blockquote>
 
@@ -96,24 +96,52 @@ function ApartmentTrustSection({ review }: { review: Review }) {
 
 function CheckInServiceIcon() {
   return (
-    <Image src="/images/icons/checkin.svg" alt="" width={50} height={50} aria-hidden="true" />
+    <Image
+      src="/images/icons/checkin.svg"
+      alt=""
+      width={50}
+      height={50}
+      style={{ height: 'auto' }}
+      aria-hidden="true"
+    />
   )
 }
 
 function CleaningServiceIcon() {
   return (
-    <Image src="/images/icons/cleaning.svg" alt="" width={38} height={47} aria-hidden="true" />
+    <Image
+      src="/images/icons/cleaning.svg"
+      alt=""
+      width={38}
+      height={47}
+      style={{ height: 'auto' }}
+      aria-hidden="true"
+    />
   )
 }
 
 function SupportServiceIcon() {
   return (
-    <Image src="/images/icons/support.svg" alt="" width={58} height={58} aria-hidden="true" />
+    <Image
+      src="/images/icons/support.svg"
+      alt=""
+      width={58}
+      height={58}
+      style={{ height: 'auto' }}
+      aria-hidden="true"
+    />
   )
 }
 
 function WalletServiceIcon() {
   return (
-    <Image src="/images/icons/wallet.svg" alt="" width={58} height={58} aria-hidden="true" />
+    <Image
+      src="/images/icons/wallet.svg"
+      alt=""
+      width={58}
+      height={58}
+      style={{ height: 'auto' }}
+      aria-hidden="true"
+    />
   )
 }

@@ -56,7 +56,7 @@ const SITE_IMAGE_FIELDS: SiteImageField[] = [
     source: 'local',
     field: 'footer_background',
     label: 'Global - Footer - Image de fond',
-    localPath: 'images/footer-gradient.jpg',
+    localPath: 'images/footer-gradient.webp',
   },
   {
     source: 'local',
@@ -68,7 +68,7 @@ const SITE_IMAGE_FIELDS: SiteImageField[] = [
     source: 'local',
     field: 'shared_location_avatar_2',
     label: 'Global - Avatars lieux - Image 2',
-    localPath: 'images/hero-home.jpg',
+    localPath: 'images/hero-home.webp',
   },
   {
     source: 'local',
@@ -98,13 +98,13 @@ const SITE_IMAGE_FIELDS: SiteImageField[] = [
     source: 'local',
     field: 'home_hero_background',
     label: 'Accueil - Hero - Image principale',
-    localPath: 'images/hero-room.png',
+    localPath: 'images/hero-room.webp',
   },
   {
     source: 'local',
     field: 'home_hero_overlay',
     label: 'Accueil - Hero - Image superposée',
-    localPath: 'images/hero-overlay.png',
+    localPath: 'images/hero-overlay.webp',
   },
   {
     source: 'local',

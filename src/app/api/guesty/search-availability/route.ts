@@ -17,6 +17,13 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
 const CACHE_TTL_SECONDS = 180
 const CACHE_HEADER = `s-maxage=${CACHE_TTL_SECONDS}, stale-while-revalidate=900`
 const MEMORY_CACHE_MAX_ENTRIES = 80
+const SEARCH_AVAILABILITY_LISTING_FIELDS = [
+  '_id',
+  'address.city',
+  'accommodates',
+  'minNights',
+  'maxNights',
+] as const
 
 interface SearchAvailabilityPayload {
   unavailableDates: string[]
@@ -100,7 +107,7 @@ async function resolveSearchAvailability({
   endDate: Date
   nights: number
 }): Promise<SearchAvailabilityPayload> {
-  const { results } = await guestyClient.getListings()
+  const { results } = await guestyClient.getListings({ fields: SEARCH_AVAILABILITY_LISTING_FIELDS })
   const listings = results.filter(
     (listing) => matchesCity(listing, city) && listing.accommodates >= guests,
   )

@@ -154,7 +154,7 @@ export const BLOG_ARTICLES_BY_LOCALE: Record<'fr' | 'en', BlogArticle[]> = {
       subtitle: 'L’adresse juste vaut souvent plus qu’un grand programme.',
       date: '26 mars 2026',
       category: 'Voyages',
-      image: '/images/hero-home.jpg',
+      image: '/images/hero-home.webp',
       section: 'voyage',
       sections: [
         {
@@ -291,7 +291,7 @@ export const BLOG_ARTICLES_BY_LOCALE: Record<'fr' | 'en', BlogArticle[]> = {
       subtitle: 'The right address often matters more than a long plan.',
       date: '26 March 2026',
       category: 'Travel',
-      image: '/images/hero-home.jpg',
+      image: '/images/hero-home.webp',
       section: 'voyage',
       sections: [
         {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { AboutView } from '@/components/about/about-view'
 import { Footer } from '@/components/layout/footer'
-import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
+import { ApartmentsSection, getApartmentCards } from '@/components/sections/apartments-section'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
@@ -29,7 +29,7 @@ export default async function NotreHistoirePage() {
     )
   }
 
-  const [siteImages, apartments] = await Promise.all([getSiteImages(locale), getApartments()])
+  const [siteImages, apartments] = await Promise.all([getSiteImages(locale), getApartmentCards()])
 
   return (
     <>

@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Map as MapboxMap } from 'mapbox-gl'
 import { useLocale } from '@/components/providers/locale-provider'
+import { type ApartmentPriceSource } from '@/types/apartment'
 
 interface Apartment {
   name: string
-  price: number
+  price: number | null
   slug: string
   image?: string
   lat?: number
@@ -14,7 +15,7 @@ interface Apartment {
   city?: string
   address?: string
   neighborhoodLabel?: string
-  priceSource?: 'base' | 'quote'
+  priceSource?: ApartmentPriceSource
 }
 
 export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
@@ -85,7 +86,11 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
           const markerElement = document.createElement('button')
           markerElement.type = 'button'
           markerElement.className = 'alto-results-pin'
-          markerElement.innerHTML = `<span class="alto-results-pin-inner">${getPricePrefix(apartment.priceSource, copy.fromShort)}${Math.round(apartment.price)}€</span>`
+
+          const markerLabel = document.createElement('span')
+          markerLabel.className = 'alto-results-pin-inner'
+          markerLabel.textContent = getPinLabel(apartment, copy)
+          markerElement.appendChild(markerLabel)
 
           const popupCard = document.createElement('a')
           popupCard.href = `/appartements/${apartment.slug}`
@@ -116,7 +121,7 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
 
           const price = document.createElement('p')
           price.className = 'alto-results-popup-price'
-          price.textContent = `${getPricePrefix(apartment.priceSource, copy.from)}${Math.round(apartment.price)}€${copy.perNight}`
+          price.textContent = getPriceLabel(apartment, copy)
 
           heading.append(name, price)
 
@@ -127,8 +132,7 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
 
           const cta = document.createElement('div')
           cta.className = 'alto-results-popup-cta'
-          cta.innerHTML =
-            `<span>${copy.viewApartment}</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6h7M6.5 3l3 3-3 3"/></svg>`
+          cta.innerHTML = `<span>${copy.viewApartment}</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6h7M6.5 3l3 3-3 3"/></svg>`
 
           body.append(heading, meta, cta)
           popupCard.appendChild(body)
@@ -144,9 +148,11 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
           const handlePopupOpen = () => {
             const inner = markerElement.querySelector('.alto-results-pin-inner')
             inner?.classList.add('alto-results-pin-active')
-            document.querySelectorAll('.alto-results-pin-inner.alto-results-pin-active').forEach((other) => {
-              if (other !== inner) other.classList.remove('alto-results-pin-active')
-            })
+            document
+              .querySelectorAll('.alto-results-pin-inner.alto-results-pin-active')
+              .forEach((other) => {
+                if (other !== inner) other.classList.remove('alto-results-pin-active')
+              })
           }
 
           const handlePopupClose = () => {
@@ -168,7 +174,11 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
             .addTo(map)
 
           const handleMarkerClick = () => {
-            map.flyTo({ center: [apartment.lng as number, apartment.lat as number], zoom: 15, duration: 650 })
+            map.flyTo({
+              center: [apartment.lng as number, apartment.lat as number],
+              zoom: 15,
+              duration: 650,
+            })
           }
 
           markerElement.addEventListener('click', handleMarkerClick)
@@ -200,7 +210,7 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
       mapRef.current = null
       setIsLoaded(false)
     }
-  }, [copy.discover, copy.from, copy.fromShort, copy.perNight, copy.viewApartment, mappableApartments])
+  }, [copy, mappableApartments])
 
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
     return <MapPlaceholder message={copy.unavailable} />
@@ -211,7 +221,7 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
   }
 
   return (
-    <div className="relative h-results-panel overflow-hidden rounded-xl border border-divider bg-sand/40">
+    <div className="h-results-panel border-divider bg-sand/40 relative overflow-hidden rounded-xl border">
       <style>{`
         .alto-results-pin {
           background: transparent;
@@ -335,9 +345,7 @@ export function AppartementsMap({ apartments }: { apartments: Apartment[] }) {
 
       {!isLoaded ? (
         <div className="bg-sand/70 absolute inset-0 flex items-center justify-center backdrop-blur-sm">
-          <p className="text-taupe text-xs font-bold uppercase tracking-[0.24px]">
-            {copy.loading}
-          </p>
+          <p className="text-taupe text-xs font-bold tracking-[0.24px] uppercase">{copy.loading}</p>
         </div>
       ) : null}
     </div>
@@ -349,6 +357,8 @@ const MAP_COPY = {
     from: 'Dès',
     fromShort: 'Dès',
     perNight: '/nuit',
+    checkAvailability: 'Voir disponibilités',
+    checkAvailabilityShort: 'Voir',
     discover: 'Découvrir',
     viewApartment: 'Voir l’appartement',
     unavailable: 'La carte n’est pas disponible pour le moment.',
@@ -359,6 +369,8 @@ const MAP_COPY = {
     from: 'From',
     fromShort: 'From',
     perNight: '/night',
+    checkAvailability: 'Check availability',
+    checkAvailabilityShort: 'View',
     discover: 'Discover',
     viewApartment: 'View apartment',
     unavailable: 'The map is not available right now.',
@@ -367,8 +379,22 @@ const MAP_COPY = {
   },
 } as const
 
-function getPricePrefix(priceSource: Apartment['priceSource'], from: string) {
+function getPinLabel(apartment: Apartment, copy: (typeof MAP_COPY)[keyof typeof MAP_COPY]) {
+  if (!isDisplayablePrice(apartment.price)) return copy.checkAvailabilityShort
+  return `${getPricePrefix(apartment.priceSource, copy.fromShort)}${Math.round(apartment.price)}€`
+}
+
+function getPriceLabel(apartment: Apartment, copy: (typeof MAP_COPY)[keyof typeof MAP_COPY]) {
+  if (!isDisplayablePrice(apartment.price)) return copy.checkAvailability
+  return `${getPricePrefix(apartment.priceSource, copy.from)}${Math.round(apartment.price)}€${copy.perNight}`
+}
+
+function getPricePrefix(priceSource: ApartmentPriceSource | undefined, from: string) {
   return priceSource === 'quote' ? '' : `${from} `
+}
+
+function isDisplayablePrice(value: number | null): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
 }
 
 function getMapCenter(apartments: Array<{ lat?: number; lng?: number }>): [number, number] {
@@ -396,8 +422,8 @@ function hasCoordinates(apartment: {
 
 function MapPlaceholder({ message }: { message: string }) {
   return (
-    <div className="flex h-[420px] items-center justify-center rounded-xl border border-divider bg-sand/40 p-8 text-center md:h-[520px]">
-      <p className="text-taupe text-xs font-bold uppercase tracking-[0.24px]">{message}</p>
+    <div className="border-divider bg-sand/40 flex h-[420px] items-center justify-center rounded-xl border p-8 text-center md:h-[520px]">
+      <p className="text-taupe text-xs font-bold tracking-[0.24px] uppercase">{message}</p>
     </div>
   )
 }

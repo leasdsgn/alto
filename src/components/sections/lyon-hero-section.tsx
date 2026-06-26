@@ -64,15 +64,15 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
       {/* Header */}
       <header className="relative z-20 flex items-center justify-between px-6 pt-6 md:px-12">
         <nav className="flex items-center gap-6">
-          <Link href="/appartements?city=paris" className="text-cream text-xs font-bold">
+          <Link href="/appartements?city=paris" prefetch={false} className="text-cream text-xs font-bold">
             Paris
           </Link>
-          <Link href="/lyon" className="text-cream text-xs font-bold">
+          <Link href="/lyon" prefetch={false} className="text-cream text-xs font-bold">
             Lyon
           </Link>
         </nav>
 
-        <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+        <Link href="/" prefetch={false} className="absolute left-1/2 -translate-x-1/2">
           <Image
             src="/images/logo-alto-light.png"
             alt="Alto"
@@ -84,7 +84,7 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
         </Link>
 
         <div className="flex items-center gap-4">
-          <Link href="/notre-histoire" className="text-cream hidden text-xs font-bold md:block">
+          <Link href="/notre-histoire" prefetch={false} className="text-cream hidden text-xs font-bold md:block">
             Notre histoire
           </Link>
           <Link

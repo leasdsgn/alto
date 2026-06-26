@@ -13,8 +13,8 @@ export function SearchParamsSync() {
 
   useEffect(() => {
     const city = params.get('city')
-    const checkIn = params.get('checkIn')
-    const checkOut = params.get('checkOut')
+    const checkIn = params.get('checkIn') ?? params.get('check_in')
+    const checkOut = params.get('checkOut') ?? params.get('check_out')
     const guests = params.get('guests')
 
     if (city) setCity(capitalize(city))

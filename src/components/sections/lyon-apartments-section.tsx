@@ -72,7 +72,9 @@ export function LyonApartmentsSection({ apartments }: LyonApartmentsSectionProps
                 <h3 className="text-coffee text-base font-bold">{apt.name}</h3>
                 <p className="text-coffee text-xs font-medium">{getLocationLabel(apt)}</p>
               </div>
-              <p className="text-silver text-xs font-bold uppercase">Dès {apt.price}€/nuit</p>
+              <p className="text-silver text-xs font-bold uppercase">
+                {isDisplayablePrice(apt.price) ? `Dès ${apt.price}€/nuit` : 'Voir disponibilités'}
+              </p>
             </div>
 
             <div className="text-ash mt-2 flex items-center gap-4 text-xs font-extrabold">
@@ -94,6 +96,7 @@ export function LyonApartmentsSection({ apartments }: LyonApartmentsSectionProps
 
             <Link
               href={`/appartements/${apt.slug}`}
+              prefetch={false}
               className="bg-coffee text-cream mt-4 inline-flex w-full items-center justify-center rounded-sm px-6 py-2.5 text-xs font-normal md:w-auto"
             >
               Voir
@@ -120,4 +123,8 @@ function getSecondaryMetric(apartment: LyonApartment) {
   if (apartment.bedrooms > 0) return `${apartment.bedrooms} ch.`
   if (apartment.bathrooms > 0) return `${apartment.bathrooms} sdb`
   return 'Alto'
+}
+
+function isDisplayablePrice(value: number | null): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
 }

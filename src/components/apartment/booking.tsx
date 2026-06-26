@@ -14,12 +14,13 @@ import { getQuoteAccommodationCents, getQuoteTotalCents } from '@/lib/guesty-pri
 import type { GuestyCalendarDay, GuestyQuote } from '@/types/guesty'
 
 interface BookingProps {
-  price: number
+  price: number | null
   slug: string
   listingId?: string
   capacity?: number
   minNights?: number
   maxNights?: number
+  initialShouldVerifyQuote?: boolean
 }
 
 type AvailabilityStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -38,6 +39,7 @@ export function ApartmentBooking({
   capacity,
   minNights,
   maxNights,
+  initialShouldVerifyQuote = false,
 }: BookingProps) {
   const locale = useLocale()
   const { dates, guests, setDates, setGuests } = useSearchStore()
@@ -52,8 +54,12 @@ export function ApartmentBooking({
   const [quoteStatus, setQuoteStatus] = useState<QuoteStatus>('idle')
   const [quoteBreakdown, setQuoteBreakdown] = useState<QuoteBreakdown | null>(null)
   const [verifiedQuoteKey, setVerifiedQuoteKey] = useState<string | null>(null)
+  const [shouldVerifyQuote, setShouldVerifyQuote] = useState(initialShouldVerifyQuote)
   const nights = dates.end.compare(dates.start)
-  const fallbackTotal = useMemo(() => price * Math.max(nights, 0), [nights, price])
+  const fallbackTotal = useMemo(() => {
+    if (!isDisplayablePrice(price)) return null
+    return price * Math.max(nights, 0)
+  }, [nights, price])
   const minDate = today(getLocalTimeZone())
   const minDateKey = minDate.toString()
   const availabilityEnd = getAvailabilityEnd(minDate, dates.end)
@@ -67,6 +73,7 @@ export function ApartmentBooking({
   const hasVerifiedQuote =
     !listingId || (quoteStatus === 'ready' && verifiedQuoteKey === quoteRequestKey)
   const canReserve =
+    shouldVerifyQuote &&
     (!listingId || availabilityStatus === 'ready') &&
     hasVerifiedQuote &&
     nights > 0 &&
@@ -84,13 +91,16 @@ export function ApartmentBooking({
     maxNights,
     capacity,
     quoteStatus,
+    shouldVerifyQuote,
   })
   const priceLabel = getPriceLabel({
+    fallbackPrice: price,
     fallbackTotal,
     quoteBreakdown,
     quoteStatus,
     locale,
     canShowFallbackPrice: canReserve || availabilityStatus !== 'ready',
+    shouldVerifyQuote,
   })
   const nightlyLabel = getNightlyLabel({
     fallbackPrice: price,
@@ -99,6 +109,7 @@ export function ApartmentBooking({
     quoteStatus,
     locale,
     canShowFallbackPrice: canReserve || availabilityStatus !== 'ready',
+    shouldVerifyQuote,
   })
 
   useEffect(() => {
@@ -172,12 +183,14 @@ export function ApartmentBooking({
     if (!value) return
     if (rangeHasUnavailableNight(value.start, value.end, unavailableDates)) return
 
+    setShouldVerifyQuote(true)
     setDates({ start: value.start, end: value.end })
   }
 
   useEffect(() => {
     if (
       !listingId ||
+      !shouldVerifyQuote ||
       availabilityStatus !== 'ready' ||
       nights <= 0 ||
       hasUnavailableSelection ||
@@ -236,6 +249,7 @@ export function ApartmentBooking({
     return () => controller.abort()
   }, [
     listingId,
+    shouldVerifyQuote,
     availabilityStatus,
     nights,
     hasUnavailableSelection,
@@ -430,20 +444,34 @@ function formatPrice(value: number) {
 }
 
 function getPriceLabel({
+  fallbackPrice,
   fallbackTotal,
   quoteBreakdown,
   quoteStatus,
   locale,
   canShowFallbackPrice,
+  shouldVerifyQuote,
 }: {
-  fallbackTotal: number
+  fallbackPrice: number | null
+  fallbackTotal: number | null
   quoteBreakdown: QuoteBreakdown | null
   quoteStatus: QuoteStatus
   locale: 'fr' | 'en'
   canShowFallbackPrice: boolean
+  shouldVerifyQuote: boolean
 }) {
   if (quoteStatus === 'loading') {
     return locale === 'en' ? 'Calculating total...' : 'Calcul du total...'
+  }
+
+  if (!shouldVerifyQuote) {
+    if (isDisplayablePrice(fallbackPrice)) {
+      return locale === 'en'
+        ? `From ${formatPrice(fallbackPrice)}€ / night`
+        : `Dès ${formatPrice(fallbackPrice)}€ / nuit`
+    }
+
+    return locale === 'en' ? 'Check availability' : 'Voir disponibilités'
   }
 
   if (!canShowFallbackPrice) {
@@ -455,9 +483,13 @@ function getPriceLabel({
     return locale === 'en' ? `${total} total` : `${total} au total`
   }
 
-  return locale === 'en'
-    ? `${formatPrice(fallbackTotal)}€ total`
-    : `${formatPrice(fallbackTotal)}€ au total`
+  if (fallbackTotal) {
+    return locale === 'en'
+      ? `${formatPrice(fallbackTotal)}€ total`
+      : `${formatPrice(fallbackTotal)}€ au total`
+  }
+
+  return locale === 'en' ? 'Price after dates' : 'Prix après sélection'
 }
 
 function getNightlyLabel({
@@ -467,14 +499,17 @@ function getNightlyLabel({
   quoteStatus,
   locale,
   canShowFallbackPrice,
+  shouldVerifyQuote,
 }: {
-  fallbackPrice: number
+  fallbackPrice: number | null
   nights: number
   quoteBreakdown: QuoteBreakdown | null
   quoteStatus: QuoteStatus
   locale: 'fr' | 'en'
   canShowFallbackPrice: boolean
+  shouldVerifyQuote: boolean
 }) {
+  if (!shouldVerifyQuote) return null
   if (!canShowFallbackPrice || nights <= 0 || quoteStatus === 'loading') return null
 
   if (quoteBreakdown) {
@@ -484,9 +519,15 @@ function getNightlyLabel({
     return locale === 'en' ? `${averageNight} / night` : `${averageNight} / nuit`
   }
 
+  if (!isDisplayablePrice(fallbackPrice)) return null
+
   return locale === 'en'
     ? `${formatPrice(fallbackPrice)}€ / night`
     : `${formatPrice(fallbackPrice)}€ / nuit`
+}
+
+function isDisplayablePrice(value: number | null): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
 }
 
 function getQuoteBreakdown(quote: GuestyQuote): QuoteBreakdown | null {
@@ -558,6 +599,7 @@ function getAvailabilityMessage({
   maxNights,
   capacity,
   quoteStatus,
+  shouldVerifyQuote,
 }: {
   status: AvailabilityStatus
   hasUnavailableSelection: boolean
@@ -568,6 +610,7 @@ function getAvailabilityMessage({
   maxNights?: number
   capacity?: number
   quoteStatus: QuoteStatus
+  shouldVerifyQuote: boolean
 }) {
   if (status === 'loading') return 'Vérification des disponibilités en cours.'
   if (status === 'error') return 'Les disponibilités ne peuvent pas être vérifiées pour le moment.'
@@ -582,6 +625,7 @@ function getAvailabilityMessage({
   if (isAboveCapacity && capacity) {
     return `Cet appartement accueille jusqu’à ${capacity} voyageur${capacity > 1 ? 's' : ''}.`
   }
+  if (!shouldVerifyQuote) return 'Choisissez vos dates pour vérifier le tarif exact.'
   if (quoteStatus === 'loading') return 'Vérification du tarif et des disponibilités.'
   if (quoteStatus === 'error') {
     return 'Ces dates ne sont pas disponibles pour cet appartement. Choisissez une autre période.'

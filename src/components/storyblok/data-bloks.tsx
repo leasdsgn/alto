@@ -1,7 +1,7 @@
 import { storyblokEditable } from '@storyblok/react/rsc'
 import {
   ApartmentsSection,
-  getApartments,
+  getApartmentCards,
   getApartmentsForSearch,
 } from '@/components/sections/apartments-section'
 import { LyonApartmentsSection } from '@/components/sections/lyon-apartments-section'
@@ -30,7 +30,7 @@ export async function ApartmentsGridSectionBlok({ blok }: { blok: Blok }) {
     )
   }
 
-  const apartments = await getApartments()
+  const apartments = await getApartmentCards()
   const filtered =
     cityFilter === 'all'
       ? apartments

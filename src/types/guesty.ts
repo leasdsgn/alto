@@ -33,6 +33,7 @@ export interface GuestyListing {
     basePrice: number
     currency: string
   }
+  totalPrice?: number
   minNights: number
   maxNights: number
 }

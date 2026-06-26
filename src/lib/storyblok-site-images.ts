@@ -65,9 +65,9 @@ export interface SiteImages {
 const STORYBLOK_STORY_SLUGS = ['globals/site-images', 'site-images'] as const
 
 const DEFAULT_SITE_IMAGES: SiteImages = {
-  footerBackground: '/images/footer-gradient.jpg',
+  footerBackground: '/images/footer-gradient.webp',
   shared: {
-    locationAvatars: ['/images/blog-1.jpg', '/images/hero-home.jpg', '/images/blog-3.jpg'],
+    locationAvatars: ['/images/blog-1.jpg', '/images/hero-home.webp', '/images/blog-3.jpg'],
     travelerAvatars: [
       '/images/avatars/voyageur-1.png',
       '/images/avatars/voyageur-2.png',
@@ -75,8 +75,8 @@ const DEFAULT_SITE_IMAGES: SiteImages = {
     ],
   },
   home: {
-    heroBackground: '/images/hero-room.png',
-    heroOverlay: '/images/hero-overlay.png',
+    heroBackground: '/images/hero-room.webp',
+    heroOverlay: '/images/hero-overlay.webp',
     experience: {
       arrival: '/images/experience-espaces.png',
       checkin: '/images/experience-localisation.png',

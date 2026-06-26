@@ -11,11 +11,12 @@ import { SearchBar } from '@/components/ui/search-bar'
 import { SearchBarMobile } from '@/components/ui/search-bar-mobile'
 import { useLocale } from '@/components/providers/locale-provider'
 import { type InquiryLocale } from '@/types/inquiry'
+import { type ApartmentPriceSource } from '@/types/apartment'
 
 interface Apartment {
   id: string
   name: string
-  price: number
+  price: number | null
   guests: number
   surface: number
   bedrooms: number
@@ -26,7 +27,7 @@ interface Apartment {
   lng?: number
   address?: string
   neighborhoodLabel?: string
-  priceSource?: 'base' | 'quote'
+  priceSource?: ApartmentPriceSource
 }
 
 export function AppartementsGrid({
@@ -290,7 +291,7 @@ function MapApartmentResult({
   ]
 
   return (
-    <Link href={`/appartements/${apartment.slug}`} className="group block">
+    <Link href={`/appartements/${apartment.slug}`} prefetch={false} className="group block">
       <article className="bg-taupe/10 rounded-result-card hover:bg-taupe/15 grid min-h-[154px] grid-cols-[90px_minmax(0,1fr)] gap-x-3 gap-y-3 overflow-hidden p-3 transition-colors">
         <div className="bg-sand rounded-result-card relative size-[90px] overflow-hidden">
           {image ? (
@@ -334,9 +335,15 @@ function MapApartmentResult({
 
         <div className="flex min-w-0 items-center justify-end gap-3">
           <span className="text-silver text-body whitespace-nowrap">
-            {apartment.priceSource === 'quote' ? '' : `${copy.from} `}
-            {formatCurrency(Math.round(apartment.price), locale)}
-            {copy.perNight}
+            {isDisplayablePrice(apartment.price) ? (
+              <>
+                {apartment.priceSource === 'quote' ? '' : `${copy.from} `}
+                {formatCurrency(Math.round(apartment.price), locale)}
+                {copy.perNight}
+              </>
+            ) : (
+              copy.checkAvailability
+            )}
           </span>
         </div>
       </article>
@@ -358,6 +365,7 @@ const APARTMENTS_GRID_COPY = {
       'La recherche datée n’a pas pu être vérifiée. Merci de réessayer dans un instant.',
     from: 'Dès',
     perNight: '/nuit',
+    checkAvailability: 'Voir disponibilités',
   },
   en: {
     all: 'All',
@@ -371,6 +379,7 @@ const APARTMENTS_GRID_COPY = {
     availabilityErrorBody: 'The dated search could not be verified. Please try again in a moment.',
     from: 'From',
     perNight: '/night',
+    checkAvailability: 'Check availability',
   },
 } as const
 
@@ -380,6 +389,10 @@ function formatCurrency(value: number, locale: InquiryLocale) {
     currency: 'EUR',
     maximumFractionDigits: 0,
   }).format(value)
+}
+
+function isDisplayablePrice(value: number | null): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
 }
 
 function StarIcon() {

@@ -27,6 +27,15 @@ const TOKEN_LOCK_WAIT_MS = 5 * 1000
 const TOKEN_LOCK_POLL_MS = 200
 const TOKEN_LOCK_ATTEMPTS = 3
 
+export interface GuestyListingsQuery {
+  fields?: readonly string[]
+  checkIn?: string
+  checkOut?: string
+  guests?: number
+  limit?: number
+  cursor?: string
+}
+
 const memoryCache = globalThis as unknown as {
   __guestyToken?: string
   __guestyTokenExpiresAt?: number
@@ -201,6 +210,20 @@ function getRetryAfterMs(response: Response) {
   return RATE_LIMIT_COOLDOWN_MS
 }
 
+function buildListingsPath(query: GuestyListingsQuery = {}) {
+  const params = new URLSearchParams()
+
+  if (query.fields?.length) params.set('fields', query.fields.join(' '))
+  if (query.checkIn) params.set('checkIn', query.checkIn)
+  if (query.checkOut) params.set('checkOut', query.checkOut)
+  if (query.guests) params.set('minOccupancy', String(query.guests))
+  if (query.limit) params.set('limit', String(query.limit))
+  if (query.cursor) params.set('cursor', query.cursor)
+
+  const queryString = params.toString()
+  return queryString ? `/listings?${queryString}` : '/listings'
+}
+
 async function guestyFetch<T>(
   path: string,
   options: RequestInit & { revalidate?: number } = {},
@@ -259,9 +282,9 @@ async function mock<K extends keyof GuestyMock>(method: K): Promise<GuestyMock[K
 }
 
 export const guestyClient = {
-  getListings() {
+  getListings(query?: GuestyListingsQuery) {
     if (USE_MOCK) return mock('getListings').then((fn) => fn())
-    return guestyFetch<{ results: GuestyListing[] }>('/listings', { revalidate: 300 })
+    return guestyFetch<{ results: GuestyListing[] }>(buildListingsPath(query), { revalidate: 300 })
   },
 
   getListing(listingId: string) {
@@ -277,11 +300,17 @@ export const guestyClient = {
     )
   },
 
-  getAvailableListings(checkIn: string, checkOut: string, guests?: number) {
+  getAvailableListings(
+    checkIn: string,
+    checkOut: string,
+    guests?: number,
+    options: Pick<GuestyListingsQuery, 'fields'> = {},
+  ) {
     if (USE_MOCK) return mock('getAvailableListings').then((fn) => fn(checkIn, checkOut, guests))
-    const params = new URLSearchParams({ checkIn, checkOut })
-    if (guests) params.set('minOccupancy', String(guests))
-    return guestyFetch<{ results: GuestyListing[] }>(`/listings?${params}`, { revalidate: 60 })
+    return guestyFetch<{ results: GuestyListing[] }>(
+      buildListingsPath({ checkIn, checkOut, guests, fields: options.fields }),
+      { revalidate: 60 },
+    )
   },
 
   createQuote(listingId: string, checkIn: string, checkOut: string, guestsCount: number) {

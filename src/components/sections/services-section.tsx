@@ -52,7 +52,7 @@ export function ServicesSection({ services: servicesOverride }: ServicesSectionP
           {services.map(({ title, description, icon }) => (
             <div key={title} className="bg-ash/10 flex flex-col gap-6 rounded-lg p-8">
               <div className="flex size-10 items-center justify-center">
-                <Image src={icon} alt="" width={40} height={40} />
+                <Image src={icon} alt="" width={40} height={40} style={{ height: 'auto' }} />
               </div>
               <div>
                 <h3 className="text-coffee text-body-xl font-semibold">{title}</h3>

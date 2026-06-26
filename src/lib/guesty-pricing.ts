@@ -29,13 +29,6 @@ export function getQuoteAverageNightlyPrice(quote: GuestyQuote, nights: number):
   return Math.round(accommodationCents / 100 / nights)
 }
 
-export function getDisplayNightlyPrice(basePrice: number, quoteNightlyPrice: number): number {
-  if (!Number.isFinite(basePrice) || basePrice <= 0) return quoteNightlyPrice
-  if (!Number.isFinite(quoteNightlyPrice) || quoteNightlyPrice <= 0) return basePrice
-
-  return Math.min(basePrice, quoteNightlyPrice)
-}
-
 export function getCalendarMinimumNightlyPrice(days: GuestyCalendarDay[]): number | null {
   const prices = days
     .filter((day) => day.status === 'available')

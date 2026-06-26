@@ -102,6 +102,7 @@ export function CtaSectionBlok({ blok }: { blok: Blok }) {
               <Link
                 key={`${cta.label}-${index}`}
                 href={linkHref(cta.link as StoryblokLinkField, '/')}
+                prefetch={false}
                 className="bg-coffee text-cream inline-flex h-12 items-center rounded-full px-8 text-sm font-medium transition-opacity hover:opacity-85"
               >
                 {textOr(cta.label, 'En savoir plus')}
@@ -546,6 +547,7 @@ function CmsCtaLink({ cta }: { cta: { label?: unknown; link?: unknown; variant?:
   return (
     <Link
       href={href}
+      prefetch={false}
       target={target}
       rel={target === '_blank' ? 'noopener noreferrer' : undefined}
       className={`${classes} inline-flex h-12 items-center rounded-full px-7 text-sm font-medium transition`}

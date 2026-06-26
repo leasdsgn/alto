@@ -57,7 +57,7 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
     <>
       <header className={`${positionClass} py-5 lg:py-6`} style={apartmentBackgroundStyle}>
         <div className="max-w-content px-gutter md:px-gutter-md mx-auto flex items-center justify-between gap-6">
-          <Link href="/" className="shrink-0">
+          <Link href="/" prefetch={false} className="shrink-0">
             <Image
               src={logoSrc}
               alt="Alto"
@@ -76,7 +76,7 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
 
           <div className="flex shrink-0 items-center gap-2">
             {!isApartment && (
-              <Button variant="primary" size="small" href="/appartements">
+              <Button variant="primary" size="small" href="/appartements" prefetch={false}>
                 {header.bookLabel}
               </Button>
             )}
@@ -106,6 +106,7 @@ function MapButton({ label }: { label: string }) {
   return (
     <Link
       href="/appartements"
+      prefetch={false}
       aria-label={label}
       className="bg-coffee text-cream flex size-8 items-center justify-center rounded-md transition-opacity hover:opacity-80"
     >
@@ -194,7 +195,7 @@ function BurgerOverlay({
           }`}
         >
           <div className="border-divider flex items-center justify-between border-b px-5 py-5">
-            <Link href="/" className="shrink-0" onClick={onClose}>
+            <Link href="/" prefetch={false} className="shrink-0" onClick={onClose}>
               <Image
                 src={header.logoDark}
                 alt="Alto"
@@ -256,7 +257,11 @@ function BurgerOverlay({
 
             <div className="border-divider mt-8 border-t pt-5">
               <p className="text-taupe text-body-sm mb-4 max-w-[26ch]">{header.mobileFooterText}</p>
-              <Button href={header.mobileFooterButtonHref} className="w-full justify-center">
+              <Button
+                href={header.mobileFooterButtonHref}
+                prefetch={false}
+                className="w-full justify-center"
+              >
                 {header.mobileFooterButtonLabel}
               </Button>
             </div>
@@ -279,6 +284,7 @@ function PrimaryLink({
   return (
     <Link
       href={link.href}
+      prefetch={false}
       target={link.opensInNewTab ? '_blank' : undefined}
       rel={link.opensInNewTab ? 'noopener noreferrer' : undefined}
       onClick={onClose}
@@ -323,6 +329,7 @@ function SecondaryLink({
   return (
     <Link
       href={link.href}
+      prefetch={false}
       target={link.opensInNewTab ? '_blank' : undefined}
       rel={link.opensInNewTab ? 'noopener noreferrer' : undefined}
       onClick={onClose}

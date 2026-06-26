@@ -1,7 +1,7 @@
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { HeroSection } from '@/components/sections/hero-section'
 import { AboutSection } from '@/components/sections/about-section'
-import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
+import { ApartmentsSection, getApartmentCards } from '@/components/sections/apartments-section'
 import { ExperienceSection } from '@/components/sections/experience-section'
 import { ServicesSection } from '@/components/sections/services-section'
 import { TestimonialsSection } from '@/components/sections/testimonials-section'
@@ -32,7 +32,7 @@ export default async function Home() {
   }
 
   const [apartments, blogArticles, globals] = await Promise.all([
-    getApartments(),
+    getApartmentCards(),
     getBlogArticles(locale),
     getStoryblokGlobals(locale),
   ])
@@ -41,8 +41,8 @@ export default async function Home() {
     <>
       <main>
         <HeroSection
-          backgroundImage="/images/hero-room.png"
-          overlayImage="/images/hero-overlay.png"
+          backgroundImage="/images/hero-room.webp"
+          overlayImage="/images/hero-overlay.webp"
         />
         <AboutSection
           locationAvatars={globals.sharedAssets.locationAvatars.map((a) => a.src)}

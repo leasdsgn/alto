@@ -3,10 +3,11 @@
 import { useRef } from 'react'
 import { ApartmentCard } from '@/components/ui/apartment-card'
 import { useLocale } from '@/components/providers/locale-provider'
+import { type ApartmentPriceSource } from '@/types/apartment'
 
 interface Apartment {
   name: string
-  price: number
+  price: number | null
   guests: number
   surface: number
   bedrooms: number
@@ -14,6 +15,7 @@ interface Apartment {
   image?: string
   city?: string
   neighborhoodLabel?: string
+  priceSource?: ApartmentPriceSource
 }
 
 interface ApartmentsCarouselProps {
@@ -45,7 +47,7 @@ export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProp
           <button
             type="button"
             onClick={() => scroll('left')}
-            className="bg-sand text-coffee flex size-9 items-center justify-center rounded-full border border-sand transition-colors hover:bg-sand/80"
+            className="bg-sand text-coffee border-sand hover:bg-sand/80 flex size-9 items-center justify-center rounded-full border transition-colors"
             aria-label={copy.previous}
           >
             <ArrowLeft />
@@ -53,7 +55,7 @@ export function ApartmentsCarousel({ apartments, title }: ApartmentsCarouselProp
           <button
             type="button"
             onClick={() => scroll('right')}
-            className="bg-sand text-coffee flex size-9 items-center justify-center rounded-full border border-sand transition-colors hover:bg-sand/80"
+            className="bg-sand text-coffee border-sand hover:bg-sand/80 flex size-9 items-center justify-center rounded-full border transition-colors"
             aria-label={copy.next}
           >
             <ArrowRight />

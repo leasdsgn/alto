@@ -6,17 +6,13 @@
  */
 
 export const SHARED_DEFAULTS = {
-  locationAvatars: [
-    '/images/blog-1.jpg',
-    '/images/hero-home.jpg',
-    '/images/blog-3.jpg',
-  ] as const,
+  locationAvatars: ['/images/blog-1.jpg', '/images/hero-home.webp', '/images/blog-3.jpg'] as const,
   travelerAvatars: [
     '/images/avatars/voyageur-1.png',
     '/images/avatars/voyageur-2.png',
     '/images/avatars/voyageur-3.png',
   ] as const,
-  footerBackground: '/images/footer-gradient.jpg',
+  footerBackground: '/images/footer-gradient.webp',
 }
 
 export const PLACEHOLDER_IMAGE = '/images/alto-salon.jpg'

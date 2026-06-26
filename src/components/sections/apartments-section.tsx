@@ -2,16 +2,34 @@ import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { calculateNights } from '@/lib/reservation-validation'
-import {
-  getCalendarMinimumNightlyPrice,
-  getDisplayNightlyPrice,
-  getQuoteAverageNightlyPrice,
-} from '@/lib/guesty-pricing'
+import { getCalendarMinimumNightlyPrice, getQuoteAverageNightlyPrice } from '@/lib/guesty-pricing'
 import { type GuestyListing, type GuestyQuote } from '@/types/guesty'
+import {
+  type Apartment,
+  type ApartmentCardData,
+  type ApartmentPriceSource,
+} from '@/types/apartment'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 
 const PRICE_LOOKAHEAD_DAYS = 180
+const LISTING_CARD_FIELDS = [
+  '_id',
+  'title',
+  'nickname',
+  'address.full',
+  'address.city',
+  'address.lat',
+  'address.lng',
+  'pictures',
+  'accommodates',
+  'bedrooms',
+  'bathrooms',
+  'prices.currency',
+  'minNights',
+  'maxNights',
+] as const
+const LISTING_SEARCH_FIELDS = [...LISTING_CARD_FIELDS, 'totalPrice'] as const
 
 function slugify(title: string): string {
   return title
@@ -22,7 +40,7 @@ function slugify(title: string): string {
     .replace(/(^-|-$)/g, '')
 }
 
-function mapListing(listing: GuestyListing) {
+function mapListing(listing: GuestyListing): Apartment {
   const address = listing.address?.full
   const city = listing.address?.city
   const slug = slugify(listing.nickname || listing.title)
@@ -30,7 +48,7 @@ function mapListing(listing: GuestyListing) {
   return {
     id: listing._id,
     name: listing.title,
-    price: listing.prices.basePrice,
+    price: null,
     currency: listing.prices.currency,
     guests: listing.accommodates,
     surface: 0,
@@ -58,6 +76,38 @@ function mapListing(listing: GuestyListing) {
   }
 }
 
+function mapListingCard(listing: GuestyListing, nights?: number): ApartmentCardData {
+  const city = listing.address?.city
+  const slug = slugify(listing.nickname || listing.title || listing._id)
+  const neighborhoodLabel = getNeighborhoodBySlug(slug)
+  const image = normalizeGuestyImageUrl(
+    listing.pictures?.[0]?.original || listing.pictures?.[0]?.thumbnail,
+  )
+  const totalNightlyPrice = getTotalPriceNightlyPrice(listing.totalPrice, nights)
+
+  return {
+    id: listing._id,
+    name: listing.title || listing.nickname || 'Appartement Alto',
+    price: totalNightlyPrice,
+    priceSource: totalNightlyPrice ? 'quote' : 'starting',
+    currency: listing.prices?.currency ?? 'EUR',
+    guests: listing.accommodates ?? 0,
+    surface: 0,
+    bedrooms: listing.bedrooms ?? 0,
+    bathrooms: listing.bathrooms ?? 0,
+    slug,
+    image,
+    images: image ? [image] : [],
+    lat: listing.address?.lat,
+    lng: listing.address?.lng,
+    address: listing.address?.full,
+    city,
+    neighborhoodLabel,
+    minNights: listing.minNights,
+    maxNights: listing.maxNights,
+  }
+}
+
 function normalizeGuestyImageUrl(value: string | null | undefined) {
   if (!value) return undefined
 
@@ -78,12 +128,18 @@ const getCachedListingCalendarForPrice = unstable_cache(
   (listingId: string, from: string, to: string) =>
     guestyClient.getListingCalendar(listingId, from, to),
   ['guesty-listing-calendar-price'],
-  { revalidate: 3600 },
+  { revalidate: 43200 },
 )
 
 const getCachedListings = unstable_cache(() => guestyClient.getListings(), ['guesty-listings'], {
   revalidate: 300,
 })
+
+const getCachedListingCards = unstable_cache(
+  () => guestyClient.getListings({ fields: LISTING_CARD_FIELDS }),
+  ['guesty-listing-cards'],
+  { revalidate: 300 },
+)
 
 const FALLBACK_APARTMENTS = [
   {
@@ -295,7 +351,7 @@ function normalizeCity(value: string | undefined | null): string {
     .trim()
 }
 
-async function getApartments() {
+async function getApartments(): Promise<Apartment[]> {
   try {
     const { results } = await getCachedListings()
     if (results.length > 0) return withCalendarPrices(results.map(mapListing))
@@ -303,6 +359,18 @@ async function getApartments() {
     // fall through to fallback
   }
   return FALLBACK_APARTMENTS
+}
+
+async function getApartmentCards(): Promise<ApartmentCardData[]> {
+  try {
+    const { results } = await getCachedListingCards()
+    if (results.length > 0)
+      return withCalendarPrices(results.map((listing) => mapListingCard(listing)))
+  } catch {
+    // fall through to fallback
+  }
+
+  return FALLBACK_APARTMENTS.map(toApartmentCardData)
 }
 
 export interface SearchCriteria {
@@ -324,17 +392,26 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
 
   if (hasDates && checkIn && checkOut) {
     try {
-      const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests)
+      const nights = calculateNights(checkIn, checkOut)
+      const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests, {
+        fields: LISTING_SEARCH_FIELDS,
+      })
       const apartments = city
-        ? applyCityFilter(results.map(mapListing), city)
-        : results.map(mapListing)
+        ? applyCityFilter(
+            results.map((listing) => mapListingCard(listing, nights)),
+            city,
+          )
+        : results.map((listing) => mapListingCard(listing, nights))
+      const hasTotalPrice = apartments.some((apartment) => apartment.priceSource === 'quote')
 
       return {
-        apartments: await withQuotePrices(apartments, {
-          checkIn,
-          checkOut,
-          guestsCount: guests ?? 1,
-        }),
+        apartments: hasTotalPrice
+          ? apartments
+          : await withQuotePrices(apartments, {
+              checkIn,
+              checkOut,
+              guestsCount: guests ?? 1,
+            }),
         hasDateSearch: true,
         status: 'ready' as const,
       }
@@ -352,19 +429,19 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
   }
 
   try {
-    const { results } = await getCachedListings()
-    const apartments = city
-      ? applyCityFilter(results.map(mapListing), city)
-      : results.map(mapListing)
+    const apartments = await getApartmentCards()
+    const filtered = city ? applyCityFilter(apartments, city) : apartments
 
     return {
-      apartments: await withCalendarPrices(apartments),
+      apartments: filtered,
       hasDateSearch: false,
       status: 'ready' as const,
     }
   } catch {
     return {
-      apartments: city ? applyCityFilter(FALLBACK_APARTMENTS, city) : FALLBACK_APARTMENTS,
+      apartments: city
+        ? applyCityFilter(FALLBACK_APARTMENTS.map(toApartmentCardData), city)
+        : FALLBACK_APARTMENTS.map(toApartmentCardData),
       hasDateSearch: false,
       status: 'fallback' as const,
     }
@@ -376,9 +453,14 @@ async function getApartmentsForSearch(criteria: SearchCriteria) {
   return result.apartments
 }
 
-async function withCalendarPrices<T extends { id: string; price: number; minNights?: number }>(
-  apartments: T[],
-) {
+async function withCalendarPrices<
+  T extends {
+    id: string
+    price: number | null
+    minNights?: number
+    priceSource?: ApartmentPriceSource
+  },
+>(apartments: T[]) {
   const { from, to } = getPriceCalendarWindow()
 
   return mapWithConcurrency(apartments, 3, async (apartment) => {
@@ -391,7 +473,8 @@ async function withCalendarPrices<T extends { id: string; price: number; minNigh
 
       return {
         ...apartment,
-        price: getDisplayNightlyPrice(apartment.price, nightlyPrice),
+        price: nightlyPrice,
+        priceSource: 'starting' as const,
       }
     } catch {
       return apartment
@@ -399,7 +482,7 @@ async function withCalendarPrices<T extends { id: string; price: number; minNigh
   })
 }
 
-async function withQuotePrices<T extends { id: string; price: number }>(
+async function withQuotePrices<T extends { id: string; price: number | null }>(
   apartments: T[],
   {
     checkIn,
@@ -458,6 +541,39 @@ function getQuoteNightlyPrice(quote: GuestyQuote, nights: number) {
   return getQuoteAverageNightlyPrice(quote, nights)
 }
 
+function getTotalPriceNightlyPrice(totalPrice: number | undefined, nights: number | undefined) {
+  if (!nights || nights <= 0) return null
+  if (!Number.isFinite(totalPrice) || !totalPrice || totalPrice <= 0) return null
+  return Math.round(totalPrice / nights)
+}
+
+function toApartmentCardData(apartment: (typeof FALLBACK_APARTMENTS)[number]): ApartmentCardData {
+  const maybeImage = (apartment as { image?: unknown }).image
+  const image = typeof maybeImage === 'string' ? maybeImage : undefined
+
+  return {
+    id: apartment.id,
+    name: apartment.name,
+    price: apartment.price,
+    currency: apartment.currency,
+    guests: apartment.guests,
+    surface: apartment.surface,
+    bedrooms: apartment.bedrooms,
+    bathrooms: apartment.bathrooms,
+    slug: apartment.slug,
+    image,
+    images: apartment.images,
+    lat: apartment.lat,
+    lng: apartment.lng,
+    address: apartment.address,
+    city: apartment.city,
+    neighborhoodLabel: apartment.neighborhoodLabel,
+    minNights: apartment.minNights,
+    maxNights: apartment.maxNights,
+    priceSource: 'starting',
+  }
+}
+
 function isFallbackApartmentId(id: string) {
   return id.startsWith('fb-') || id.startsWith('ly-')
 }
@@ -479,18 +595,18 @@ function formatDateKey(date: Date) {
   return date.toISOString().slice(0, 10)
 }
 
-export { getApartments, getApartmentsForSearch, getApartmentSearchResult }
+export { getApartments, getApartmentCards, getApartmentsForSearch, getApartmentSearchResult }
 
 export async function ApartmentsSection({
   apartments,
   titles,
 }: {
-  apartments?: Awaited<ReturnType<typeof getApartments>>
+  apartments?: ApartmentCardData[]
   titles?: { paris: string; lyon: string }
 }) {
   const locale = getStaticServerLocale()
   const copy = titles ?? APARTMENTS_SECTION_COPY[locale]
-  const data = apartments ?? (await getApartments())
+  const data = apartments ?? (await getApartmentCards())
   const paris = applyCityFilter(data, 'paris')
   const lyon = applyCityFilter(data, 'lyon')
 
