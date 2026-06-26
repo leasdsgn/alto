@@ -7,7 +7,7 @@ import {
   SHARED_ASSETS_DEFAULTS,
   STICKY_CTA_DEFAULTS,
   type StoryblokGlobals,
-} from '@/lib/storyblok-globals'
+} from '@/lib/storyblok-globals-defaults'
 
 const StoryblokGlobalsContext = createContext<StoryblokGlobals | null>(null)
 
