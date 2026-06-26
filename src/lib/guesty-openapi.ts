@@ -67,7 +67,7 @@ async function openApiFetch<T>(path: string, options: RequestInit = {}): Promise
   return response.json() as Promise<T>
 }
 
-export interface GuestyOpenApiPayment {
+interface GuestyOpenApiPayment {
   _id?: string
   id?: string
   amount?: number

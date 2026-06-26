@@ -151,16 +151,6 @@ type ReservationApiResponse =
       paymentId: string
       clientSecret: string | null
     }
-  | {
-      phase: 'processing'
-      reservationId: string
-      paymentId: string
-    }
-
-interface FormError {
-  title: string
-  description: string
-}
 
 function PaymentSection(props: PaymentSectionProps) {
   const stripe = useStripe()
@@ -168,7 +158,6 @@ function PaymentSection(props: PaymentSectionProps) {
   const [policy, setPolicy] = useState<PolicyValues>({ privacy: false, terms: false })
   const [submitting, setSubmitting] = useState(false)
   const [paymentAuthenticating, setPaymentAuthenticating] = useState(false)
-  const [formError, setFormError] = useState<FormError | null>(null)
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(event: React.FormEvent) {
@@ -183,7 +172,6 @@ function PaymentSection(props: PaymentSectionProps) {
     }
 
     setSubmitting(true)
-    setFormError(null)
 
     try {
       const paymentCredential = await createPaymentCredential()
@@ -191,17 +179,11 @@ function PaymentSection(props: PaymentSectionProps) {
       setSuccess(true)
     } catch (err) {
       if (err instanceof ReservationError) {
-        setFormError({ title: err.title, description: err.description })
         toast.error(err.title, { description: err.description })
       } else {
-        const description =
-          err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc')
-        setFormError({
-          title: t(props.locale, 'errorPaymentFailedTitle'),
-          description,
-        })
         toast.error(t(props.locale, 'errorPaymentFailedTitle'), {
-          description,
+          description:
+            err instanceof Error ? err.message : t(props.locale, 'errorPaymentFailedDesc'),
         })
       }
     } finally {
@@ -294,7 +276,7 @@ function PaymentSection(props: PaymentSectionProps) {
 
       if (error) {
         try {
-          await verifyPendingAuth(action, 'failed')
+          await verifyPendingAuth(action)
           return
         } catch {
           // L'erreur Stripe reste l'information la plus utile pour l'utilisateur.
@@ -302,49 +284,38 @@ function PaymentSection(props: PaymentSectionProps) {
 
         throw new ReservationError(
           'THREE_DS_REQUIRED',
-          t(props.locale, 'errorBankAuthenticationFailedTitle'),
-          t(props.locale, 'errorBankAuthenticationFailedDesc'),
+          t(props.locale, 'errorThreeDSRequiredTitle'),
+          error.message ?? t(props.locale, 'errorThreeDSRequiredDesc'),
         )
       }
     }
 
-    await verifyPendingAuth(action, 'succeeded')
+    await verifyPendingAuth(action)
   }
 
   async function verifyPendingAuth(
     action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
-    authOutcome: 'succeeded' | 'failed',
   ) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await fetch('/api/guesty/reservation/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reservationId: action.reservationId,
-          paymentId: action.paymentId,
-          authOutcome,
-          preferredLanguage: props.locale,
-        }),
-      })
+    const response = await fetch('/api/guesty/reservation/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reservationId: action.reservationId,
+        paymentId: action.paymentId,
+        preferredLanguage: props.locale,
+      }),
+    })
 
-      const body = (await response.json().catch(() => null)) as
-        | GuestyErrorBody
-        | ReservationApiResponse
-        | null
+    const body = (await response.json().catch(() => null)) as
+      | GuestyErrorBody
+      | ReservationApiResponse
+      | null
 
-      if (!response.ok) {
-        throwReservationApiError(body)
-      }
-
-      if (isReservationApiResponse(body) && body.phase === 'confirmed') return
-
-      if (isReservationApiResponse(body) && body.phase === 'processing') {
-        await wait(2000)
-        continue
-      }
-
-      break
+    if (!response.ok) {
+      throwReservationApiError(body)
     }
+
+    if (isReservationApiResponse(body) && body.phase === 'confirmed') return
 
     throw new ReservationError(
       'PAYMENT_FAILED',
@@ -370,10 +341,6 @@ function PaymentSection(props: PaymentSectionProps) {
     return Boolean(body && 'phase' in body)
   }
 
-  function wait(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-  }
-
   if (success) {
     return (
       <div className="border-divider bg-cream rounded-lg border p-6">
@@ -392,16 +359,6 @@ function PaymentSection(props: PaymentSectionProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentForm locale={props.locale} />
-
-      {formError ? (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-950"
-        >
-          <p className="font-semibold">{formError.title}</p>
-          <p className="mt-1 leading-relaxed">{formError.description}</p>
-        </div>
-      ) : null}
 
       <p className="border-divider bg-cream text-coffee rounded-lg border p-4 text-sm leading-relaxed">
         {t(props.locale, 'depositNotice')}
