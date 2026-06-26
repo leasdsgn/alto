@@ -151,6 +151,11 @@ type ReservationApiResponse =
       paymentId: string
       clientSecret: string | null
     }
+  | {
+      phase: 'processing'
+      reservationId: string
+      paymentId: string
+    }
 
 interface FormError {
   title: string
@@ -309,26 +314,35 @@ function PaymentSection(props: PaymentSectionProps) {
   async function verifyPendingAuth(
     action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
   ) {
-    const response = await fetch('/api/guesty/reservation/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reservationId: action.reservationId,
-        paymentId: action.paymentId,
-        preferredLanguage: props.locale,
-      }),
-    })
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const response = await fetch('/api/guesty/reservation/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reservationId: action.reservationId,
+          paymentId: action.paymentId,
+          preferredLanguage: props.locale,
+        }),
+      })
 
-    const body = (await response.json().catch(() => null)) as
-      | GuestyErrorBody
-      | ReservationApiResponse
-      | null
+      const body = (await response.json().catch(() => null)) as
+        | GuestyErrorBody
+        | ReservationApiResponse
+        | null
 
-    if (!response.ok) {
-      throwReservationApiError(body)
+      if (!response.ok) {
+        throwReservationApiError(body)
+      }
+
+      if (isReservationApiResponse(body) && body.phase === 'confirmed') return
+
+      if (isReservationApiResponse(body) && body.phase === 'processing') {
+        await wait(2000)
+        continue
+      }
+
+      break
     }
-
-    if (isReservationApiResponse(body) && body.phase === 'confirmed') return
 
     throw new ReservationError(
       'PAYMENT_FAILED',
@@ -352,6 +366,10 @@ function PaymentSection(props: PaymentSectionProps) {
     body: GuestyErrorBody | ReservationApiResponse | null,
   ): body is ReservationApiResponse {
     return Boolean(body && 'phase' in body)
+  }
+
+  function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
   if (success) {
