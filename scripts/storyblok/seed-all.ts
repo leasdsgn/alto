@@ -58,7 +58,17 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/notre-histoire',
     realPath: '/notre-histoire',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent([
+      blok('notre_histoire_section', {}),
+      blok('apartments_grid_section', {
+        paris_title: 'Nos appartements à Paris',
+        lyon_title: 'Nos appartements à Lyon',
+        city_filter: 'all',
+        max_per_city: 0,
+        show_search_bar: false,
+        display_mode: 'carousel',
+      }),
+    ]),
   },
   {
     name: 'Investir',

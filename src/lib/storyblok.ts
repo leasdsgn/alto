@@ -19,6 +19,7 @@ import {
   LyonServicesSectionBlok,
   LyonStatsSectionBlok,
 } from '@/components/storyblok/lyon-bloks'
+import { NotreHistoireSectionBlok } from '@/components/storyblok/about-bloks'
 
 export const getStoryblokApi = storyblokInit({
   accessToken:
@@ -41,6 +42,7 @@ export const getStoryblokApi = storyblokInit({
     lyon_services_section: LyonServicesSectionBlok,
     lyon_quartiers_section: LyonQuartiersSectionBlok,
     lyon_blog_section: LyonBlogSectionAsyncBlok,
+    notre_histoire_section: NotreHistoireSectionBlok,
   },
   apiOptions: {
     region: 'eu',
