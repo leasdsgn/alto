@@ -261,7 +261,7 @@ export function SearchBar({
                       onMouseLeave={() => setHoverDate(null)}
                       className={[
                         'flex size-8 items-center justify-center rounded-sm text-xs outline-none',
-                        disabled ? 'text-silver cursor-not-allowed line-through' : 'cursor-pointer',
+                        disabled ? 'text-silver cursor-not-allowed' : 'cursor-pointer',
                         isStart || isEnd ? 'bg-coffee text-cream' : '',
                         inRange ? 'bg-coffee/10 text-coffee' : '',
                         !isStart && !isEnd && !inRange && !disabled

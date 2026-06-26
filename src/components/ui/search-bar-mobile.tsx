@@ -192,7 +192,7 @@ export function SearchBarMobile({
                     {(date) => (
                       <RangeCalendar.Cell
                         date={date}
-                        className="text-coffee hover:bg-sand data-[selected]:bg-coffee/10 data-[selection-start]:bg-coffee data-[selection-start]:text-cream data-[selection-end]:bg-coffee data-[selection-end]:text-cream data-[unavailable]:text-silver flex size-9 items-center justify-center rounded-sm text-xs outline-none data-[unavailable]:line-through"
+                        className="text-coffee hover:bg-sand data-[selected]:bg-coffee/10 data-[selection-start]:bg-coffee data-[selection-start]:text-cream data-[selection-end]:bg-coffee data-[selection-end]:text-cream data-[unavailable]:text-silver flex size-9 items-center justify-center rounded-sm text-xs outline-none"
                       />
                     )}
                   </RangeCalendar.GridBody>
