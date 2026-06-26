@@ -767,6 +767,18 @@ const SECTIONS: ComponentDefinition[] = [
     },
   },
   {
+    name: 'blog_index_section',
+    display_name: 'Blog - Page index complète',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      note: textareaField(
+        'Note pour l’éditeur (la mise en page complète reste pilotée par le code)',
+        0,
+      ),
+    },
+  },
+  {
     name: 'notre_histoire_section',
     display_name: 'Notre histoire - Page complète',
     is_root: false,

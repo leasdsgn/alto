@@ -28,6 +28,7 @@ import {
   TextSectionBlok,
 } from '@/components/storyblok/shared-bloks'
 import { ContactFormSectionBlok } from '@/components/storyblok/contact-bloks'
+import { BlogIndexSectionBlok } from '@/components/storyblok/blog-bloks'
 
 export const getStoryblokApi = storyblokInit({
   accessToken:
@@ -57,6 +58,7 @@ export const getStoryblokApi = storyblokInit({
     invest_model_section: InvestModelSectionBlok,
     invest_stats_section: InvestStatsSectionBlok,
     contact_form_section: ContactFormSectionBlok,
+    blog_index_section: BlogIndexSectionBlok,
   },
   apiOptions: {
     region: 'eu',

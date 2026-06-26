@@ -97,7 +97,21 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/blog',
     realPath: '/blog',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent([
+      blok('blog_index_section', {}),
+      blok('services_section', {
+        items: [],
+        variant: 'grid',
+      }),
+      blok('apartments_grid_section', {
+        paris_title: 'Nos appartements à Paris',
+        lyon_title: 'Nos appartements à Lyon',
+        city_filter: 'all',
+        max_per_city: 0,
+        show_search_bar: false,
+        display_mode: 'carousel',
+      }),
+    ]),
   },
   {
     name: 'CGV',
