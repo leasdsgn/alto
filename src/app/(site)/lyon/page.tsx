@@ -9,7 +9,7 @@ import { LyonBlogSection } from '@/components/sections/lyon-blog-section'
 import { FaqSection } from '@/components/sections/faq-section'
 import { Footer } from '@/components/layout/footer'
 import { StickyCta } from '@/components/ui/sticky-cta'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
@@ -21,7 +21,7 @@ export const metadata = {
 }
 
 export default async function LyonPage() {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const story = await getStoryBySlug('pages/lyon', locale)
 
   if (

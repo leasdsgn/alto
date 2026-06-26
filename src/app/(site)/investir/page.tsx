@@ -4,12 +4,12 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { FaqSection } from '@/components/sections/faq-section'
 import { Button } from '@/components/ui/button'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export default async function InvestirPage() {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const story = await getStoryBySlug('pages/investir', locale)
 
   if (
@@ -39,15 +39,15 @@ export default async function InvestirPage() {
           className="object-cover"
           priority
         />
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-coffee/75 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-coffee/75 to-transparent" />
+        <div className="from-coffee/75 absolute inset-x-0 top-0 h-24 bg-gradient-to-b to-transparent" />
+        <div className="from-coffee/75 absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t to-transparent" />
 
         <Header />
 
         <div className="absolute inset-0 flex items-end">
-          <div className="mx-auto w-full max-w-content px-gutter pb-10 md:px-gutter-md">
-            <h1 className="text-cream text-base font-bold leading-[18px]">{copy.heroTitle}</h1>
-            <p className="text-cream/80 mt-3 max-w-[505px] text-xs font-medium leading-[20px]">
+          <div className="max-w-content px-gutter md:px-gutter-md mx-auto w-full pb-10">
+            <h1 className="text-cream text-base leading-[18px] font-bold">{copy.heroTitle}</h1>
+            <p className="text-cream/80 mt-3 max-w-[505px] text-xs leading-[20px] font-medium">
               {copy.heroText}
             </p>
           </div>
@@ -55,22 +55,22 @@ export default async function InvestirPage() {
       </div>
 
       <main>
-        <section className="mx-auto max-w-content px-gutter py-section md:px-gutter-md">
-          <p className="text-silver text-xs font-bold uppercase leading-[24px] tracking-[0.24px]">
+        <section className="max-w-content px-gutter py-section md:px-gutter-md mx-auto">
+          <p className="text-silver text-xs leading-[24px] font-bold tracking-[0.24px] uppercase">
             {copy.apartmentsEyebrow}
           </p>
-          <p className="text-coffee mt-1 max-w-[205px] text-base font-medium leading-[24px]">
+          <p className="text-coffee mt-1 max-w-[205px] text-base leading-[24px] font-medium">
             {copy.apartmentsTitle}
           </p>
 
           <div className="mt-10">
-            <p className="text-coffee max-w-[408px] text-base font-bold leading-[20px]">
+            <p className="text-coffee max-w-[408px] text-base leading-[20px] font-bold">
               {copy.apartmentsLead}
             </p>
 
             <div className="mt-8 max-w-[408px] space-y-4">
               {copy.apartmentsBody.map((paragraph) => (
-                <p key={paragraph} className="text-coffee text-xs font-medium leading-[22px]">
+                <p key={paragraph} className="text-coffee text-xs leading-[22px] font-medium">
                   {paragraph}
                 </p>
               ))}
@@ -79,7 +79,7 @@ export default async function InvestirPage() {
         </section>
 
         <section className="bg-silver">
-          <div className="mx-auto grid max-w-content grid-cols-1 gap-12 px-gutter py-section md:px-gutter-md lg:grid-cols-[304px_1fr]">
+          <div className="max-w-content px-gutter py-section md:px-gutter-md mx-auto grid grid-cols-1 gap-12 lg:grid-cols-[304px_1fr]">
             <div className="relative h-[350px] overflow-hidden rounded-lg lg:h-[468px]">
               <Image
                 src={siteImages.pages.investModel}
@@ -92,18 +92,18 @@ export default async function InvestirPage() {
             </div>
 
             <div className="flex flex-col justify-center">
-              <p className="text-cream text-xs font-bold uppercase leading-[24px] tracking-[0.24px]">
+              <p className="text-cream text-xs leading-[24px] font-bold tracking-[0.24px] uppercase">
                 {copy.modelEyebrow}
               </p>
-              <h2 className="text-cream mt-1 text-base font-medium leading-[24px]">
+              <h2 className="text-cream mt-1 text-base leading-[24px] font-medium">
                 {copy.modelTitle}
               </h2>
 
               <div className="mt-10 flex flex-col gap-8">
                 {copy.modelPoints.map((point) => (
                   <div key={point.title}>
-                    <h3 className="text-cream text-base font-bold leading-[20px]">{point.title}</h3>
-                    <p className="text-cream mt-2 text-xs font-medium leading-[22px]">
+                    <h3 className="text-cream text-base leading-[20px] font-bold">{point.title}</h3>
+                    <p className="text-cream mt-2 text-xs leading-[22px] font-medium">
                       {point.description}
                     </p>
                   </div>
@@ -114,10 +114,10 @@ export default async function InvestirPage() {
         </section>
 
         <section className="bg-coffee">
-          <div className="mx-auto max-w-content px-gutter py-16 text-center md:px-gutter-md">
+          <div className="max-w-content px-gutter md:px-gutter-md mx-auto py-16 text-center">
             <div className="mx-auto max-w-[735px]">
-              <p className="text-cream text-base font-bold leading-[24px]">{copy.statsLineOne}</p>
-              <p className="text-cream text-base font-bold leading-[24px]">{copy.statsLineTwo}</p>
+              <p className="text-cream text-base leading-[24px] font-bold">{copy.statsLineOne}</p>
+              <p className="text-cream text-base leading-[24px] font-bold">{copy.statsLineTwo}</p>
             </div>
 
             <p className="text-cream/70 mt-4 text-xs font-medium">{copy.statsBody}</p>
@@ -131,15 +131,15 @@ export default async function InvestirPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-content px-gutter py-section md:px-gutter-md">
-          <p className="text-silver text-xs font-bold uppercase leading-[24px] tracking-[0.24px]">
+        <section className="max-w-content px-gutter py-section md:px-gutter-md mx-auto">
+          <p className="text-silver text-xs leading-[24px] font-bold tracking-[0.24px] uppercase">
             {copy.contactEyebrow}
           </p>
-          <h2 className="text-coffee mt-1 text-base font-medium leading-[24px]">
+          <h2 className="text-coffee mt-1 text-base leading-[24px] font-medium">
             {copy.contactTitle}
           </h2>
 
-          <p className="text-coffee mt-8 max-w-[728px] text-base font-bold leading-[20px]">
+          <p className="text-coffee mt-8 max-w-[728px] text-base leading-[20px] font-bold">
             {copy.contactLead}
           </p>
 

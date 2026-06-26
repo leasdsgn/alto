@@ -1,7 +1,7 @@
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 }
 
 export default async function CgvPage() {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const story = await getStoryBySlug('pages/cgv', locale)
 
   if (
@@ -32,9 +32,9 @@ export default async function CgvPage() {
   return (
     <>
       <Header variant="dark" />
-      <main className="mx-auto w-full max-w-content px-gutter py-section md:px-gutter-md md:py-section-md">
+      <main className="max-w-content px-gutter py-section md:px-gutter-md md:py-section-md mx-auto w-full">
         <div className="max-w-[720px]">
-          <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Alto</p>
+          <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">Alto</p>
           <h1 className="text-coffee mt-3 text-2xl font-bold md:text-4xl">{copy.title}</h1>
           <div className="text-coffee mt-10 space-y-6 text-sm leading-[1.8]">
             {copy.body.map((paragraph) => (

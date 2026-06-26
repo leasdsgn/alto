@@ -8,7 +8,7 @@ import { StoryblokProvider } from '@/components/providers/storyblok-provider'
 import { StoryblokGlobalsProvider } from '@/components/providers/storyblok-globals-provider'
 import { CustomCursor } from '@/components/ui/custom-cursor'
 import { LenisProvider } from '@/components/providers/lenis-provider'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import './globals.css'
 
@@ -28,7 +28,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const globals = await getStoryblokGlobals(locale)
 
   return (

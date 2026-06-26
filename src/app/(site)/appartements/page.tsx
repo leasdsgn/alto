@@ -7,7 +7,7 @@ import { ApartmentEditorialSections } from '@/components/sections/apartment-edit
 import { AppartementsGrid } from '@/components/sections/appartements-grid'
 import { getApartmentSearchResult } from '@/components/sections/apartments-section'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 
@@ -21,7 +21,7 @@ interface PageProps {
 }
 
 export default async function AppartementsPage({ searchParams }: PageProps) {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const sp = await searchParams
   const guestsCount = sp.guests ? Number(sp.guests) : undefined
   const gridKey = [
@@ -56,10 +56,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       {hasStoryBody ? (
         <StoryblokStory story={story} />
       ) : (
-        <FallbackHero
-          imageSrc={siteImages.pages.apartmentsHero}
-          locale={locale}
-        />
+        <FallbackHero imageSrc={siteImages.pages.apartmentsHero} locale={locale} />
       )}
 
       <main className="max-w-content px-gutter pb-section-md md:px-gutter-md mx-auto w-full">
@@ -78,13 +75,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
   )
 }
 
-function FallbackHero({
-  imageSrc,
-  locale,
-}: {
-  imageSrc: string
-  locale: 'fr' | 'en'
-}) {
+function FallbackHero({ imageSrc, locale }: { imageSrc: string; locale: 'fr' | 'en' }) {
   const copy = APARTMENTS_PAGE_COPY[locale]
   return (
     <div className="h-apartments-hero relative overflow-hidden">

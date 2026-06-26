@@ -4,15 +4,11 @@ import { getApartments } from '@/components/sections/apartments-section'
 import { ApartmentView } from '@/components/apartment/apartment-view'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 
-export default async function ApartmentPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function ApartmentPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const apartments = await getApartments()
   const apartment = apartments.find((a) => a.slug === slug)
 

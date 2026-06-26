@@ -3,13 +3,13 @@ import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { calculateNights } from '@/lib/reservation-validation'
 import {
-  findFirstAvailableCalendarStay,
+  getCalendarMinimumNightlyPrice,
   getDisplayNightlyPrice,
   getQuoteAverageNightlyPrice,
 } from '@/lib/guesty-pricing'
 import { type GuestyListing, type GuestyQuote } from '@/types/guesty'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 
 const PRICE_LOOKAHEAD_DAYS = 180
 
@@ -80,6 +80,10 @@ const getCachedListingCalendarForPrice = unstable_cache(
   ['guesty-listing-calendar-price'],
   { revalidate: 3600 },
 )
+
+const getCachedListings = unstable_cache(() => guestyClient.getListings(), ['guesty-listings'], {
+  revalidate: 300,
+})
 
 const FALLBACK_APARTMENTS = [
   {
@@ -293,7 +297,7 @@ function normalizeCity(value: string | undefined | null): string {
 
 async function getApartments() {
   try {
-    const { results } = await guestyClient.getListings()
+    const { results } = await getCachedListings()
     if (results.length > 0) return withCalendarPrices(results.map(mapListing))
   } catch {
     // fall through to fallback
@@ -348,7 +352,7 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
   }
 
   try {
-    const { results } = await guestyClient.getListings()
+    const { results } = await getCachedListings()
     const apartments = city
       ? applyCityFilter(results.map(mapListing), city)
       : results.map(mapListing)
@@ -382,11 +386,7 @@ async function withCalendarPrices<T extends { id: string; price: number; minNigh
 
     try {
       const calendar = await getCachedListingCalendarForPrice(apartment.id, from, to)
-      const stay = findFirstAvailableCalendarStay(calendar.days, apartment.minNights)
-      if (!stay) return apartment
-
-      const quote = await getCachedSearchQuote(apartment.id, stay.checkIn, stay.checkOut, 1)
-      const nightlyPrice = getQuoteAverageNightlyPrice(quote, stay.nights)
+      const nightlyPrice = getCalendarMinimumNightlyPrice(calendar.days)
       if (!nightlyPrice) return apartment
 
       return {
@@ -488,7 +488,7 @@ export async function ApartmentsSection({
   apartments?: Awaited<ReturnType<typeof getApartments>>
   titles?: { paris: string; lyon: string }
 }) {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const copy = titles ?? APARTMENTS_SECTION_COPY[locale]
   const data = apartments ?? (await getApartments())
   const paris = applyCityFilter(data, 'paris')

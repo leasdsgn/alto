@@ -21,7 +21,7 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
   const target = resolvePreviewTarget(query, slug)
 
   if (target.kind === 'story') {
-    const story = await getStoryBySlug(target.slug, locale)
+    const story = await getStoryBySlug(target.slug, locale, 'draft')
     if (story) return <StoryblokStory story={story} />
     if (target.fallbackPath) redirect(target.fallbackPath)
   }

@@ -3,12 +3,12 @@ import { ArticleView } from '@/components/blog/article-view'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
 import { getBlogEditorialMeta } from '@/lib/blog-page'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const articles = await getBlogArticles(locale)
   const apartments = await getApartments()
   const article = articles.find((entry) => entry.slug === slug)

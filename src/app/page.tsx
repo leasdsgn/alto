@@ -8,16 +8,20 @@ import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { BlogSection } from '@/components/sections/blog-section'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 
 export default async function Home() {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const story = await getStoryBySlug('pages/home', locale)
 
-  if (story && Array.isArray((story.content as { body?: unknown }).body) && (story.content as { body: unknown[] }).body.length > 0) {
+  if (
+    story &&
+    Array.isArray((story.content as { body?: unknown }).body) &&
+    (story.content as { body: unknown[] }).body.length > 0
+  ) {
     return (
       <>
         <StoryblokStory story={story} />

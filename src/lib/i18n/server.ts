@@ -1,10 +1,5 @@
 import { cookies, headers } from 'next/headers'
-import {
-  DEFAULT_LOCALE,
-  LOCALE_COOKIE,
-  SUPPORTED_LOCALES,
-  resolveLocale,
-} from '@/lib/i18n/locale'
+import { DEFAULT_LOCALE, LOCALE_COOKIE, SUPPORTED_LOCALES, resolveLocale } from '@/lib/i18n/locale'
 import { type InquiryLocale } from '@/types/inquiry'
 
 function pickLocaleFromAcceptLanguage(value: string | null): InquiryLocale | null {
@@ -35,4 +30,8 @@ export async function getServerLocale(): Promise<InquiryLocale> {
 
   const headerList = await headers()
   return pickLocaleFromAcceptLanguage(headerList.get('accept-language')) ?? DEFAULT_LOCALE
+}
+
+export function getStaticServerLocale(): InquiryLocale {
+  return DEFAULT_LOCALE
 }

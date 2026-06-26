@@ -1,6 +1,10 @@
 import { cache } from 'react'
 import { DEFAULT_LOCALE } from '@/lib/i18n/locale'
-import { getStoryblokToken, getStoryblokVersion } from '@/lib/storyblok-preview'
+import {
+  getStoryblokToken,
+  getStoryblokVersion,
+  type StoryblokVersion,
+} from '@/lib/storyblok-preview'
 import { type InquiryLocale } from '@/types/inquiry'
 
 export interface StoryblokStory<T = Record<string, unknown>> {
@@ -22,8 +26,9 @@ export const getStoryBySlug = cache(
   async <T = Record<string, unknown>>(
     slug: string,
     locale: InquiryLocale = DEFAULT_LOCALE,
+    versionOverride?: StoryblokVersion,
   ): Promise<StoryblokStory<T> | null> => {
-    const version = await getStoryblokVersion()
+    const version = versionOverride ?? (await getStoryblokVersion())
     const token = getStoryblokToken(version)
     if (!token) return null
 

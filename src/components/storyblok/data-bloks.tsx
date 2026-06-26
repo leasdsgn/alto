@@ -7,7 +7,7 @@ import {
 import { LyonApartmentsSection } from '@/components/sections/lyon-apartments-section'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { textOr } from '@/lib/storyblok-asset'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { BlogGridSectionBlok } from '@/components/storyblok/section-bloks'
 import { LyonBlogSectionBlok } from '@/components/storyblok/lyon-bloks'
 
@@ -36,10 +36,7 @@ export async function ApartmentsGridSectionBlok({ blok }: { blok: Blok }) {
       ? apartments
       : apartments.filter((apt) => normalize(apt.city).includes(cityFilter))
 
-  const final =
-    maxPerCity > 0
-      ? capPerCity(filtered, maxPerCity)
-      : filtered
+  const final = maxPerCity > 0 ? capPerCity(filtered, maxPerCity) : filtered
 
   return (
     <div {...editable(blok)}>
@@ -55,13 +52,13 @@ export async function ApartmentsGridSectionBlok({ blok }: { blok: Blok }) {
 }
 
 export async function BlogGridSectionAsyncBlok({ blok }: { blok: Blok }) {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const articles = await getBlogArticles(locale)
   return <BlogGridSectionBlok blok={blok} articles={articles} />
 }
 
 export async function LyonBlogSectionAsyncBlok({ blok }: { blok: Blok }) {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const articles = await getBlogArticles(locale)
   return <LyonBlogSectionBlok blok={blok} articles={articles} />
 }

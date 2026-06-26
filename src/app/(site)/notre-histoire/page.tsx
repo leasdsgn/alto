@@ -3,17 +3,17 @@ import { StoryblokStory } from '@storyblok/react/rsc'
 import { AboutView } from '@/components/about/about-view'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   return NOTRE_HISTOIRE_METADATA[locale]
 }
 
 export default async function NotreHistoirePage() {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const story = await getStoryBySlug('pages/notre-histoire', locale)
 
   if (

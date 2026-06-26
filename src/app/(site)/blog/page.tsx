@@ -4,13 +4,13 @@ import { Footer } from '@/components/layout/footer'
 import { ApartmentsSection, getApartments } from '@/components/sections/apartments-section'
 import { ServicesSection } from '@/components/sections/services-section'
 import { BLOG_PAGE_COPY, buildBlogEditorialSections } from '@/lib/blog-page'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export default async function BlogPage() {
-  const locale = await getServerLocale()
+  const locale = getStaticServerLocale()
   const story = await getStoryBySlug('pages/blog', locale)
 
   if (
