@@ -115,6 +115,7 @@ export function ApartmentBooking({
     shouldVerifyQuote,
   })
   const isMobileSheet = variant === 'mobileSheet'
+  const copy = BOOKING_COPY[locale]
 
   useEffect(() => {
     if (!listingId) {
@@ -274,17 +275,17 @@ export function ApartmentBooking({
             : 'rounded-[8px] bg-[#f9f9f2] px-6 pt-8 pb-[31px] shadow-[0_2px_2px_rgba(0,0,0,0.15)]'
         }
       >
-        {!isMobileSheet && (
-          <div className="px-4">
-            <h2 className="text-coffee text-h5 font-bold tracking-[-0.02em]">Votre réservation</h2>
+        <div className={isMobileSheet ? 'px-1' : 'px-4'}>
+          <h2 className="text-coffee text-h5 font-bold tracking-[-0.02em]">{copy.title}</h2>
 
-            <div className="from-silver to-taupe mt-[13px] max-w-[378px] rounded-[8px] bg-gradient-to-r px-3 py-1.5 shadow-[0_2px_2px_rgba(0,0,0,0.15)]">
-              <p className="text-cream text-body-sm whitespace-nowrap">
-                Annulation gratuite 14 jours avant la réservation
-              </p>
-            </div>
+          <div className="from-silver to-taupe mt-[13px] max-w-[378px] rounded-[8px] bg-gradient-to-r px-3 py-1.5 shadow-[0_2px_2px_rgba(0,0,0,0.15)]">
+            <p className="text-cream text-body-sm leading-[1.35] sm:whitespace-nowrap">
+              {copy.cancellation}
+            </p>
           </div>
-        )}
+        </div>
+
+        {isMobileSheet && <SwiklyNotice copy={copy} />}
 
         <DateRangePicker
           value={dates}
@@ -300,7 +301,7 @@ export function ApartmentBooking({
         >
           <Label className="sr-only">Dates du séjour</Label>
 
-          <div className={`border-silver mx-[17px] border-t ${isMobileSheet ? 'mt-0' : 'mt-8'}`}>
+          <div className={`border-silver mx-[17px] border-t ${isMobileSheet ? 'mt-5' : 'mt-8'}`}>
             <button
               type="button"
               className="grid w-full grid-cols-[1fr_1px_1fr] text-left"
@@ -441,12 +442,44 @@ export function ApartmentBooking({
 
       {!isMobileSheet && (
         <div className="rounded-[8px] bg-[#f9f9f2] px-10 pt-[31px] pb-8">
-          <p className="text-coffee text-body">Besoin d’aide avec votre réservation ?</p>
+          <p className="text-coffee text-body">{copy.helpTitle}</p>
           <Button href="/contact" className="mt-6 min-w-[208px]" iconRight={<ArrowOutwardIcon />}>
-            Contacter l’équipe
+            {copy.helpCta}
           </Button>
         </div>
       )}
+    </div>
+  )
+}
+
+const BOOKING_COPY = {
+  fr: {
+    title: 'Votre réservation',
+    cancellation: 'Annulation gratuite 14 jours avant la réservation',
+    swiklyTitle: 'Dépôt de garantie Swikly',
+    swiklyBody:
+      'Une caution sécurisée peut être demandée avant l’arrivée. Elle n’est pas débitée, sauf incident.',
+    helpTitle: 'Besoin d’aide avec votre réservation ?',
+    helpCta: 'Contacter l’équipe',
+  },
+  en: {
+    title: 'Your booking',
+    cancellation: 'Free cancellation up to 14 days before the stay',
+    swiklyTitle: 'Swikly security deposit',
+    swiklyBody:
+      'A secure deposit may be requested before arrival. It is not charged unless an incident occurs.',
+    helpTitle: 'Need help with your booking?',
+    helpCta: 'Contact the team',
+  },
+} as const
+
+type BookingCopy = (typeof BOOKING_COPY)[keyof typeof BOOKING_COPY]
+
+function SwiklyNotice({ copy }: { copy: BookingCopy }) {
+  return (
+    <div className="border-divider bg-sand/40 mx-1 mt-4 rounded-[8px] border px-4 py-3">
+      <p className="text-coffee text-body-sm font-semibold">{copy.swiklyTitle}</p>
+      <p className="text-taupe mt-1 text-xs leading-[1.45]">{copy.swiklyBody}</p>
     </div>
   )
 }
