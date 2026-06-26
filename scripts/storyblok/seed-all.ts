@@ -82,7 +82,7 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/contact',
     realPath: '/contact',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent(buildContactDefaultBody()),
   },
   {
     name: 'Blog',
@@ -158,6 +158,45 @@ function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
     body,
     seo: [],
   }
+}
+
+function buildContactDefaultBody() {
+  return [
+    blok('hero_compact_section', {
+      background_image: '',
+      title: 'Contact',
+      body: 'Une question, un projet d’investissement, une réservation ? Écrivez-nous.',
+      height: 'fixed-442',
+    }),
+    blok('contact_form_section', {
+      eyebrow: 'Formulaire',
+      title: 'Envoyez-nous un message',
+      intro: '',
+      firstname_label: 'Prénom',
+      lastname_label: 'Nom',
+      email_label: 'Email',
+      subject_label: 'Sujet',
+      subjects: [
+        blok('subject_option', { value: 'reservation', label: 'Réservation' }),
+        blok('subject_option', { value: 'investissement', label: 'Investissement' }),
+        blok('subject_option', { value: 'partenariat', label: 'Partenariat' }),
+        blok('subject_option', { value: 'autre', label: 'Autre' }),
+      ],
+      message_label: 'Message',
+      submit_label: 'Envoyer',
+      success_message: 'Merci, nous revenons vers vous dès que possible.',
+      sidebar_email: 'contact@alto-paris.com',
+      sidebar_phone_label: 'Téléphone',
+      sidebar_phone: '+33 1 00 00 00 00',
+      sidebar_address_label: 'Adresse',
+      sidebar_address_lines: 'Paris, France',
+      sidebar_socials_label: 'Réseaux',
+      sidebar_socials: [
+        blok('social_link', { platform: 'instagram', url: 'https://instagram.com' }),
+        blok('social_link', { platform: 'facebook', url: 'https://facebook.com' }),
+      ],
+    }),
+  ]
 }
 
 function buildInvestirDefaultBody() {
