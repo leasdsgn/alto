@@ -270,7 +270,10 @@ function PaymentSection(props: PaymentSectionProps) {
       throwReservationApiError(body)
     }
 
-    if (isReservationApiResponse(body) && body.phase === 'confirmed') return
+    if (isReservationApiResponse(body) && body.phase === 'confirmed') {
+      redirectAfterConfirmedBooking()
+      return
+    }
 
     if (isReservationApiResponse(body) && body.phase === 'requires_action') {
       await completePendingAuth(body)
@@ -329,6 +332,7 @@ function PaymentSection(props: PaymentSectionProps) {
 
       await verifyPendingAuth(action, stripeStatus)
       clearPendingBankAuth()
+      redirectAfterConfirmedBooking()
       return
     }
 
@@ -500,6 +504,10 @@ function isGuestValid(guest: GuestFormValues) {
 function buildBankAuthReturnUrl() {
   const url = new URL('/book/payment-return', window.location.origin)
   return url.toString()
+}
+
+function redirectAfterConfirmedBooking() {
+  window.location.replace('/')
 }
 
 function isStripeContinuableStatus(status: string | null): boolean {

@@ -92,7 +92,7 @@ export function BookingAuthReturn() {
 
         if (confirmed) {
           clearPendingBankAuth()
-          setState({ status: 'confirmed', returnTo: pending.returnTo })
+          redirectAfterConfirmedBooking()
           return
         }
 
@@ -249,6 +249,10 @@ function getClientSecretFromUrl(): string | null {
 
 function isStripeContinuableStatus(status: string | null): boolean {
   return status === 'succeeded' || status === 'processing' || status === 'requires_capture'
+}
+
+function redirectAfterConfirmedBooking() {
+  window.location.replace('/')
 }
 
 function wait(ms: number) {

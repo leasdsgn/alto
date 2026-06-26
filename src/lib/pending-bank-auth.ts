@@ -1,7 +1,6 @@
 import type { InquiryLocale } from '@/types/inquiry'
 
 export const PENDING_BANK_AUTH_STORAGE_KEY = 'alto:pending-bank-auth'
-
 export interface PendingBankAuthState {
   reservationId: string
   paymentId: string
