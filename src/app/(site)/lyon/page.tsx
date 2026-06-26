@@ -1,3 +1,4 @@
+import { StoryblokStory } from '@storyblok/react/rsc'
 import { LyonHeroSection } from '@/components/sections/lyon-hero-section'
 import { StatsSection } from '@/components/sections/stats-section'
 import { LyonApartmentsSection } from '@/components/sections/lyon-apartments-section'
@@ -11,14 +12,32 @@ import { StickyCta } from '@/components/ui/sticky-cta'
 import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryBySlug } from '@/lib/storyblok-page'
 
 export const metadata = {
   title: 'Alto Lyon - Appartements de charme à Lyon',
-  description: 'Découvrez nos appartements soignés dans les plus beaux quartiers de Lyon : Bellecour, Vieux Lyon, Terreaux.',
+  description:
+    'Découvrez nos appartements soignés dans les plus beaux quartiers de Lyon : Bellecour, Vieux Lyon, Terreaux.',
 }
 
 export default async function LyonPage() {
   const locale = await getServerLocale()
+  const story = await getStoryBySlug('pages/lyon', locale)
+
+  if (
+    story &&
+    Array.isArray((story.content as { body?: unknown }).body) &&
+    (story.content as { body: unknown[] }).body.length > 0
+  ) {
+    return (
+      <>
+        <StoryblokStory story={story} />
+        <Footer reserveStickyCtaSpace />
+        <StickyCta />
+      </>
+    )
+  }
+
   const [articles, lyonApartments, siteImages] = await Promise.all([
     getBlogArticles(locale),
     getApartmentsForSearch({ city: 'lyon' }),

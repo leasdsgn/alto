@@ -305,6 +305,21 @@ const ATOMS: ComponentDefinition[] = [
       url: textNoTranslate('URL', 1, true),
     },
   },
+  {
+    name: 'lyon_service_item',
+    display_name: 'Atome - Service Lyon (icône inline)',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      icon: selectField('Icône', 0, [
+        { name: 'Construction', value: 'construction' },
+        { name: 'Clé', value: 'key' },
+        { name: 'Ménage', value: 'cleaning' },
+        { name: 'Calendrier', value: 'calendar' },
+      ]),
+      label: textField('Libellé', 1, true),
+    },
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -749,6 +764,76 @@ const SECTIONS: ComponentDefinition[] = [
       sidebar_address_lines: textareaField('Lignes d’adresse', 15),
       sidebar_socials_label: textField('Label réseaux', 16),
       sidebar_socials: bloksField('Réseaux sociaux', 17, ['social_link']),
+    },
+  },
+  {
+    name: 'lyon_hero_section',
+    display_name: 'Lyon - Hero',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      background_image: imageField('Image de fond', 0, true),
+      eyebrow: textField('Sur-titre (ex: Lyon)', 1),
+      title: textField('Titre', 2, true),
+      body: textField('Texte sous le titre', 3),
+      show_search_bar: boolField('Afficher la barre de recherche', 4, true),
+    },
+  },
+  {
+    name: 'lyon_stats_section',
+    display_name: 'Lyon - Statistiques',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      title: textareaField('Titre principal', 0, true),
+      body: textareaField('Texte sous le titre', 1),
+      seen_on_label: textField('Label "Vu sur"', 2),
+      press_logo: imageField('Logo presse', 3),
+      monocle_logo: imageField('Logo Monocle', 4),
+    },
+  },
+  {
+    name: 'lyon_services_section',
+    display_name: 'Lyon - Services',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      image: imageField('Image latérale', 0, true),
+      eyebrow: textField('Sur-titre', 1),
+      title: textField('Titre', 2, true),
+      services: {
+        type: 'bloks',
+        pos: 3,
+        display_name: 'Services (icônes + libellé)',
+        restrict_components: true,
+        component_whitelist: ['lyon_service_item'],
+      },
+      footer_text: textareaField('Texte sous les services', 4),
+      cta_label: textField('Libellé bouton', 5),
+      cta_link: linkField('Lien bouton', 6),
+    },
+  },
+  {
+    name: 'lyon_blog_section',
+    display_name: 'Lyon - Encart blog (avec carte texte)',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      eyebrow: textField('Sur-titre', 0),
+      title: textField('Titre court', 1),
+      headline: textField('Grand titre', 2, true),
+      intro: textareaField('Texte d’intro', 3),
+      max_items: numberField('Nombre d’articles', 4, 3),
+      section_filter: selectField(
+        'Filtre par section',
+        5,
+        [
+          { name: 'Tous', value: 'all' },
+          { name: 'Lyon', value: 'lyon' },
+          { name: 'Paris', value: 'paris' },
+        ],
+        'lyon',
+      ),
     },
   },
   {

@@ -11,7 +11,14 @@ import {
 import {
   ApartmentsGridSectionBlok,
   BlogGridSectionAsyncBlok,
+  LyonBlogSectionAsyncBlok,
 } from '@/components/storyblok/data-bloks'
+import {
+  LyonHeroSectionBlok,
+  LyonQuartiersSectionBlok,
+  LyonServicesSectionBlok,
+  LyonStatsSectionBlok,
+} from '@/components/storyblok/lyon-bloks'
 
 export const getStoryblokApi = storyblokInit({
   accessToken:
@@ -29,6 +36,11 @@ export const getStoryblokApi = storyblokInit({
     testimonials_section: TestimonialsSectionBlok,
     services_section: ServicesSectionBlok,
     blog_grid_section: BlogGridSectionAsyncBlok,
+    lyon_hero_section: LyonHeroSectionBlok,
+    lyon_stats_section: LyonStatsSectionBlok,
+    lyon_services_section: LyonServicesSectionBlok,
+    lyon_quartiers_section: LyonQuartiersSectionBlok,
+    lyon_blog_section: LyonBlogSectionAsyncBlok,
   },
   apiOptions: {
     region: 'eu',

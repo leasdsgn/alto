@@ -44,7 +44,7 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/lyon',
     realPath: '/lyon',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent(buildLyonDefaultBody()),
   },
   {
     name: 'Appartements',
@@ -148,6 +148,85 @@ function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
     body,
     seo: [],
   }
+}
+
+function buildLyonDefaultBody() {
+  return [
+    blok('lyon_hero_section', {
+      background_image: '',
+      eyebrow: 'Lyon',
+      title: 'Vivre Lyon autrement.',
+      body: 'Des appartements soignés, dans les quartiers qui comptent.',
+      show_search_bar: true,
+    }),
+    blok('lyon_stats_section', {
+      title: '12 appartements soigneusement pensés,\n3 villes emblématiques, déjà 480 voyageurs conquis.',
+      body: 'Une collection intime d’adresses où l’on se sent chez soi, naturellement.',
+      seen_on_label: 'Vu sur :',
+      press_logo: '',
+      monocle_logo: '',
+    }),
+    blok('apartments_grid_section', {
+      paris_title: 'Nos appartements à Paris',
+      lyon_title: 'Nos appartements à Lyon',
+      city_filter: 'lyon',
+      max_per_city: 3,
+      show_search_bar: false,
+      display_mode: 'lyon-3-cards',
+    }),
+    blok('lyon_services_section', {
+      image: '',
+      eyebrow: 'Nos services',
+      title: 'Chez soi, comme à l’hôtel',
+      services: [
+        blok('lyon_service_item', { icon: 'construction', label: 'Appartements restaurés' }),
+        blok('lyon_service_item', { icon: 'key', label: 'Check-in autonome' }),
+        blok('lyon_service_item', { icon: 'cleaning', label: 'Linge et ménage inclus' }),
+        blok('lyon_service_item', { icon: 'calendar', label: 'Réservation sans frais' }),
+      ],
+      footer_text: 'Un parquet qui craque doucement.\nUn linge soigné.\nUn quartier qu’on apprend à connaître.',
+      cta_label: 'Réserver',
+      cta_link: { url: '#disponibilites', linktype: 'url' },
+    }),
+    blok('lyon_quartiers_section', {
+      eyebrow: 'Les quartiers',
+      title: 'Choisir son quartier',
+      items: [
+        blok('quartier', {
+          name: 'Bellecour',
+          slug: 'bellecour',
+          description: '2e arr.',
+          image: '',
+        }),
+        blok('quartier', {
+          name: 'Vieux Lyon',
+          slug: 'vieux-lyon',
+          description: '5e arr.',
+          image: '',
+        }),
+        blok('quartier', {
+          name: 'Terreaux',
+          slug: 'terreaux',
+          description: '1e arr.',
+          image: '',
+        }),
+      ],
+    }),
+    blok('lyon_blog_section', {
+      eyebrow: 'Le blog',
+      title: 'En découvrir plus',
+      headline: 'Nos conseils pour améliorer votre voyage',
+      intro: 'Depuis 2016 nous aidons les voyageurs grâce à des logements premium au cœur des villes',
+      max_items: 3,
+      section_filter: 'lyon',
+    }),
+    blok('faq_section', {
+      eyebrow: 'FAQ',
+      title: 'Questions fréquentes',
+      source: 'global',
+      items: [],
+    }),
+  ]
 }
 
 function buildHomeDefaultBody() {
