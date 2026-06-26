@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useLocale, useTranslations } from '@/components/providers/locale-provider'
+import { useHeaderGlobals } from '@/components/providers/storyblok-globals-provider'
 import { LocaleToggle } from '@/components/ui/locale-toggle'
 import { BookingNavPill } from '@/components/ui/booking-nav-pill'
 import { Button } from '@/components/ui/button'
-import { type InquiryLocale } from '@/types/inquiry'
+import { type StoryblokHeader, type HeaderNavItem, type HeaderQuickLink } from '@/lib/storyblok-globals'
 
 type Tone = 'light' | 'dark'
 type Mode = 'default' | 'apartment'
@@ -18,50 +18,16 @@ interface HeaderProps {
   mode?: Mode
 }
 
-const HEADER_COPY = {
-  fr: {
-    book: 'Réserver',
-    map: 'Voir la carte',
-    openMenu: 'Ouvrir le menu',
-    closeMenu: 'Fermer le menu',
-    navigation: 'Navigation',
-    quickAccess: 'Accès rapide',
-    apartmentsDescription: 'Paris & Lyon',
-    blogDescription: 'Adresses, quartiers, voyages',
-    storyDescription: 'L’approche Alto',
-    footerText:
-      'Séjours haut de gamme à Paris et Lyon, avec une expérience simple à réserver et claire à vivre.',
-    footerButton: 'Réserver un séjour',
-  },
-  en: {
-    book: 'Book',
-    map: 'View map',
-    openMenu: 'Open menu',
-    closeMenu: 'Close menu',
-    navigation: 'Navigation',
-    quickAccess: 'Quick access',
-    apartmentsDescription: 'Paris & Lyon',
-    blogDescription: 'Addresses, neighborhoods, travel',
-    storyDescription: 'The Alto approach',
-    footerText:
-      'Premium stays in Paris and Lyon, with a clear booking flow and a simple guest experience.',
-    footerButton: 'Book a stay',
-  },
-} as const
-type HeaderCopy = (typeof HEADER_COPY)[InquiryLocale]
-
 export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
   const [openPath, setOpenPath] = useState<string | null>(null)
   const pathname = usePathname()
-  const locale = useLocale()
-  const copy = HEADER_COPY[locale]
-  const t = useTranslations('nav')
+  const header = useHeaderGlobals()
   const open = openPath === pathname
   const isApartment = mode === 'apartment'
   const tone: Tone = isApartment ? 'dark' : variant
   const isLight = tone === 'light'
   const textClass = isLight ? 'text-cream' : 'text-coffee'
-  const logoSrc = isLight ? '/images/logo-alto-light.png' : '/images/logo-alto-dark.png'
+  const logoSrc = isLight ? header.logoLight : header.logoDark
 
   const positionClass = isApartment
     ? 'sticky top-0 z-30 border-b border-divider bg-cream'
@@ -69,37 +35,6 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
   const apartmentBackgroundStyle = isApartment
     ? { background: 'var(--Floral-white, #FFFFF8)' }
     : undefined
-  const primaryLinks = useMemo(
-    () => [
-      {
-        href: '/appartements',
-        label: t('apartments'),
-        description: copy.apartmentsDescription,
-        match: (path: string) => path.startsWith('/appartements'),
-      },
-      {
-        href: '/blog',
-        label: t('blog'),
-        description: copy.blogDescription,
-        match: (path: string) => path.startsWith('/blog'),
-      },
-      {
-        href: '/notre-histoire',
-        label: t('story'),
-        description: copy.storyDescription,
-        match: (path: string) => path.startsWith('/notre-histoire') || path.startsWith('/about'),
-      },
-    ],
-    [copy.apartmentsDescription, copy.blogDescription, copy.storyDescription, t],
-  )
-  const secondaryLinks = useMemo(
-    () => [
-      { href: '/appartements?city=paris', label: 'Paris' },
-      { href: '/appartements?city=lyon', label: 'Lyon' },
-      { href: '/contact', label: t('contact') },
-    ],
-    [t],
-  )
 
   useEffect(() => {
     if (!open) return
@@ -142,13 +77,13 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
           <div className="flex shrink-0 items-center gap-2">
             {!isApartment && (
               <Button variant="primary" size="small" href="/appartements">
-                {copy.book}
+                {header.bookLabel}
               </Button>
             )}
-            {isApartment && <MapButton label={copy.map} />}
+            {isApartment && <MapButton label={header.mapLabel} />}
             <BurgerButton
               open={open}
-              copy={copy}
+              header={header}
               onClick={() => setOpenPath(open ? null : pathname)}
             />
           </div>
@@ -159,9 +94,7 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
         open={open}
         onClose={() => setOpenPath(null)}
         pathname={pathname}
-        primaryLinks={primaryLinks}
-        secondaryLinks={secondaryLinks}
-        copy={copy}
+        header={header}
       />
 
       <span className={textClass} aria-hidden="true" hidden />
@@ -195,14 +128,14 @@ function MapButton({ label }: { label: string }) {
 
 function BurgerButton({
   open,
-  copy,
+  header,
   onClick,
 }: {
   open: boolean
-  copy: HeaderCopy
+  header: StoryblokHeader
   onClick: () => void
 }) {
-  const label = open ? copy.closeMenu : copy.openMenu
+  const label = open ? header.mobileCloseLabel : header.mobileOpenLabel
 
   return (
     <button
@@ -230,25 +163,13 @@ function BurgerOverlay({
   open,
   onClose,
   pathname,
-  primaryLinks,
-  secondaryLinks,
-  copy,
+  header,
 }: {
   open: boolean
   onClose: () => void
   pathname: string
-  primaryLinks: Array<{
-    href: string
-    label: string
-    description: string
-    match: (path: string) => boolean
-  }>
-  secondaryLinks: Array<{ href: string; label: string }>
-  copy: HeaderCopy
+  header: StoryblokHeader
 }) {
-  const isActive = (href: string, match?: (path: string) => boolean) =>
-    match ? match(pathname) : pathname === href
-
   return (
     <div
       inert={!open}
@@ -259,7 +180,7 @@ function BurgerOverlay({
     >
       <button
         type="button"
-        aria-label="Fermer le menu"
+        aria-label={header.mobileCloseLabel}
         onClick={onClose}
         className={`bg-coffee/40 absolute inset-0 backdrop-blur-md transition-opacity duration-300 ${
           open ? 'opacity-100' : 'opacity-0'
@@ -275,7 +196,7 @@ function BurgerOverlay({
           <div className="border-divider flex items-center justify-between border-b px-5 py-5">
             <Link href="/" className="shrink-0" onClick={onClose}>
               <Image
-                src="/images/logo-alto-dark.png"
+                src={header.logoDark}
                 alt="Alto"
                 width={110}
                 height={28}
@@ -288,17 +209,10 @@ function BurgerOverlay({
               <button
                 type="button"
                 className="bg-coffee text-cream flex size-9 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-                aria-label={copy.closeMenu}
+                aria-label={header.mobileCloseLabel}
                 onClick={onClose}
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
@@ -309,79 +223,41 @@ function BurgerOverlay({
             <div className="space-y-8">
               <div>
                 <p className="text-silver text-overline mb-4 font-bold tracking-[0.24px] uppercase">
-                  {copy.navigation}
+                  {header.mobileNavigationLabel}
                 </p>
                 <nav className="space-y-3">
-                  {primaryLinks.map((link) => {
-                    const active = isActive(link.href, link.match)
-
-                    return (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={onClose}
-                        className={`group block rounded-[20px] border px-4 py-4 transition-colors ${
-                          active
-                            ? 'border-coffee bg-coffee text-cream'
-                            : 'border-divider text-coffee hover:bg-sand bg-transparent'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-[22px] leading-[1.5] font-semibold tracking-[-1.98px]">
-                              {link.label}
-                            </p>
-                            <p
-                              className={`text-body mt-1 font-medium ${active ? 'text-cream/82' : 'text-taupe'}`}
-                            >
-                              {link.description}
-                            </p>
-                          </div>
-                          <span
-                            className={`flex size-9 items-center justify-center rounded-full border transition-transform group-hover:translate-x-0.5 ${
-                              active
-                                ? 'border-cream/20 bg-cream/10 text-cream'
-                                : 'border-divider bg-cream text-coffee'
-                            }`}
-                          >
-                            <ArrowOutward />
-                          </span>
-                        </div>
-                      </Link>
-                    )
-                  })}
+                  {header.navPrimary.map((link) => (
+                    <PrimaryLink
+                      key={link.href}
+                      link={link}
+                      active={isPathnameActive(pathname, link.href)}
+                      onClose={onClose}
+                    />
+                  ))}
                 </nav>
               </div>
 
               <div>
                 <p className="text-silver text-overline mb-4 font-bold tracking-[0.24px] uppercase">
-                  {copy.quickAccess}
+                  {header.mobileQuickAccessLabel}
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  {secondaryLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={onClose}
-                      className={`text-overline rounded-full border px-4 py-2 font-bold uppercase transition-colors ${
-                        isActive(link.href)
-                          ? 'border-coffee bg-coffee text-cream'
-                          : 'border-divider text-coffee hover:bg-sand'
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
+                  {header.navSecondary.map((link) => (
+                    <SecondaryLink
+                      key={`${link.href}-${link.label}`}
+                      link={link}
+                      active={pathname === link.href}
+                      onClose={onClose}
+                    />
                   ))}
                 </div>
               </div>
             </div>
 
             <div className="border-divider mt-8 border-t pt-5">
-              <p className="text-taupe text-body-sm mb-4 max-w-[26ch]">
-                {copy.footerText}
-              </p>
-              <Button href="/appartements" className="w-full justify-center">
-                {copy.footerButton}
+              <p className="text-taupe text-body-sm mb-4 max-w-[26ch]">{header.mobileFooterText}</p>
+              <Button href={header.mobileFooterButtonHref} className="w-full justify-center">
+                {header.mobileFooterButtonLabel}
               </Button>
             </div>
           </div>
@@ -389,6 +265,81 @@ function BurgerOverlay({
       </div>
     </div>
   )
+}
+
+function PrimaryLink({
+  link,
+  active,
+  onClose,
+}: {
+  link: HeaderNavItem
+  active: boolean
+  onClose: () => void
+}) {
+  return (
+    <Link
+      href={link.href}
+      target={link.opensInNewTab ? '_blank' : undefined}
+      rel={link.opensInNewTab ? 'noopener noreferrer' : undefined}
+      onClick={onClose}
+      className={`group block rounded-[20px] border px-4 py-4 transition-colors ${
+        active
+          ? 'border-coffee bg-coffee text-cream'
+          : 'border-divider text-coffee hover:bg-sand bg-transparent'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[22px] leading-[1.5] font-semibold tracking-[-1.98px]">{link.label}</p>
+          {link.description && (
+            <p className={`text-body mt-1 font-medium ${active ? 'text-cream/82' : 'text-taupe'}`}>
+              {link.description}
+            </p>
+          )}
+        </div>
+        <span
+          className={`flex size-9 items-center justify-center rounded-full border transition-transform group-hover:translate-x-0.5 ${
+            active
+              ? 'border-cream/20 bg-cream/10 text-cream'
+              : 'border-divider bg-cream text-coffee'
+          }`}
+        >
+          <ArrowOutward />
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+function SecondaryLink({
+  link,
+  active,
+  onClose,
+}: {
+  link: HeaderQuickLink
+  active: boolean
+  onClose: () => void
+}) {
+  return (
+    <Link
+      href={link.href}
+      target={link.opensInNewTab ? '_blank' : undefined}
+      rel={link.opensInNewTab ? 'noopener noreferrer' : undefined}
+      onClick={onClose}
+      className={`text-overline rounded-full border px-4 py-2 font-bold uppercase transition-colors ${
+        active
+          ? 'border-coffee bg-coffee text-cream'
+          : 'border-divider text-coffee hover:bg-sand'
+      }`}
+    >
+      {link.label}
+    </Link>
+  )
+}
+
+function isPathnameActive(pathname: string, href: string) {
+  if (href === '/') return pathname === '/'
+  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 function ArrowOutward() {

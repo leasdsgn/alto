@@ -5,9 +5,11 @@ import { Toaster } from 'sonner'
 import { I18nProvider } from '@/components/providers/i18n-provider'
 import { LocaleProvider } from '@/components/providers/locale-provider'
 import { StoryblokProvider } from '@/components/providers/storyblok-provider'
+import { StoryblokGlobalsProvider } from '@/components/providers/storyblok-globals-provider'
 import { CustomCursor } from '@/components/ui/custom-cursor'
 import { LenisProvider } from '@/components/providers/lenis-provider'
 import { getServerLocale } from '@/lib/i18n/server'
+import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import './globals.css'
 
 const manrope = Manrope({
@@ -27,6 +29,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const locale = await getServerLocale()
+  const globals = await getStoryblokGlobals(locale)
 
   return (
     <StoryblokProvider>
@@ -43,7 +46,9 @@ export default async function RootLayout({
         >
           <LocaleProvider>
             <LenisProvider>
-              <I18nProvider>{children}</I18nProvider>
+              <I18nProvider>
+                <StoryblokGlobalsProvider value={globals}>{children}</StoryblokGlobalsProvider>
+              </I18nProvider>
             </LenisProvider>
           </LocaleProvider>
           <CustomCursor />

@@ -1,18 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useStickyCtaGlobals } from '@/components/providers/storyblok-globals-provider'
 import { SearchBar } from '@/components/ui/search-bar'
 
 export function StickyCta() {
+  const { enabled, thresholdVh } = useStickyCtaGlobals()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
+    if (!enabled) return
+    const ratio = Math.max(0, Math.min(100, thresholdVh)) / 100
     const onScroll = () => {
-      setVisible(window.scrollY > window.innerHeight * 0.8)
+      setVisible(window.scrollY > window.innerHeight * ratio)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [enabled, thresholdVh])
+
+  if (!enabled) return null
 
   return (
     <div
