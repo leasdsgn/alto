@@ -1,13 +1,12 @@
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { ApartmentBooking } from '@/components/apartment/booking'
+import { ResponsiveBooking } from '@/components/apartment/responsive-booking'
 import { ApartmentGallery } from '@/components/apartment/gallery'
 import { ApartmentFaq } from '@/components/apartment/faq'
 import { ApartmentMap } from '@/components/apartment/apartment-map'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { ApartmentEditorialSections } from '@/components/sections/apartment-editorial-sections'
-import { Button } from '@/components/ui/button'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { type Apartment } from '@/types/apartment'
 import type { InquiryLocale } from '@/types/inquiry'
@@ -174,9 +173,6 @@ const FALLBACK_FEATURES_EN: FeatureItem[] = [
 
 const APARTMENT_COPY = {
   fr: {
-    book: 'Réserver',
-    from: 'Dès',
-    perNight: '/nuit',
     trips: '114 voyages',
     fallbackNeighborhood: 'Quartier central',
     guests: (count: number) => `${count} p.`,
@@ -192,9 +188,6 @@ const APARTMENT_COPY = {
     fallbackFeatures: FALLBACK_FEATURES,
   },
   en: {
-    book: 'Book',
-    from: 'From',
-    perNight: '/night',
     trips: '114 stays',
     fallbackNeighborhood: 'Central neighborhood',
     guests: (count: number) => `${count} guest${count > 1 ? 's' : ''}`,
@@ -243,7 +236,6 @@ export function ApartmentView({
   const description = apartment.description
   const space = apartment.space
   const transit = apartment.transit
-  const mobilePriceLabel = getMobilePriceLabel(apartment.price, locale, copy)
 
   return (
     <>
@@ -334,8 +326,8 @@ export function ApartmentView({
             </section>
           </div>
 
-          <aside className="hidden self-start lg:sticky lg:top-28 lg:block">
-            <ApartmentBooking
+          <aside className="self-start lg:sticky lg:top-28">
+            <ResponsiveBooking
               price={apartment.price}
               slug={apartment.slug}
               listingId={apartment.id}
@@ -359,38 +351,8 @@ export function ApartmentView({
       </main>
 
       <Footer reserveStickyCtaSpace="mobile" />
-
-      <div className="bg-cream/95 border-divider fixed inset-x-0 bottom-0 z-40 border-t p-4 backdrop-blur-md lg:hidden">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <span className="text-coffee text-body-xl font-semibold">{mobilePriceLabel.title}</span>
-            {mobilePriceLabel.suffix && (
-              <span className="text-taupe text-body-sm"> {mobilePriceLabel.suffix}</span>
-            )}
-          </div>
-          <Button href={`/book/${apartment.slug}`}>{copy.book}</Button>
-        </div>
-      </div>
     </>
   )
-}
-
-function getMobilePriceLabel(
-  price: number | null,
-  locale: InquiryLocale,
-  copy: (typeof APARTMENT_COPY)[InquiryLocale],
-) {
-  if (typeof price === 'number' && Number.isFinite(price) && price > 0) {
-    return {
-      title: `${copy.from} ${price.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-GB')}€`,
-      suffix: copy.perNight,
-    }
-  }
-
-  return {
-    title: locale === 'en' ? 'Check availability' : 'Voir disponibilités',
-    suffix: null,
-  }
 }
 
 function pickReview(globalTestimonials: StoryblokTestimonial[]): ReviewItem {

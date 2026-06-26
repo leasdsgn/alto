@@ -60,13 +60,15 @@ export function ApartmentBooking({
     if (!isDisplayablePrice(price)) return null
     return price * Math.max(nights, 0)
   }, [nights, price])
-  const minDate = today(getLocalTimeZone())
+  const minDate = useMemo(() => today(getLocalTimeZone()), [])
   const minDateKey = minDate.toString()
-  const availabilityEnd = getAvailabilityEnd(minDate, dates.end)
+  const availabilityEnd = useMemo(() => minDate.add({ months: 18 }).toString(), [minDate])
   const quoteRequestKey = listingId
     ? [listingId, checkIn, checkOut, guests, locale].join(':')
     : null
-  const hasUnavailableSelection = rangeHasUnavailableNight(dates.start, dates.end, unavailableDates)
+  const hasKnownUnavailableSelection =
+    availabilityStatus === 'ready' &&
+    rangeHasUnavailableNight(dates.start, dates.end, unavailableDates)
   const isBelowMinNights = Boolean(minNights && nights < minNights)
   const isAboveMaxNights = Boolean(maxNights && nights > maxNights)
   const isAboveCapacity = Boolean(capacity && guests > capacity)
@@ -74,16 +76,15 @@ export function ApartmentBooking({
     !listingId || (quoteStatus === 'ready' && verifiedQuoteKey === quoteRequestKey)
   const canReserve =
     shouldVerifyQuote &&
-    (!listingId || availabilityStatus === 'ready') &&
     hasVerifiedQuote &&
     nights > 0 &&
-    !hasUnavailableSelection &&
+    !hasKnownUnavailableSelection &&
     !isBelowMinNights &&
     !isAboveMaxNights &&
     !isAboveCapacity
   const availabilityMessage = getAvailabilityMessage({
     status: availabilityStatus,
-    hasUnavailableSelection,
+    hasUnavailableSelection: hasKnownUnavailableSelection,
     isBelowMinNights,
     isAboveMaxNights,
     isAboveCapacity,
@@ -191,9 +192,8 @@ export function ApartmentBooking({
     if (
       !listingId ||
       !shouldVerifyQuote ||
-      availabilityStatus !== 'ready' ||
       nights <= 0 ||
-      hasUnavailableSelection ||
+      hasKnownUnavailableSelection ||
       isBelowMinNights ||
       isAboveMaxNights ||
       isAboveCapacity
@@ -250,9 +250,8 @@ export function ApartmentBooking({
   }, [
     listingId,
     shouldVerifyQuote,
-    availabilityStatus,
     nights,
-    hasUnavailableSelection,
+    hasKnownUnavailableSelection,
     isBelowMinNights,
     isAboveMaxNights,
     isAboveCapacity,
@@ -543,17 +542,6 @@ function getQuoteBreakdown(quote: GuestyQuote): QuoteBreakdown | null {
   }
 }
 
-function getAvailabilityEnd(minDate: DateValue, selectedEnd: DateValue) {
-  const minEnd = addMonths(minDate, 18)
-  const selectedBufferEnd = addMonths(selectedEnd, 1)
-
-  return selectedBufferEnd.compare(minEnd) > 0 ? selectedBufferEnd.toString() : minEnd.toString()
-}
-
-function addMonths(date: DateValue, months: number) {
-  return date.add({ months })
-}
-
 function rangeHasUnavailableNight(start: DateValue, end: DateValue, unavailableDates: Set<string>) {
   let current = start
 
@@ -612,10 +600,14 @@ function getAvailabilityMessage({
   quoteStatus: QuoteStatus
   shouldVerifyQuote: boolean
 }) {
-  if (status === 'loading') return 'Vérification des disponibilités en cours.'
-  if (status === 'error') return 'Les disponibilités ne peuvent pas être vérifiées pour le moment.'
-  if (hasUnavailableSelection)
+  if (!shouldVerifyQuote) return 'Choisissez vos dates pour vérifier le tarif exact.'
+  if (quoteStatus === 'loading') return 'Vérification du tarif et des disponibilités.'
+  if (quoteStatus === 'error') {
+    return 'Ces dates ne sont pas disponibles pour cet appartement. Choisissez une autre période.'
+  }
+  if (hasUnavailableSelection) {
     return 'Ces dates ne sont pas disponibles. Choisissez une autre période.'
+  }
   if (isBelowMinNights && minNights) {
     return `Le séjour minimum est de ${minNights} nuit${minNights > 1 ? 's' : ''}.`
   }
@@ -625,10 +617,11 @@ function getAvailabilityMessage({
   if (isAboveCapacity && capacity) {
     return `Cet appartement accueille jusqu’à ${capacity} voyageur${capacity > 1 ? 's' : ''}.`
   }
-  if (!shouldVerifyQuote) return 'Choisissez vos dates pour vérifier le tarif exact.'
-  if (quoteStatus === 'loading') return 'Vérification du tarif et des disponibilités.'
-  if (quoteStatus === 'error') {
-    return 'Ces dates ne sont pas disponibles pour cet appartement. Choisissez une autre période.'
+  if (status === 'loading') {
+    return 'Chargement du calendrier de disponibilités.'
+  }
+  if (status === 'error') {
+    return 'Le calendrier de disponibilités ne peut pas être vérifié pour le moment.'
   }
 
   return null
