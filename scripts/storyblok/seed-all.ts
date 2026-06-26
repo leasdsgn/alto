@@ -51,7 +51,15 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/appartements',
     realPath: '/appartements',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent([
+      blok('hero_compact_section', {
+        background_image: '',
+        eyebrow: 'Alto, c’est une nouvelle manière de penser l’hospitalité.',
+        title: 'Nos appartements',
+        body: '',
+        height: 'fixed-442',
+      }),
+    ]),
   },
   {
     name: 'Notre histoire',
