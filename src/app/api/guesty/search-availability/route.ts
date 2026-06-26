@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
 import { hasRedisConfig, redisCommand } from '@/lib/guesty-oauth-cache'
-import type { GuestyCalendarDay, GuestyListing } from '@/types/guesty'
+import { isCalendarDateAvailableForRequestedStay } from '@/lib/search-availability'
+import type { GuestyListing } from '@/types/guesty'
 
 const schema = z.object({
   city: z.string().min(1),
@@ -109,7 +110,6 @@ async function resolveSearchAvailability({
   const calendarEnd = addDays(endDate, nights)
 
   const calendarResults = await mapWithConcurrency(listings, 4, async (listing) => {
-    if (listing.minNights && nights < listing.minNights) return { status: 'skipped' as const }
     if (listing.maxNights && nights > listing.maxNights) return { status: 'skipped' as const }
 
     try {
@@ -119,7 +119,7 @@ async function resolveSearchAvailability({
         formatDate(calendarEnd),
       )
 
-      return { status: 'fulfilled' as const, calendar }
+      return { status: 'fulfilled' as const, calendar, listing }
     } catch (error) {
       console.warn('[search availability] listing calendar failed', {
         listingId: listing._id,
@@ -144,7 +144,15 @@ async function resolveSearchAvailability({
     const daysByDate = new Map(calendar.days.map((day) => [day.date.slice(0, 10), day]))
 
     for (const date of candidateDates) {
-      if (isListingAvailableForStay(daysByDate, date, nights)) {
+      if (
+        isCalendarDateAvailableForRequestedStay({
+          daysByDate,
+          startDate: formatDate(date),
+          requestedNights: nights,
+          fallbackMinNights: result.listing.minNights,
+          fallbackMaxNights: result.listing.maxNights,
+        })
+      ) {
         availableStarts.add(formatDate(date))
       }
     }
@@ -251,19 +259,6 @@ function normalize(value: string | undefined | null) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
-}
-
-function isListingAvailableForStay(
-  daysByDate: Map<string, GuestyCalendarDay>,
-  startDate: Date,
-  nights: number,
-) {
-  for (let index = 0; index < nights; index += 1) {
-    const date = formatDate(addDays(startDate, index))
-    if (daysByDate.get(date)?.status !== 'available') return false
-  }
-
-  return true
 }
 
 function parseDate(value: string) {
