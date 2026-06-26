@@ -75,7 +75,7 @@ const PAGE_STORIES: StorySeed[] = [
     fullSlug: 'pages/investir',
     realPath: '/investir',
     parent: 'pages',
-    defaultContent: pageContent([]),
+    defaultContent: pageContent(buildInvestirDefaultBody()),
   },
   {
     name: 'Contact',
@@ -158,6 +158,81 @@ function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
     body,
     seo: [],
   }
+}
+
+function buildInvestirDefaultBody() {
+  return [
+    blok('hero_compact_section', {
+      background_image: '',
+      title: 'Investir avec nous',
+      body:
+        'Un modèle d’appartements haut de gamme, ancrés dans les quartiers les plus recherchés, pensé pour conjuguer rendement et excellence esthétique.',
+      height: 'fixed-442',
+    }),
+    blok('text_section', {
+      eyebrow: 'Les appartements',
+      title: 'Une collection d’adresses à forte valeur patrimoniale',
+      body:
+        'Nous sélectionnons des biens situés dans des emplacements premium, au cœur de villes à forte attractivité culturelle et touristique.\n\nChaque appartement est soigneusement rénové, valorisé par une direction artistique exigeante, optimisé pour la location courte et moyenne durée.\n\nNotre approche repose sur un équilibre entre rentabilité, désirabilité et pérennité du patrimoine.',
+      max_width: 'prose',
+      alignment: 'left',
+    }),
+    blok('invest_model_section', {
+      eyebrow: 'Le modèle',
+      title: 'Un modèle éprouvé',
+      image: '',
+      image_alt: 'Intérieur Alto',
+      points: [
+        blok('feature', {
+          title: 'Performance opérationnelle',
+          description:
+            'Un taux d’occupation optimisé grâce à une stratégie tarifaire dynamique et un positionnement haut de gamme différenciant.',
+        }),
+        blok('feature', {
+          title: 'Maîtrise des coûts',
+          description:
+            'Un réseau d’artisans, de partenaires et de fournisseurs permettant une gestion rigoureuse des investissements et des charges.',
+        }),
+        blok('feature', {
+          title: 'Expérience premium',
+          description:
+            'Une expérience client soignée, générant récurrence et recommandations.',
+        }),
+      ],
+    }),
+    blok('invest_stats_section', {
+      line_one: '12 appartements soigneusement pensés,',
+      line_two: '3 villes emblématiques, déjà 480 voyageurs conquis.',
+      body: 'Une collection intime d’adresses où l’on se sent chez soi, naturellement.',
+      seen_on_label: 'Vu sur :',
+      logos: [],
+    }),
+    blok('cta_section', {
+      eyebrow: 'Nous contacter',
+      title: 'Échangeons sur votre projet',
+      body:
+        'Vous souhaitez en savoir plus sur notre modèle ou étudier une opportunité d’investissement ?',
+      ctas: [
+        blok('cta_button', {
+          label: 'Recevoir le dossier investisseur',
+          link: { url: '/contact', linktype: 'url' },
+          variant: 'primary',
+        }),
+        blok('cta_button', {
+          label: 'Nous contacter',
+          link: { url: '/contact', linktype: 'url' },
+          variant: 'outline',
+        }),
+      ],
+      variant: 'cream',
+    }),
+    blok('faq_section', {
+      eyebrow: 'FAQ',
+      title: 'Questions fréquentes',
+      source: 'global',
+      items: [],
+    }),
+  ]
 }
 
 function buildLyonDefaultBody() {

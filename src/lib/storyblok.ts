@@ -20,6 +20,13 @@ import {
   LyonStatsSectionBlok,
 } from '@/components/storyblok/lyon-bloks'
 import { NotreHistoireSectionBlok } from '@/components/storyblok/about-bloks'
+import {
+  CtaSectionBlok,
+  FaqSectionBlok,
+  InvestModelSectionBlok,
+  InvestStatsSectionBlok,
+  TextSectionBlok,
+} from '@/components/storyblok/shared-bloks'
 
 export const getStoryblokApi = storyblokInit({
   accessToken:
@@ -43,6 +50,11 @@ export const getStoryblokApi = storyblokInit({
     lyon_quartiers_section: LyonQuartiersSectionBlok,
     lyon_blog_section: LyonBlogSectionAsyncBlok,
     notre_histoire_section: NotreHistoireSectionBlok,
+    text_section: TextSectionBlok,
+    cta_section: CtaSectionBlok,
+    faq_section: FaqSectionBlok,
+    invest_model_section: InvestModelSectionBlok,
+    invest_stats_section: InvestStatsSectionBlok,
   },
   apiOptions: {
     region: 'eu',
