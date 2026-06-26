@@ -1,7 +1,11 @@
 import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
-import { getCalendarMinimumNightlyPrice, getQuoteTotalCents } from '@/lib/guesty-pricing'
+import {
+  findFirstAvailableCalendarStay,
+  getQuoteAverageNightlyPrice,
+  getQuoteTotalCents,
+} from '@/lib/guesty-pricing'
 import { type GuestyListing } from '@/types/guesty'
 import {
   type Apartment,
@@ -125,6 +129,16 @@ const getCachedSearchQuote = unstable_cache(
   { revalidate: 300 },
 )
 
+const getCachedStartingPriceQuote = unstable_cache(
+  (listingId: string, checkIn: string, checkOut: string) =>
+    guestyClient.createQuote(listingId, checkIn, checkOut, 1),
+  ['guesty-starting-price-quote'],
+  {
+    revalidate: STARTING_PRICE_REVALIDATE_SECONDS,
+    tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
+  },
+)
+
 const getCachedListingCalendarForPrice = unstable_cache(
   (listingId: string, from: string, to: string) =>
     guestyClient.getListingCalendar(listingId, from, to),
@@ -147,7 +161,7 @@ const getCachedListingCards = unstable_cache(
 
 const getCachedApartmentCardSnapshot = unstable_cache(
   loadApartmentCardSnapshot,
-  ['guesty-apartment-card-starting-price-snapshot'],
+  ['guesty-apartment-card-quote-starting-price-snapshot-v2'],
   {
     revalidate: STARTING_PRICE_REVALIDATE_SECONDS,
     tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
@@ -367,7 +381,7 @@ function normalizeCity(value: string | undefined | null): string {
 async function getApartments(): Promise<Apartment[]> {
   try {
     const { results } = await getCachedListings()
-    if (results.length > 0) return withCalendarPrices(results.map(mapListing))
+    if (results.length > 0) return withStartingPrices(results.map(mapListing))
   } catch {
     // fall through to fallback
   }
@@ -382,7 +396,7 @@ async function loadApartmentCardSnapshot(): Promise<ApartmentCardData[]> {
   try {
     const { results } = await getCachedListingCards()
     if (results.length > 0)
-      return withCalendarPrices(results.map((listing) => mapListingCard(listing)))
+      return withStartingPrices(results.map((listing) => mapListingCard(listing)))
   } catch {
     // fall through to fallback
   }
@@ -480,7 +494,7 @@ async function getApartmentsForSearch(criteria: SearchCriteria) {
   return result.apartments
 }
 
-async function withCalendarPrices<
+async function withStartingPrices<
   T extends {
     id: string
     price: number | null
@@ -495,7 +509,11 @@ async function withCalendarPrices<
 
     try {
       const calendar = await getCachedListingCalendarForPrice(apartment.id, from, to)
-      const nightlyPrice = getCalendarMinimumNightlyPrice(calendar.days)
+      const stay = findFirstAvailableCalendarStay(calendar.days, apartment.minNights ?? 1)
+      if (!stay) return apartment
+
+      const quote = await getCachedStartingPriceQuote(apartment.id, stay.checkIn, stay.checkOut)
+      const nightlyPrice = getQuoteAverageNightlyPrice(quote, stay.nights)
       if (!nightlyPrice) return apartment
 
       return {
