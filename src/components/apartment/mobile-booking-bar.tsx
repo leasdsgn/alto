@@ -83,7 +83,7 @@ export function MobileBookingBar(props: MobileBookingBarProps) {
             </div>
 
             <div className="mx-auto max-w-[498px]">
-              <ApartmentBooking {...props} initialShouldVerifyQuote />
+              <ApartmentBooking {...props} initialShouldVerifyQuote variant="mobileSheet" />
             </div>
           </div>
         </div>

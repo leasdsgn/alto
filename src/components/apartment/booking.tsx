@@ -21,6 +21,7 @@ interface BookingProps {
   minNights?: number
   maxNights?: number
   initialShouldVerifyQuote?: boolean
+  variant?: 'card' | 'mobileSheet'
 }
 
 type AvailabilityStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -40,6 +41,7 @@ export function ApartmentBooking({
   minNights,
   maxNights,
   initialShouldVerifyQuote = false,
+  variant = 'card',
 }: BookingProps) {
   const locale = useLocale()
   const { dates, guests, setDates, setGuests } = useSearchStore()
@@ -112,6 +114,7 @@ export function ApartmentBooking({
     canShowFallbackPrice: canReserve || availabilityStatus !== 'ready',
     shouldVerifyQuote,
   })
+  const isMobileSheet = variant === 'mobileSheet'
 
   useEffect(() => {
     if (!listingId) {
@@ -263,17 +266,25 @@ export function ApartmentBooking({
   ])
 
   return (
-    <div className="w-full max-w-[498px] space-y-[33px]">
-      <div className="rounded-[8px] bg-[#f9f9f2] px-6 pt-8 pb-[31px] shadow-[0_2px_2px_rgba(0,0,0,0.15)]">
-        <div className="px-4">
-          <h2 className="text-coffee text-h5 font-bold tracking-[-0.02em]">Votre réservation</h2>
+    <div className={isMobileSheet ? 'w-full max-w-[498px]' : 'w-full max-w-[498px] space-y-[33px]'}>
+      <div
+        className={
+          isMobileSheet
+            ? ''
+            : 'rounded-[8px] bg-[#f9f9f2] px-6 pt-8 pb-[31px] shadow-[0_2px_2px_rgba(0,0,0,0.15)]'
+        }
+      >
+        {!isMobileSheet && (
+          <div className="px-4">
+            <h2 className="text-coffee text-h5 font-bold tracking-[-0.02em]">Votre réservation</h2>
 
-          <div className="from-silver to-taupe mt-[13px] max-w-[378px] rounded-[8px] bg-gradient-to-r px-3 py-1.5 shadow-[0_2px_2px_rgba(0,0,0,0.15)]">
-            <p className="text-cream text-body-sm whitespace-nowrap">
-              Annulation gratuite 14 jours avant la réservation
-            </p>
+            <div className="from-silver to-taupe mt-[13px] max-w-[378px] rounded-[8px] bg-gradient-to-r px-3 py-1.5 shadow-[0_2px_2px_rgba(0,0,0,0.15)]">
+              <p className="text-cream text-body-sm whitespace-nowrap">
+                Annulation gratuite 14 jours avant la réservation
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <DateRangePicker
           value={dates}
@@ -289,7 +300,7 @@ export function ApartmentBooking({
         >
           <Label className="sr-only">Dates du séjour</Label>
 
-          <div className="border-silver mx-[17px] mt-8 border-t">
+          <div className={`border-silver mx-[17px] border-t ${isMobileSheet ? 'mt-0' : 'mt-8'}`}>
             <button
               type="button"
               className="grid w-full grid-cols-[1fr_1px_1fr] text-left"
@@ -428,12 +439,14 @@ export function ApartmentBooking({
         </div>
       </div>
 
-      <div className="rounded-[8px] bg-[#f9f9f2] px-10 pt-[31px] pb-8">
-        <p className="text-coffee text-body">Besoin d’aide avec votre réservation ?</p>
-        <Button href="/contact" className="mt-6 min-w-[208px]" iconRight={<ArrowOutwardIcon />}>
-          Contacter l’équipe
-        </Button>
-      </div>
+      {!isMobileSheet && (
+        <div className="rounded-[8px] bg-[#f9f9f2] px-10 pt-[31px] pb-8">
+          <p className="text-coffee text-body">Besoin d’aide avec votre réservation ?</p>
+          <Button href="/contact" className="mt-6 min-w-[208px]" iconRight={<ArrowOutwardIcon />}>
+            Contacter l’équipe
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
