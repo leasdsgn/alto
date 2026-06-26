@@ -17,6 +17,8 @@
     "storyblok:seed-images": "bun run scripts/seed-storyblok-site-images.ts",
     "storyblok:seed-apartments": "bun run scripts/seed-storyblok-apartments.ts",
     "storyblok:sync-assets": "bun run scripts/sync-storyblok-site-assets.ts",
+    "storyblok:seed-all": "bun run scripts/storyblok/seed-all.ts",
+    "storyblok:seed-schema": "bun run scripts/storyblok/seed-all.ts --schema-only",
     "test": "vitest run",
     "test:watch": "vitest"
   },

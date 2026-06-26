@@ -2,20 +2,7 @@ import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { getServerLocale } from '@/lib/i18n/server'
-import { getStoryblokApi } from '@/lib/storyblok'
-
-const STATIC_ROUTES = new Set([
-  '/about',
-  '/annulation',
-  '/appartements',
-  '/blog',
-  '/cgv',
-  '/confidentialite',
-  '/contact',
-  '/investir',
-  '/lyon',
-  '/notre-histoire',
-])
+import { getStoryBySlug } from '@/lib/storyblok-page'
 
 interface PreviewPageProps {
   params: Promise<{
@@ -25,103 +12,122 @@ interface PreviewPageProps {
 }
 
 export default async function PreviewPage({ params, searchParams }: PreviewPageProps) {
-  const query = await searchParams
   const draft = await draftMode()
   draft.enable()
 
+  const query = await searchParams
   const { slug = [] } = await params
-  const path = getPreviewPath(query, slug)
+  const locale = await getServerLocale()
+  const target = resolvePreviewTarget(query, slug)
 
-  if (path === '/') {
-    const storyblokApi = getStoryblokApi()
-    const locale = await getServerLocale()
-    const { data } = await storyblokApi.get('cdn/stories/site-images', {
-      version: 'draft',
-      language: locale,
-      fallback_lang: 'fr',
-    })
-
-    return <StoryblokStory story={data.story} />
+  if (target.kind === 'story') {
+    const story = await getStoryBySlug(target.slug, locale)
+    if (story) return <StoryblokStory story={story} />
+    if (target.fallbackPath) redirect(target.fallbackPath)
   }
 
-  const queryString = toQueryString(query)
-
-  redirect(queryString ? `${path}?${queryString}` : path)
+  redirect(target.fallbackPath ?? '/')
 }
 
-function getPreviewPath(query: Record<string, string | string[] | undefined>, slug: string[]) {
+interface PreviewTarget {
+  kind: 'story' | 'redirect'
+  slug: string
+  fallbackPath?: string
+}
+
+const PAGE_SLUG_TO_PATH: Record<string, string> = {
+  home: '/',
+  lyon: '/lyon',
+  appartements: '/appartements',
+  'notre-histoire': '/notre-histoire',
+  investir: '/investir',
+  contact: '/contact',
+  blog: '/blog',
+  cgv: '/cgv',
+  confidentialite: '/confidentialite',
+  annulation: '/annulation',
+}
+
+function resolvePreviewTarget(
+  query: Record<string, string | string[] | undefined>,
+  slug: string[],
+): PreviewTarget {
   const queryPath =
     firstQueryValue(query.path) ?? firstQueryValue(query.slug) ?? firstQueryValue(query.real_path)
-  if (queryPath) return normalizePath(queryPath)
-  if (slug.length > 0) return normalizePath(slug.join('/'))
-  return '/'
+  const raw = queryPath ?? slug.join('/')
+  const normalized = stripLeading(normalize(raw))
+
+  if (!normalized || normalized === 'home') {
+    return { kind: 'story', slug: 'pages/home', fallbackPath: '/' }
+  }
+
+  if (normalized === 'about') {
+    return { kind: 'story', slug: 'pages/notre-histoire', fallbackPath: '/notre-histoire' }
+  }
+
+  if (normalized.startsWith('pages/')) {
+    const pageKey = normalized.slice('pages/'.length)
+    return {
+      kind: 'story',
+      slug: normalized,
+      fallbackPath: PAGE_SLUG_TO_PATH[pageKey] ?? `/${pageKey}`,
+    }
+  }
+
+  if (normalized.startsWith('globals/')) {
+    return { kind: 'story', slug: normalized, fallbackPath: '/' }
+  }
+
+  if (normalized.startsWith('articles/')) {
+    return {
+      kind: 'story',
+      slug: normalized,
+      fallbackPath: `/blog/${normalized.replace(/^articles\//, '')}`,
+    }
+  }
+
+  if (normalized.startsWith('apartments/') || normalized.startsWith('apartment-editorials/')) {
+    const slugPart = normalized.replace(/^(apartments|apartment-editorials)\//, '')
+    return {
+      kind: 'story',
+      slug: normalized,
+      fallbackPath: `/appartements/${slugPart}`,
+    }
+  }
+
+  if (normalized.startsWith('blog/')) {
+    return {
+      kind: 'story',
+      slug: normalized.replace(/^blog\//, 'articles/'),
+      fallbackPath: `/${normalized}`,
+    }
+  }
+
+  if (normalized === 'site-images' || normalized === 'globals/site-images') {
+    return { kind: 'story', slug: 'pages/home', fallbackPath: '/' }
+  }
+
+  if (PAGE_SLUG_TO_PATH[normalized]) {
+    return {
+      kind: 'story',
+      slug: `pages/${normalized}`,
+      fallbackPath: PAGE_SLUG_TO_PATH[normalized],
+    }
+  }
+
+  return { kind: 'redirect', slug: '', fallbackPath: `/${normalized}` }
 }
 
 function firstQueryValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
 }
 
-function normalizePath(value: string) {
-  const path = value.startsWith('/preview') ? value.replace(/^\/preview/, '') : value
-  const normalized = normalizeLeadingSlash(path)
-
-  if (
-    !path ||
-    normalized === '/home' ||
-    normalized === '/site-images' ||
-    normalized === '/globals/site-images'
-  ) {
-    return '/'
-  }
-
-  if (normalized === '/global-faq' || normalized === '/apartment-faq') {
-    return '/appartements'
-  }
-
-  if (normalized === '/blog/index') {
-    return '/blog'
-  }
-
-  if (normalized.startsWith('/_categories/') || normalized.startsWith('/_settings/')) {
-    return '/'
-  }
-
-  if (normalized.startsWith('/articles/')) {
-    return normalized.replace(/^\/articles\//, '/blog/')
-  }
-
-  if (normalized.startsWith('/blog/')) {
-    return normalized
-  }
-
-  if (normalized.startsWith('/apartments/') || normalized.startsWith('/apartment-editorials/')) {
-    return normalized.replace(/^\/(apartments|apartment-editorials)\//, '/appartements/')
-  }
-
-  if (normalized.startsWith('/appartements/')) {
-    return normalized
-  }
-
-  if (STATIC_ROUTES.has(normalized)) {
-    return normalized
-  }
-
-  return `/blog${normalized}`
-}
-
-function normalizeLeadingSlash(value: string) {
+function normalize(value: string) {
   if (!value) return '/'
-  return value.startsWith('/') ? value : `/${value}`
+  const cleaned = value.startsWith('/preview') ? value.replace(/^\/preview/, '') : value
+  return cleaned.startsWith('/') ? cleaned : `/${cleaned}`
 }
 
-function toQueryString(query: Record<string, string | string[] | undefined>) {
-  const params = new URLSearchParams()
-
-  for (const [key, value] of Object.entries(query)) {
-    if (key === 'path' || key === 'slug' || key === 'real_path') continue
-    if (typeof value === 'string') params.set(key, value)
-    if (Array.isArray(value)) value.forEach((item) => params.append(key, item))
-  }
-
-  return params.toString()
+function stripLeading(value: string) {
+  return value.replace(/^\/+/, '').replace(/\/+$/, '')
 }
