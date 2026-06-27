@@ -1,22 +1,13 @@
 import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
-import {
-  findFirstAvailableCalendarStay,
-  getQuoteAverageNightlyPrice,
-  getQuoteTotalCents,
-} from '@/lib/guesty-pricing'
+import { getQuoteTotalCents } from '@/lib/guesty-pricing'
 import { type GuestyListing } from '@/types/guesty'
-import {
-  type Apartment,
-  type ApartmentCardData,
-  type ApartmentPriceSource,
-} from '@/types/apartment'
+import { type Apartment, type ApartmentCardData } from '@/types/apartment'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 
-const PRICE_LOOKAHEAD_DAYS = 180
-const STARTING_PRICE_REVALIDATE_SECONDS = 12 * 60 * 60
+const BASE_PRICE_REVALIDATE_SECONDS = 12 * 60 * 60
 const APARTMENT_STARTING_PRICES_CACHE_TAG = 'guesty-apartment-starting-prices'
 const LISTING_CARD_FIELDS = [
   '_id',
@@ -30,6 +21,7 @@ const LISTING_CARD_FIELDS = [
   'accommodates',
   'bedrooms',
   'bathrooms',
+  'prices.basePrice',
   'prices.currency',
   'minNights',
   'maxNights',
@@ -53,8 +45,8 @@ function mapListing(listing: GuestyListing): Apartment {
   return {
     id: listing._id,
     name: listing.title,
-    price: null,
-    currency: listing.prices.currency,
+    price: getBasePrice(listing.prices?.basePrice),
+    currency: listing.prices?.currency ?? 'EUR',
     guests: listing.accommodates,
     surface: 0,
     bedrooms: listing.bedrooms,
@@ -89,11 +81,12 @@ function mapListingCard(listing: GuestyListing): ApartmentCardData {
     listing.pictures?.[0]?.original || listing.pictures?.[0]?.thumbnail,
   )
   const totalPrice = getTotalPrice(listing.totalPrice)
+  const basePrice = getBasePrice(listing.prices?.basePrice)
 
   return {
     id: listing._id,
     name: listing.title || listing.nickname || 'Appartement Alto',
-    price: totalPrice,
+    price: totalPrice ?? basePrice,
     priceSource: totalPrice ? 'total' : 'starting',
     currency: listing.prices?.currency ?? 'EUR',
     guests: listing.accommodates ?? 0,
@@ -129,26 +122,6 @@ const getCachedSearchQuote = unstable_cache(
   { revalidate: 300 },
 )
 
-const getCachedStartingPriceQuote = unstable_cache(
-  (listingId: string, checkIn: string, checkOut: string) =>
-    guestyClient.createQuote(listingId, checkIn, checkOut, 1),
-  ['guesty-starting-price-quote'],
-  {
-    revalidate: STARTING_PRICE_REVALIDATE_SECONDS,
-    tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
-  },
-)
-
-const getCachedListingCalendarForPrice = unstable_cache(
-  (listingId: string, from: string, to: string) =>
-    guestyClient.getListingCalendar(listingId, from, to),
-  ['guesty-listing-calendar-price'],
-  {
-    revalidate: STARTING_PRICE_REVALIDATE_SECONDS,
-    tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
-  },
-)
-
 const getCachedListings = unstable_cache(() => guestyClient.getListings(), ['guesty-listings'], {
   revalidate: 300,
 })
@@ -161,9 +134,9 @@ const getCachedListingCards = unstable_cache(
 
 const getCachedApartmentCardSnapshot = unstable_cache(
   loadApartmentCardSnapshot,
-  ['guesty-apartment-card-quote-starting-price-snapshot-v2'],
+  ['guesty-apartment-card-base-price-snapshot-v1'],
   {
-    revalidate: STARTING_PRICE_REVALIDATE_SECONDS,
+    revalidate: BASE_PRICE_REVALIDATE_SECONDS,
     tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
   },
 )
@@ -381,7 +354,7 @@ function normalizeCity(value: string | undefined | null): string {
 async function getApartments(): Promise<Apartment[]> {
   try {
     const { results } = await getCachedListings()
-    if (results.length > 0) return withStartingPrices(results.map(mapListing))
+    if (results.length > 0) return results.map(mapListing)
   } catch {
     // fall through to fallback
   }
@@ -395,8 +368,7 @@ async function getApartmentCards(): Promise<ApartmentCardData[]> {
 async function loadApartmentCardSnapshot(): Promise<ApartmentCardData[]> {
   try {
     const { results } = await getCachedListingCards()
-    if (results.length > 0)
-      return withStartingPrices(results.map((listing) => mapListingCard(listing)))
+    if (results.length > 0) return results.map((listing) => mapListingCard(listing))
   } catch {
     // fall through to fallback
   }
@@ -494,39 +466,6 @@ async function getApartmentsForSearch(criteria: SearchCriteria) {
   return result.apartments
 }
 
-async function withStartingPrices<
-  T extends {
-    id: string
-    price: number | null
-    minNights?: number
-    priceSource?: ApartmentPriceSource
-  },
->(apartments: T[]) {
-  const { from, to } = getPriceCalendarWindow()
-
-  return mapWithConcurrency(apartments, 3, async (apartment) => {
-    if (isFallbackApartmentId(apartment.id)) return apartment
-
-    try {
-      const calendar = await getCachedListingCalendarForPrice(apartment.id, from, to)
-      const stay = findFirstAvailableCalendarStay(calendar.days, apartment.minNights ?? 1)
-      if (!stay) return apartment
-
-      const quote = await getCachedStartingPriceQuote(apartment.id, stay.checkIn, stay.checkOut)
-      const nightlyPrice = getQuoteAverageNightlyPrice(quote, stay.nights)
-      if (!nightlyPrice) return apartment
-
-      return {
-        ...apartment,
-        price: nightlyPrice,
-        priceSource: 'starting' as const,
-      }
-    } catch {
-      return apartment
-    }
-  })
-}
-
 async function withQuotePrices<T extends { id: string; price: number | null }>(
   apartments: T[],
   {
@@ -579,6 +518,11 @@ function getTotalPrice(totalPrice: number | undefined) {
   return Math.round(totalPrice)
 }
 
+function getBasePrice(basePrice: number | undefined | null) {
+  if (!Number.isFinite(basePrice) || !basePrice || basePrice <= 0) return null
+  return Math.round(basePrice)
+}
+
 function toApartmentCardData(apartment: (typeof FALLBACK_APARTMENTS)[number]): ApartmentCardData {
   const maybeImage = (apartment as { image?: unknown }).image
   const image = typeof maybeImage === 'string' ? maybeImage : undefined
@@ -612,23 +556,6 @@ function isFallbackApartmentId(id: string) {
 
 function isDisplayablePrice(value: number | null): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value > 0
-}
-
-function getPriceCalendarWindow() {
-  const fromDate = new Date()
-  fromDate.setDate(fromDate.getDate() + 1)
-
-  const toDate = new Date(fromDate)
-  toDate.setDate(toDate.getDate() + PRICE_LOOKAHEAD_DAYS)
-
-  return {
-    from: formatDateKey(fromDate),
-    to: formatDateKey(toDate),
-  }
-}
-
-function formatDateKey(date: Date) {
-  return date.toISOString().slice(0, 10)
 }
 
 export {
