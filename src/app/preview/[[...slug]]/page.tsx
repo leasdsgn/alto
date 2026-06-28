@@ -1,4 +1,3 @@
-import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { getServerLocale } from '@/lib/i18n/server'
@@ -12,9 +11,6 @@ interface PreviewPageProps {
 }
 
 export default async function PreviewPage({ params, searchParams }: PreviewPageProps) {
-  const draft = await draftMode()
-  draft.enable()
-
   const query = await searchParams
   const { slug = [] } = await params
   const locale = await getServerLocale()
