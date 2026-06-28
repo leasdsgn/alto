@@ -23,6 +23,10 @@ export default async function PreviewPage({ params, searchParams }: PreviewPageP
   if (target.kind === 'story') {
     const story = await getStoryBySlug(target.slug, locale, 'draft')
     if (story) return <StoryblokStory story={story} />
+    if (target.slug === 'pages/home') {
+      const legacyHome = await getStoryBySlug('site-images', locale, 'draft')
+      if (legacyHome) return <StoryblokStory story={legacyHome} />
+    }
     if (target.fallbackPath) redirect(target.fallbackPath)
   }
 
@@ -104,7 +108,7 @@ function resolvePreviewTarget(
   }
 
   if (normalized === 'site-images' || normalized === 'globals/site-images') {
-    return { kind: 'story', slug: 'pages/home', fallbackPath: '/' }
+    return { kind: 'story', slug: 'site-images', fallbackPath: '/' }
   }
 
   if (PAGE_SLUG_TO_PATH[normalized]) {

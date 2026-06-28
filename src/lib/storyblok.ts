@@ -2,7 +2,6 @@ import { storyblokInit, apiPlugin } from '@storyblok/react/rsc'
 import { PageBlok } from '@/components/storyblok/page-blok'
 import {
   HeroSectionBlok,
-  HomeAboutSectionBlok,
   PanelsSectionBlok,
   TestimonialsSectionBlok,
   ServicesSectionBlok,
@@ -41,6 +40,16 @@ import {
 } from '@/components/storyblok/shared-bloks'
 import { ContactFormSectionBlok } from '@/components/storyblok/contact-bloks'
 import { BlogIndexSectionBlok } from '@/components/storyblok/blog-bloks'
+import {
+  HomeAboutStory,
+  HomeApartmentsStory,
+  HomeBlogStory,
+  HomeExperienceStory,
+  HomeHeroStory,
+  HomeServicesStory,
+  HomeTestimonialsStory,
+} from '@/components/storyblok/home-sections'
+import { SiteImagesStory } from '@/components/storyblok/site-images-story'
 
 export const getStoryblokApi = storyblokInit({
   accessToken:
@@ -50,9 +59,16 @@ export const getStoryblokApi = storyblokInit({
   use: [apiPlugin],
   components: {
     page: PageBlok,
+    site_images: SiteImagesStory,
+    home_hero_section: HomeHeroStory,
+    home_about_section: HomeAboutStory,
+    home_apartments_section: HomeApartmentsStory,
+    home_experience_section: HomeExperienceStory,
+    home_testimonials_section: HomeTestimonialsStory,
+    home_services_section: HomeServicesStory,
+    home_blog_section: HomeBlogStory,
     hero_section: HeroSectionBlok,
     hero_compact_section: HeroCompactSectionBlok,
-    home_about_section: HomeAboutSectionBlok,
     apartments_grid_section: ApartmentsGridSectionBlok,
     panels_section: PanelsSectionBlok,
     testimonials_section: TestimonialsSectionBlok,
