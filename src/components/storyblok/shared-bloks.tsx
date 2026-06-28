@@ -26,6 +26,7 @@ type Editable = Parameters<typeof storyblokEditable>[0]
 type Variant = 'cream' | 'coffee' | 'sand' | 'gradient'
 
 const editable = (blok: Blok) => storyblokEditable(blok as Editable)
+const editableUnknown = (blok: unknown) => editable(blok as Blok)
 
 const ctaVariantClasses: Record<Variant, string> = {
   cream: 'bg-cream text-coffee',
@@ -101,6 +102,7 @@ export function CtaSectionBlok({ blok }: { blok: Blok }) {
             {ctas.map((cta, index) => (
               <Link
                 key={`${cta.label}-${index}`}
+                {...editable(cta as Blok)}
                 href={linkHref(cta.link as StoryblokLinkField, '/')}
                 prefetch={false}
                 className="bg-coffee text-cream inline-flex h-12 items-center rounded-full px-8 text-sm font-medium transition-opacity hover:opacity-85"
@@ -118,8 +120,9 @@ export function CtaSectionBlok({ blok }: { blok: Blok }) {
 export function FaqSectionBlok({ blok }: { blok: Blok }) {
   const source = textOr(blok.source, 'inline')
   const global = useApartmentFaqGlobals()
-  const inline = bloksOf<{ question?: unknown; answer?: unknown }>(blok.items)
+  const inline = bloksOf<{ question?: unknown; answer?: unknown } & Blok>(blok.items)
     .map((item) => ({
+      ...item,
       question: textOr(item.question, ''),
       answer: richTextToPlainText(item.answer),
     }))
@@ -147,7 +150,11 @@ export function FaqSectionBlok({ blok }: { blok: Blok }) {
 
       <div className="mt-6">
         {items.map((item, i) => (
-          <div key={`${item.question}-${i}`} className="border-divider border-t">
+          <div
+            key={`${item.question}-${i}`}
+            {...editableUnknown(item)}
+            className="border-divider border-t"
+          >
             <button
               type="button"
               className="flex w-full items-center gap-3 py-3"
@@ -223,7 +230,7 @@ export function ImageTextSectionBlok({ blok }: { blok: Blok }) {
           {points.length > 0 ? (
             <div className="mt-8 grid grid-cols-1 gap-5">
               {points.map((point, index) => (
-                <div key={`${point.title}-${index}`}>
+                <div key={`${point.title}-${index}`} {...editable(point as Blok)}>
                   <h3 className="text-coffee text-sm font-bold">{textOr(point.title, '')}</h3>
                   {point.description ? (
                     <p className="text-taupe mt-2 text-sm leading-relaxed">
@@ -238,7 +245,7 @@ export function ImageTextSectionBlok({ blok }: { blok: Blok }) {
           {ctas.length > 0 ? (
             <div className="mt-8 flex flex-wrap gap-3">
               {ctas.map((cta, index) => (
-                <CmsCtaLink key={`${cta.label}-${index}`} cta={cta} />
+                <CmsCtaLink key={`${cta.label}-${index}`} cta={cta as Blok} />
               ))}
             </div>
           ) : null}
@@ -286,7 +293,11 @@ export function FeatureGridSectionBlok({ blok }: { blok: Blok }) {
         {features.map((feature, index) => {
           const icon = assetUrl(feature.icon, '')
           return (
-            <article key={`${feature.title}-${index}`} className="border-divider border-t pt-5">
+            <article
+              key={`${feature.title}-${index}`}
+              {...editable(feature as Blok)}
+              className="border-divider border-t pt-5"
+            >
               {variant === 'numbered' ? (
                 <p className="text-silver text-sm font-bold">
                   {String(index + 1).padStart(2, '0')}
@@ -331,7 +342,11 @@ export function StatsSectionBlok({ blok }: { blok: Blok }) {
             {items.map((item, index) => {
               const icon = assetUrl(item.icon, '')
               return (
-                <div key={`${item.value}-${index}`} className="border-t border-current/15 pt-5">
+                <div
+                  key={`${item.value}-${index}`}
+                  {...editable(item as Blok)}
+                  className="border-t border-current/15 pt-5"
+                >
                   {icon ? (
                     <Image src={icon} alt="" width={24} height={24} className="mb-4 h-6 w-6" />
                   ) : null}
@@ -392,7 +407,7 @@ export function QuartiersSectionBlok({ blok }: { blok: Blok }) {
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {items.map((item, index) => (
-          <article key={`${item.slug}-${index}`} className="group">
+          <article key={`${item.slug}-${index}`} {...editable(item as Blok)} className="group">
             <div className="bg-sand relative aspect-[4/5] overflow-hidden rounded-lg">
               <Image
                 src={assetUrl(item.image, PLACEHOLDER_IMAGE)}
@@ -456,7 +471,7 @@ export function InvestModelSectionBlok({ blok }: { blok: Blok }) {
 
           <div className="mt-10 flex flex-col gap-8">
             {points.map((point, index) => (
-              <div key={`${point.title}-${index}`}>
+              <div key={`${point.title}-${index}`} {...editable(point as Blok)}>
                 <h3 className="text-cream text-base leading-[20px] font-bold">
                   {textOr(point.title, '')}
                 </h3>
@@ -533,7 +548,11 @@ export function RichTextSectionBlok({ blok }: { blok: Blok }) {
   )
 }
 
-function CmsCtaLink({ cta }: { cta: { label?: unknown; link?: unknown; variant?: unknown } }) {
+function CmsCtaLink({
+  cta,
+}: {
+  cta: Blok & { label?: unknown; link?: unknown; variant?: unknown }
+}) {
   const variant = textOr(cta.variant, 'primary')
   const href = linkHref(cta.link as StoryblokLinkField, '/')
   const target = linkTarget(cta.link)
@@ -546,6 +565,7 @@ function CmsCtaLink({ cta }: { cta: { label?: unknown; link?: unknown; variant?:
 
   return (
     <Link
+      {...editable(cta)}
       href={href}
       prefetch={false}
       target={target}

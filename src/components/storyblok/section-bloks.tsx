@@ -88,6 +88,7 @@ export function PanelsSectionBlok({ blok }: { blok: Blok }) {
                 first?.title,
                 'Espaces de charme, singuliers, atypiques, et bien pensés.',
               ),
+              editableAttributes: first ? editable(first as Blok) : undefined,
             },
             {
               label: textOr(second?.label, 'Localisation'),
@@ -95,6 +96,7 @@ export function PanelsSectionBlok({ blok }: { blok: Blok }) {
                 second?.title,
                 'Bonnes adresses. Au cœur de l’action ou loin des sentiers battus.',
               ),
+              editableAttributes: second ? editable(second as Blok) : undefined,
             },
             {
               label: textOr(third?.label, 'Confort'),
@@ -102,6 +104,7 @@ export function PanelsSectionBlok({ blok }: { blok: Blok }) {
                 third?.title,
                 'Standards hôteliers. Soin des détails, équipements modernes.',
               ),
+              editableAttributes: third ? editable(third as Blok) : undefined,
             },
           ],
         }}
@@ -119,10 +122,12 @@ export function TestimonialsSectionBlok({ blok }: { blok: Blok }) {
     apartment?: unknown
     stay?: unknown
   }>(blok.items).map((item) => ({
+    ...item,
     quote: textOr(item.quote, ''),
     name: textOr(item.name, ''),
     apartment: textOr(item.apartment, ''),
     stay: textOr(item.stay, ''),
+    editableAttributes: editable(item as Blok),
   }))
 
   const items =
@@ -152,6 +157,7 @@ export function ServicesSectionBlok({ blok }: { blok: Blok }) {
     title: textOr(item.title, ''),
     description: textOr(item.description, ''),
     icon: assetUrl(item.icon, '/images/icons/checkin.svg'),
+    editableAttributes: editable(item as Blok),
   }))
 
   return (

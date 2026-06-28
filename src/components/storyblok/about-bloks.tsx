@@ -69,7 +69,7 @@ export function FoundersSectionBlok({ blok }: { blok: Blok }) {
         {founders.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {founders.map((founder, index) => (
-              <article key={`${founder.name}-${index}`}>
+              <article key={`${founder.name}-${index}`} {...editable(founder as Blok)}>
                 <div className="bg-sand relative aspect-[4/5] overflow-hidden rounded-lg">
                   <Image
                     src={assetUrl(founder.image, PLACEHOLDER_IMAGE)}
@@ -130,7 +130,11 @@ export function ConceptSectionBlok({ blok }: { blok: Blok }) {
           {points.length > 0 ? (
             <div className="mt-8 space-y-6">
               {points.map((point, index) => (
-                <div key={`${point.title}-${index}`} className="border-divider border-t pt-5">
+                <div
+                  key={`${point.title}-${index}`}
+                  {...editable(point as Blok)}
+                  className="border-divider border-t pt-5"
+                >
                   <h3 className="text-coffee text-base font-bold">{textOr(point.title, '')}</h3>
                   {point.description ? (
                     <p className="text-taupe mt-2 text-sm leading-relaxed">
@@ -187,7 +191,11 @@ export function GuaranteesSectionBlok({ blok }: { blok: Blok }) {
               {items.map((item, index) => {
                 const icon = assetUrl(item.icon, '')
                 return (
-                  <article key={`${item.title}-${index}`} className="border-divider border-t pt-5">
+                  <article
+                    key={`${item.title}-${index}`}
+                    {...editable(item as Blok)}
+                    className="border-divider border-t pt-5"
+                  >
                     {icon ? (
                       <Image src={icon} alt="" width={24} height={24} className="mb-4 h-6 w-6" />
                     ) : null}

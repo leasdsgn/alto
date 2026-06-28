@@ -21,7 +21,10 @@ interface ExperienceSectionProps {
 type ExperiencePanelCopy = {
   label: string
   title: string
+  editableAttributes?: EditableAttributes
 }
+
+type EditableAttributes = Record<string, string | undefined>
 
 type ExperienceSectionCopy = {
   about: string
@@ -31,7 +34,7 @@ type ExperienceSectionCopy = {
 
 export function ExperienceSection({ panelImages, copy: copyOverride }: ExperienceSectionProps) {
   const locale = useLocale()
-  const copy = copyOverride ?? EXPERIENCE_COPY[locale]
+  const copy = (copyOverride ?? EXPERIENCE_COPY[locale]) as ExperienceSectionCopy
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
 
@@ -40,16 +43,19 @@ export function ExperienceSection({ panelImages, copy: copyOverride }: Experienc
       label: copy.panels[0].label,
       title: copy.panels[0].title,
       image: panelImages.arrival,
+      editableAttributes: copy.panels[0].editableAttributes,
     },
     {
       label: copy.panels[1].label,
       title: copy.panels[1].title,
       image: panelImages.checkin,
+      editableAttributes: copy.panels[1].editableAttributes,
     },
     {
       label: copy.panels[2].label,
       title: copy.panels[2].title,
       image: panelImages.checkout,
+      editableAttributes: copy.panels[2].editableAttributes,
     },
   ]
 
@@ -117,6 +123,7 @@ export function ExperienceSection({ panelImages, copy: copyOverride }: Experienc
           {panels.map((panel) => (
             <div
               key={panel.title}
+              {...panel.editableAttributes}
               className="relative h-[420px] w-full shrink-0 overflow-hidden rounded-lg md:h-[598px] md:w-[396px]"
             >
               <Image

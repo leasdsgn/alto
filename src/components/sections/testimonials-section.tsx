@@ -14,12 +14,15 @@ type TestimonialsSectionCopy = {
     name: string
     apartment: string
     stay: string
+    editableAttributes?: EditableAttributes
   }[]
 }
 
+type EditableAttributes = Record<string, string | undefined>
+
 export function TestimonialsSection({ copy: copyOverride }: TestimonialsSectionProps = {}) {
   const locale = useLocale()
-  const copy = copyOverride ?? TESTIMONIALS_COPY[locale]
+  const copy = (copyOverride ?? TESTIMONIALS_COPY[locale]) as TestimonialsSectionCopy
   const [current, setCurrent] = useState(0)
   const testimonial = copy.items[current]
 
@@ -39,7 +42,7 @@ export function TestimonialsSection({ copy: copyOverride }: TestimonialsSectionP
             {copy.title}
           </p>
 
-          <div className="mt-10 flex flex-col gap-6">
+          <div {...testimonial.editableAttributes} className="mt-10 flex flex-col gap-6">
             <blockquote className="text-coffee min-h-[180px] text-xl leading-[1.5] font-semibold md:min-h-[140px] md:text-2xl md:leading-[1.4]">
               &ldquo;{testimonial.quote}&rdquo;
             </blockquote>

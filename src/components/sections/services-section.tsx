@@ -16,11 +16,14 @@ type ServiceItem = {
   title: string
   description: string
   icon: string
+  editableAttributes?: EditableAttributes
 }
+
+type EditableAttributes = Record<string, string | undefined>
 
 export function ServicesSection({ services: servicesOverride }: ServicesSectionProps = {}) {
   const locale = useLocale()
-  const services = servicesOverride ?? SERVICES_COPY[locale]
+  const services = (servicesOverride ?? SERVICES_COPY[locale]) as readonly ServiceItem[]
   const cardsRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
@@ -49,8 +52,12 @@ export function ServicesSection({ services: servicesOverride }: ServicesSectionP
     <section className="py-section md:py-section-md">
       <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
         <div ref={cardsRef} className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {services.map(({ title, description, icon }) => (
-            <div key={title} className="bg-ash/10 flex flex-col gap-6 rounded-lg p-8">
+          {services.map(({ title, description, icon, editableAttributes }) => (
+            <div
+              key={title}
+              {...editableAttributes}
+              className="bg-ash/10 flex flex-col gap-6 rounded-lg p-8"
+            >
               <div className="flex size-10 items-center justify-center">
                 <Image src={icon} alt="" width={40} height={40} style={{ height: 'auto' }} />
               </div>
