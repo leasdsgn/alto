@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { formatCurrency, formatDate, nightsBetween } from '@/lib/formatters'
 import { t } from '@/lib/i18n/booking-dictionary'
@@ -21,20 +22,69 @@ interface BookingConfirmationModalProps {
   details: BookingConfirmationDetails
 }
 
-const confetti = [
-  { left: '12%', top: '18%', rotate: -18, color: '#78ff47' },
-  { left: '22%', top: '10%', rotate: 24, color: '#f3f3ed' },
-  { left: '34%', top: '20%', rotate: 48, color: '#aba39e' },
-  { left: '64%', top: '12%', rotate: -28, color: '#78ff47' },
-  { left: '78%', top: '22%', rotate: 18, color: '#fffff8' },
-  { left: '86%', top: '14%', rotate: -42, color: '#aba39e' },
-] as const
-
 export function BookingConfirmationModal({ locale, details }: BookingConfirmationModalProps) {
   const nights = nightsBetween(details.checkIn, details.checkOut)
   const nightsLabel = nights > 1 ? t(locale, 'nightsPlural') : t(locale, 'nights')
   const guestsLabel = details.guestsCount > 1 ? t(locale, 'guestsPlural') : t(locale, 'guests')
   const reference = details.confirmationCode ?? details.reservationId
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    let cancelled = false
+    const timeouts: number[] = []
+
+    void import('canvas-confetti').then(({ default: confetti }) => {
+      if (cancelled) return
+
+      const colors = ['#78ff47', '#fffff8', '#f3f3ed', '#aba39e', '#301a0a']
+
+      confetti({
+        particleCount: 72,
+        spread: 70,
+        startVelocity: 36,
+        scalar: 0.85,
+        origin: { y: 0.18 },
+        colors,
+        disableForReducedMotion: true,
+      })
+
+      timeouts.push(
+        window.setTimeout(() => {
+          confetti({
+            particleCount: 34,
+            angle: 60,
+            spread: 55,
+            startVelocity: 34,
+            scalar: 0.75,
+            origin: { x: 0, y: 0.24 },
+            colors,
+            disableForReducedMotion: true,
+          })
+        }, 120),
+      )
+
+      timeouts.push(
+        window.setTimeout(() => {
+          confetti({
+            particleCount: 34,
+            angle: 120,
+            spread: 55,
+            startVelocity: 34,
+            scalar: 0.75,
+            origin: { x: 1, y: 0.24 },
+            colors,
+            disableForReducedMotion: true,
+          })
+        }, 180),
+      )
+    })
+
+    return () => {
+      cancelled = true
+      for (const timeout of timeouts) window.clearTimeout(timeout)
+    }
+  }, [])
 
   return (
     <div
@@ -44,20 +94,7 @@ export function BookingConfirmationModal({ locale, details }: BookingConfirmatio
       aria-labelledby="booking-confirmation-title"
     >
       <div className="bg-cream border-divider relative w-full max-w-xl overflow-hidden rounded-xl border p-6 shadow-2xl md:p-8">
-        <div className="bg-coffee pointer-events-none absolute inset-x-0 top-0 h-24 overflow-hidden">
-          {confetti.map((piece, index) => (
-            <span
-              key={`${piece.left}-${piece.top}-${index}`}
-              className="absolute h-3 w-1.5 rounded-full opacity-90"
-              style={{
-                left: piece.left,
-                top: piece.top,
-                transform: `rotate(${piece.rotate}deg)`,
-                backgroundColor: piece.color,
-              }}
-            />
-          ))}
-        </div>
+        <div className="bg-coffee pointer-events-none absolute inset-x-0 top-0 h-24" />
 
         <div className="relative pt-16">
           <div className="bg-signal text-coffee mb-5 flex h-12 w-12 items-center justify-center rounded-full">
