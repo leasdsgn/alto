@@ -109,7 +109,7 @@ const DEFAULT_SITE_IMAGES: SiteImages = {
   },
   pages: {
     contactHero: '/images/alto-salon.jpg',
-    apartmentsHero: '/images/alto-salon.jpg',
+    apartmentsHero: '/images/appartements-hero.webp',
     investHero: '/images/alto-salon.jpg',
     investModel: '/images/alto-salon.jpg',
   },

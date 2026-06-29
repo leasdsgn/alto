@@ -9,7 +9,6 @@ import { getApartmentSearchResult } from '@/components/sections/apartments-secti
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { getStaticServerLocale } from '@/lib/i18n/server'
-import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 
 interface PageProps {
@@ -20,6 +19,8 @@ interface PageProps {
     guests?: string
   }>
 }
+
+const APARTMENTS_HERO_IMAGE = '/images/appartements-hero.webp'
 
 export default async function AppartementsPage({ searchParams }: PageProps) {
   const locale = getStaticServerLocale()
@@ -32,7 +33,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
     sp.guests ?? 'na',
   ].join(':')
 
-  const [story, searchResult, siteImages] = await Promise.all([
+  const [story, searchResult] = await Promise.all([
     getStoryBySlug('pages/appartements', locale),
     getApartmentSearchResult({
       city: sp.city,
@@ -40,7 +41,6 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       checkOut: sp.checkOut,
       guests: guestsCount,
     }),
-    getSiteImages(locale),
   ])
 
   const hasStoryBody =
@@ -55,9 +55,9 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       </Suspense>
 
       {hasStoryBody ? (
-        <StoryblokStory story={story} />
+        <StoryblokStory story={withApartmentsHeroFallback(story)} />
       ) : (
-        <FallbackHero imageSrc={siteImages.pages.apartmentsHero} locale={locale} />
+        <FallbackHero imageSrc={APARTMENTS_HERO_IMAGE} locale={locale} />
       )}
 
       <main className="max-w-content px-gutter pb-section-md md:px-gutter-md mx-auto w-full">
@@ -74,6 +74,54 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       <Footer />
     </>
   )
+}
+
+function withApartmentsHeroFallback<T extends { content: Record<string, unknown> }>(story: T): T {
+  const body = story.content.body
+  if (!Array.isArray(body)) return story
+
+  return {
+    ...story,
+    content: {
+      ...story.content,
+      body: body.map((blok, index) => {
+        if (
+          index !== 0 ||
+          !isRecord(blok) ||
+          blok.component !== 'hero_compact_section' ||
+          hasCustomStoryblokAsset(blok.background_image)
+        ) {
+          return blok
+        }
+
+        return {
+          ...blok,
+          background_image: APARTMENTS_HERO_IMAGE,
+        }
+      }),
+    },
+  }
+}
+
+function hasCustomStoryblokAsset(value: unknown): boolean {
+  const asset = getStoryblokAssetValue(value)
+  if (!asset) return false
+
+  return !asset.includes('/images/alto-salon.jpg') && !asset.includes('alto-salon')
+}
+
+function getStoryblokAssetValue(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null
+  if (!isRecord(value)) return null
+
+  if (typeof value.filename === 'string' && value.filename.trim()) return value.filename.trim()
+  if (typeof value.url === 'string' && value.url.trim()) return value.url.trim()
+
+  return null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
 function FallbackHero({ imageSrc, locale }: { imageSrc: string; locale: 'fr' | 'en' }) {
