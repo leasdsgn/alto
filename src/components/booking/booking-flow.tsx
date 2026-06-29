@@ -13,6 +13,10 @@ import { QuoteSummary } from './quote-summary'
 import { GuestForm, type GuestFormValues } from './guest-form'
 import { PolicyCheckboxes, type PolicyValues } from './policy-checkboxes'
 import { PaymentForm } from './payment-form'
+import {
+  BookingConfirmationModal,
+  type BookingConfirmationDetails,
+} from './booking-confirmation-modal'
 import { type InquiryLocale } from '@/types/inquiry'
 import type { GuestyErrorBody } from '@/lib/guesty-errors'
 
@@ -164,6 +168,8 @@ type ReservationApiResponse =
       paymentId: string
     }
 
+type ConfirmedReservationApiResponse = Extract<ReservationApiResponse, { phase: 'confirmed' }>
+
 interface FormError {
   title: string
   description: string
@@ -176,7 +182,7 @@ function PaymentSection(props: PaymentSectionProps) {
   const [submitting, setSubmitting] = useState(false)
   const [paymentAuthenticating, setPaymentAuthenticating] = useState(false)
   const [formError, setFormError] = useState<FormError | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState<BookingConfirmationDetails | null>(null)
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -194,8 +200,8 @@ function PaymentSection(props: PaymentSectionProps) {
 
     try {
       const paymentCredential = await createPaymentCredential()
-      await submitReservation(paymentCredential)
-      setSuccess(true)
+      const confirmation = await submitReservation(paymentCredential)
+      setSuccess(confirmation)
     } catch (err) {
       if (err instanceof ReservationError) {
         setFormError({ title: err.title, description: err.description })
@@ -240,7 +246,7 @@ function PaymentSection(props: PaymentSectionProps) {
     return confirmationToken.id
   }
 
-  async function submitReservation(paymentCredential: string): Promise<void> {
+  async function submitReservation(paymentCredential: string): Promise<BookingConfirmationDetails> {
     const response = await fetch('/api/guesty/reservation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -271,13 +277,11 @@ function PaymentSection(props: PaymentSectionProps) {
     }
 
     if (isReservationApiResponse(body) && body.phase === 'confirmed') {
-      redirectAfterConfirmedBooking()
-      return
+      return buildConfirmationDetails(body)
     }
 
     if (isReservationApiResponse(body) && body.phase === 'requires_action') {
-      await completePendingAuth(body)
-      return
+      return completePendingAuth(body)
     }
 
     throw new ReservationError(
@@ -289,7 +293,7 @@ function PaymentSection(props: PaymentSectionProps) {
 
   async function completePendingAuth(
     action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
-  ) {
+  ): Promise<BookingConfirmationDetails> {
     if (!stripe) throw new Error(t(props.locale, 'errorGenericDesc'))
 
     setPaymentAuthenticating(true)
@@ -302,6 +306,14 @@ function PaymentSection(props: PaymentSectionProps) {
         connectedAccountId: props.connectedAccountId,
         locale: props.locale,
         returnTo: window.location.href,
+        booking: {
+          listingTitle: props.listingTitle,
+          checkIn: props.checkIn,
+          checkOut: props.checkOut,
+          guestsCount: props.guestsCount,
+          amountCents: props.amountCents,
+          currency: props.currency,
+        },
       })
 
       const result = await stripe.handleNextAction({ clientSecret: action.clientSecret })
@@ -330,10 +342,9 @@ function PaymentSection(props: PaymentSectionProps) {
         )
       }
 
-      await verifyPendingAuth(action, stripeStatus)
+      const confirmed = await verifyPendingAuth(action, stripeStatus)
       clearPendingBankAuth()
-      redirectAfterConfirmedBooking()
-      return
+      return buildConfirmationDetails(confirmed, action.reservationId)
     }
 
     await cleanupFailedPendingAuth(action, 'requires_action')
@@ -347,7 +358,7 @@ function PaymentSection(props: PaymentSectionProps) {
   async function verifyPendingAuth(
     action: Extract<ReservationApiResponse, { phase: 'requires_action' }>,
     stripePaymentStatus: string | null,
-  ) {
+  ): Promise<ConfirmedReservationApiResponse> {
     for (let attempt = 0; attempt < 4; attempt++) {
       const response = await fetch('/api/guesty/reservation/verify', {
         method: 'POST',
@@ -369,7 +380,7 @@ function PaymentSection(props: PaymentSectionProps) {
         throwReservationApiError(body)
       }
 
-      if (isReservationApiResponse(body) && body.phase === 'confirmed') return
+      if (isReservationApiResponse(body) && body.phase === 'confirmed') return body
 
       if (isReservationApiResponse(body) && body.phase === 'processing') {
         await wait(2000)
@@ -437,12 +448,24 @@ function PaymentSection(props: PaymentSectionProps) {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
+  function buildConfirmationDetails(
+    response: ConfirmedReservationApiResponse,
+    fallbackReservationId?: string,
+  ): BookingConfirmationDetails {
+    return {
+      listingTitle: props.listingTitle,
+      checkIn: props.checkIn,
+      checkOut: props.checkOut,
+      guestsCount: props.guestsCount,
+      amountCents: props.amountCents,
+      currency: props.currency,
+      reservationId: getStringField(response.reservation, '_id', 'id') ?? fallbackReservationId,
+      confirmationCode: getStringField(response.reservation, 'confirmationCode'),
+    }
+  }
+
   if (success) {
-    return (
-      <div className="border-divider bg-cream rounded-lg border p-6">
-        <p className="text-coffee text-lg font-semibold">{t(props.locale, 'bookingSuccess')}</p>
-      </div>
-    )
+    return <BookingConfirmationModal locale={props.locale} details={success} />
   }
 
   const canSubmit =
@@ -506,12 +529,19 @@ function buildBankAuthReturnUrl() {
   return url.toString()
 }
 
-function redirectAfterConfirmedBooking() {
-  window.location.replace('/')
-}
-
 function isStripeContinuableStatus(status: string | null): boolean {
   return status === 'succeeded' || status === 'processing' || status === 'requires_capture'
+}
+
+function getStringField(value: unknown, ...keys: string[]): string | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const record = value as Record<string, unknown>
+
+  for (const key of keys) {
+    if (typeof record[key] === 'string' && record[key].length > 0) return record[key]
+  }
+
+  return undefined
 }
 
 const altoAppearance = {

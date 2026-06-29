@@ -1,6 +1,16 @@
 import type { InquiryLocale } from '@/types/inquiry'
 
 export const PENDING_BANK_AUTH_STORAGE_KEY = 'alto:pending-bank-auth'
+
+export interface PendingBankAuthBooking {
+  listingTitle: string
+  checkIn: string
+  checkOut: string
+  guestsCount: number
+  amountCents: number
+  currency: string
+}
+
 export interface PendingBankAuthState {
   reservationId: string
   paymentId: string
@@ -8,6 +18,7 @@ export interface PendingBankAuthState {
   connectedAccountId: string | null
   locale: InquiryLocale
   returnTo: string
+  booking?: PendingBankAuthBooking
   createdAt: number
 }
 
@@ -54,6 +65,7 @@ export function readPendingBankAuth(): PendingBankAuthState | null {
         typeof parsed.connectedAccountId === 'string' ? parsed.connectedAccountId : null,
       locale: parsed.locale === 'en' ? 'en' : 'fr',
       returnTo: parsed.returnTo,
+      booking: parsePendingBooking(parsed.booking),
       createdAt: parsed.createdAt,
     }
   } catch {
@@ -65,4 +77,29 @@ export function readPendingBankAuth(): PendingBankAuthState | null {
 export function clearPendingBankAuth() {
   if (typeof window === 'undefined') return
   window.sessionStorage.removeItem(PENDING_BANK_AUTH_STORAGE_KEY)
+}
+
+function parsePendingBooking(value: unknown): PendingBankAuthBooking | undefined {
+  if (!value || typeof value !== 'object') return undefined
+
+  const booking = value as Partial<PendingBankAuthBooking>
+  if (
+    typeof booking.listingTitle !== 'string' ||
+    typeof booking.checkIn !== 'string' ||
+    typeof booking.checkOut !== 'string' ||
+    typeof booking.guestsCount !== 'number' ||
+    typeof booking.amountCents !== 'number' ||
+    typeof booking.currency !== 'string'
+  ) {
+    return undefined
+  }
+
+  return {
+    listingTitle: booking.listingTitle,
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
+    guestsCount: booking.guestsCount,
+    amountCents: booking.amountCents,
+    currency: booking.currency,
+  }
 }
