@@ -63,6 +63,7 @@ const ARTICLE_HERO_IMAGE = '/images/blog/article-hero.webp'
 
 export function ArticleView({ article, locale, relatedArticles, cta }: ArticleViewProps) {
   const copy = ARTICLE_VIEW_COPY[locale]
+  const heroImage = article.heroImage ?? ARTICLE_HERO_IMAGE
   const anchorSections =
     article.sections.length > 0
       ? article.sections
@@ -74,7 +75,7 @@ export function ArticleView({ article, locale, relatedArticles, cta }: ArticleVi
     <>
       <section className="relative h-[512px] overflow-hidden">
         <Image
-          src={ARTICLE_HERO_IMAGE}
+          src={heroImage}
           alt={article.title}
           fill
           sizes="100vw"
