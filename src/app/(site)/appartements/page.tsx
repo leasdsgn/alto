@@ -9,6 +9,7 @@ import { getApartmentSearchResult } from '@/components/sections/apartments-secti
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 
 interface PageProps {
@@ -33,7 +34,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
     sp.guests ?? 'na',
   ].join(':')
 
-  const [story, searchResult] = await Promise.all([
+  const [story, searchResult, siteImages] = await Promise.all([
     getStoryBySlug('pages/appartements', locale),
     getApartmentSearchResult({
       city: sp.city,
@@ -41,7 +42,10 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       checkOut: sp.checkOut,
       guests: guestsCount,
     }),
+    getSiteImages(locale),
   ])
+
+  const heroImage = getApartmentsHeroImage(siteImages.pages.apartmentsHero)
 
   const hasStoryBody =
     story &&
@@ -55,9 +59,9 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       </Suspense>
 
       {hasStoryBody ? (
-        <StoryblokStory story={withApartmentsHeroFallback(story)} />
+        <StoryblokStory story={withApartmentsHeroFallback(story, heroImage)} />
       ) : (
-        <FallbackHero imageSrc={APARTMENTS_HERO_IMAGE} locale={locale} />
+        <FallbackHero imageSrc={heroImage} locale={locale} />
       )}
 
       <main className="max-w-content px-gutter pb-section-md md:px-gutter-md mx-auto w-full">
@@ -76,7 +80,10 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
   )
 }
 
-function withApartmentsHeroFallback<T extends { content: Record<string, unknown> }>(story: T): T {
+function withApartmentsHeroFallback<T extends { content: Record<string, unknown> }>(
+  story: T,
+  heroImage: string,
+): T {
   const body = story.content.body
   if (!Array.isArray(body)) return story
 
@@ -96,11 +103,16 @@ function withApartmentsHeroFallback<T extends { content: Record<string, unknown>
 
         return {
           ...blok,
-          background_image: APARTMENTS_HERO_IMAGE,
+          background_image: heroImage,
         }
       }),
     },
   }
+}
+
+function getApartmentsHeroImage(value: string) {
+  if (!value || value.includes('alto-salon')) return APARTMENTS_HERO_IMAGE
+  return value
 }
 
 function hasCustomStoryblokAsset(value: unknown): boolean {
