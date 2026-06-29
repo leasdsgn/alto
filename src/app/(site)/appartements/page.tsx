@@ -7,6 +7,7 @@ import { ApartmentEditorialSections } from '@/components/sections/apartment-edit
 import { AppartementsGrid } from '@/components/sections/appartements-grid'
 import { getApartmentSearchResult } from '@/components/sections/apartments-section'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
+import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
@@ -93,7 +94,9 @@ function FallbackHero({ imageSrc, locale }: { imageSrc: string; locale: 'fr' | '
 
       <div className="absolute inset-0 flex items-end">
         <div className="max-w-content px-gutter md:px-gutter-md mx-auto w-full pb-20">
-          <p className="text-cream text-body max-w-[505px]">{copy.kicker}</p>
+          <p className="text-cream text-body max-w-[505px]">
+            <BrandKickerText value={copy.kicker} />
+          </p>
           <h1 className="text-cream text-h3 mt-1">{copy.title}</h1>
         </div>
       </div>

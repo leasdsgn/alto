@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AboutGuarantees } from '@/components/about/about-guarantees'
 import { Header } from '@/components/layout/header'
 import { useLocale } from '@/components/providers/locale-provider'
+import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import type { SiteImages } from '@/lib/storyblok-site-images'
 
 interface AboutViewProps {
@@ -88,7 +89,9 @@ export function AboutView({ siteImages }: AboutViewProps) {
 
           <div className="px-gutter md:px-gutter-md flex items-center pt-28 pb-12 md:pt-36 md:pb-16">
             <div className="max-w-[586px]">
-              <p className="text-cream text-body">{copy.hero.kicker}</p>
+              <p className="text-cream text-body">
+                <BrandKickerText value={copy.hero.kicker} />
+              </p>
               <h1 className="text-cream text-h3 md:text-h2 mt-6">{copy.hero.title}</h1>
               <p className="text-cream/90 text-body mt-8 max-w-[477px]">{copy.hero.body}</p>
 

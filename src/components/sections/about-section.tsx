@@ -5,6 +5,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useLocale } from '@/components/providers/locale-provider'
+import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -80,7 +81,9 @@ export function AboutSection({
       className="from-silver to-taupe py-section md:py-section-md bg-gradient-to-r"
     >
       <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
-        <p className="text-cream text-body text-center leading-[1.5]">{copy.kicker}</p>
+        <p className="text-cream text-body text-center leading-[1.5]">
+          <BrandKickerText value={copy.kicker} />
+        </p>
 
         <p
           ref={quoteRef}
