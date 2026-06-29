@@ -59,6 +59,8 @@ const NEIGHBORHOOD_BY_SLUG = {
   'choisir-un-pied-a-terre-bien-place': 'Adresse',
 } as const
 
+const ARTICLE_HERO_IMAGE = '/images/blog/article-hero.webp'
+
 export function ArticleView({ article, locale, relatedArticles, cta }: ArticleViewProps) {
   const copy = ARTICLE_VIEW_COPY[locale]
   const anchorSections =
@@ -72,7 +74,7 @@ export function ArticleView({ article, locale, relatedArticles, cta }: ArticleVi
     <>
       <section className="relative h-[512px] overflow-hidden">
         <Image
-          src={article.image}
+          src={ARTICLE_HERO_IMAGE}
           alt={article.title}
           fill
           sizes="100vw"
