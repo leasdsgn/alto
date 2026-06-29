@@ -10,15 +10,11 @@ import {
   readPendingBankAuth,
   type PendingBankAuthState,
 } from '@/lib/pending-bank-auth'
-import {
-  BookingConfirmationModal,
-  type BookingConfirmationDetails,
-} from './booking-confirmation-modal'
 import type { GuestyErrorBody } from '@/lib/guesty-errors'
 
 type ReturnState =
   | { status: 'loading' }
-  | { status: 'confirmed'; details: BookingConfirmationDetails | null }
+  | { status: 'confirmed' }
   | { status: 'processing'; returnTo: string }
   | { status: 'failed'; title: string; description: string; returnTo: string }
 
@@ -33,8 +29,6 @@ type ReservationApiResponse =
       reservationId: string
       paymentId: string
     }
-
-type ConfirmedReservationApiResponse = Extract<ReservationApiResponse, { phase: 'confirmed' }>
 
 export function BookingAuthReturn() {
   const locale = useLocale()
@@ -97,9 +91,8 @@ export function BookingAuthReturn() {
         if (cancelled) return
 
         if (confirmed) {
-          const details = buildConfirmationDetails(pending, confirmed)
           clearPendingBankAuth()
-          setState({ status: 'confirmed', details })
+          setState({ status: 'confirmed' })
           return
         }
 
@@ -138,14 +131,10 @@ export function BookingAuthReturn() {
   }
 
   if (state.status === 'confirmed') {
-    if (state.details) {
-      return <BookingConfirmationModal locale={locale} details={state.details} />
-    }
-
     return (
       <StatusPanel
         title={t(locale, 'bookingSuccess')}
-        description={t(locale, 'bookingConfirmedDesc')}
+        description={t(locale, 'paymentProcessingDesc')}
       />
     )
   }
@@ -175,7 +164,7 @@ async function finalizeGuestyReservation(
   pending: PendingBankAuthState,
   stripePaymentStatus: string | null,
   failed: boolean,
-): Promise<ConfirmedReservationApiResponse | null> {
+): Promise<boolean> {
   for (let attempt = 0; attempt < 4; attempt++) {
     const response = await fetch('/api/guesty/reservation/verify', {
       method: 'POST',
@@ -204,7 +193,7 @@ async function finalizeGuestyReservation(
       )
     }
 
-    if (body && 'phase' in body && body.phase === 'confirmed') return body
+    if (body && 'phase' in body && body.phase === 'confirmed') return true
 
     if (body && 'phase' in body && body.phase === 'processing') {
       await wait(2000)
@@ -214,20 +203,7 @@ async function finalizeGuestyReservation(
     break
   }
 
-  return null
-}
-
-function buildConfirmationDetails(
-  pending: PendingBankAuthState,
-  response: ConfirmedReservationApiResponse,
-): BookingConfirmationDetails | null {
-  if (!pending.booking) return null
-
-  return {
-    ...pending.booking,
-    reservationId: getStringField(response.reservation, '_id', 'id') ?? pending.reservationId,
-    confirmationCode: getStringField(response.reservation, 'confirmationCode'),
-  }
+  return false
 }
 
 function StatusPanel({
@@ -277,15 +253,4 @@ function isStripeContinuableStatus(status: string | null): boolean {
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-function getStringField(value: unknown, ...keys: string[]): string | undefined {
-  if (!value || typeof value !== 'object') return undefined
-  const record = value as Record<string, unknown>
-
-  for (const key of keys) {
-    if (typeof record[key] === 'string' && record[key].length > 0) return record[key]
-  }
-
-  return undefined
 }
