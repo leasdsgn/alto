@@ -4,6 +4,7 @@ export const PENDING_BANK_AUTH_STORAGE_KEY = 'alto:pending-bank-auth'
 
 export interface PendingBankAuthBooking {
   listingTitle: string
+  listingImage?: string
   checkIn: string
   checkOut: string
   guestsCount: number
@@ -96,6 +97,7 @@ function parsePendingBooking(value: unknown): PendingBankAuthBooking | undefined
 
   return {
     listingTitle: booking.listingTitle,
+    listingImage: typeof booking.listingImage === 'string' ? booking.listingImage : undefined,
     checkIn: booking.checkIn,
     checkOut: booking.checkOut,
     guestsCount: booking.guestsCount,

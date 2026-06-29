@@ -23,6 +23,7 @@ import type { GuestyErrorBody } from '@/lib/guesty-errors'
 interface BookingFlowProps {
   listingId: string
   listingTitle: string
+  listingImage?: string
   checkIn: string
   checkOut: string
   guestsCount: number
@@ -308,6 +309,7 @@ function PaymentSection(props: PaymentSectionProps) {
         returnTo: window.location.href,
         booking: {
           listingTitle: props.listingTitle,
+          listingImage: props.listingImage,
           checkIn: props.checkIn,
           checkOut: props.checkOut,
           guestsCount: props.guestsCount,
@@ -454,6 +456,7 @@ function PaymentSection(props: PaymentSectionProps) {
   ): BookingConfirmationDetails {
     return {
       listingTitle: props.listingTitle,
+      listingImage: props.listingImage,
       checkIn: props.checkIn,
       checkOut: props.checkOut,
       guestsCount: props.guestsCount,

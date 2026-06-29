@@ -128,6 +128,7 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
         <BookingFlow
           listingId={apartment.id}
           listingTitle={apartment.name}
+          listingImage={apartment.images[0] ?? apartment.image}
           checkIn={search.check_in}
           checkOut={search.check_out}
           guestsCount={guestsCount}

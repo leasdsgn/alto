@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { formatCurrency, formatDate, nightsBetween } from '@/lib/formatters'
 import { t } from '@/lib/i18n/booking-dictionary'
@@ -8,6 +9,7 @@ import type { InquiryLocale } from '@/types/inquiry'
 
 export interface BookingConfirmationDetails {
   listingTitle: string
+  listingImage?: string
   checkIn: string
   checkOut: string
   guestsCount: number
@@ -27,6 +29,7 @@ export function BookingConfirmationModal({ locale, details }: BookingConfirmatio
   const nightsLabel = nights > 1 ? t(locale, 'nightsPlural') : t(locale, 'nights')
   const guestsLabel = details.guestsCount > 1 ? t(locale, 'guestsPlural') : t(locale, 'guests')
   const reference = details.confirmationCode ?? details.reservationId
+  const hasImage = Boolean(details.listingImage)
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -94,9 +97,27 @@ export function BookingConfirmationModal({ locale, details }: BookingConfirmatio
       aria-labelledby="booking-confirmation-title"
     >
       <div className="bg-cream border-divider relative w-full max-w-xl overflow-hidden rounded-xl border p-6 shadow-2xl md:p-8">
-        <div className="bg-coffee pointer-events-none absolute inset-x-0 top-0 h-24" />
+        <div
+          className={`bg-coffee pointer-events-none absolute inset-x-0 top-0 overflow-hidden ${
+            hasImage ? 'h-40 md:h-44' : 'h-24'
+          }`}
+        >
+          {details.listingImage ? (
+            <>
+              <Image
+                src={details.listingImage}
+                alt=""
+                fill
+                loading="eager"
+                sizes="(max-width: 768px) 100vw, 576px"
+                className="object-cover"
+              />
+              <div className="bg-coffee/25 absolute inset-0" />
+            </>
+          ) : null}
+        </div>
 
-        <div className="relative pt-16">
+        <div className={`relative ${hasImage ? 'pt-36 md:pt-40' : 'pt-16'}`}>
           <div className="bg-signal text-coffee mb-5 flex h-12 w-12 items-center justify-center rounded-full">
             <CheckIcon />
           </div>
