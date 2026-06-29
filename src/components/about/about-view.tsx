@@ -12,9 +12,12 @@ interface AboutViewProps {
   siteImages: SiteImages
 }
 
+const ABOUT_HERO_IMAGE = '/images/about/about-hero.webp'
+
 export function AboutView({ siteImages }: AboutViewProps) {
   const locale = useLocale()
   const copy = ABOUT_VIEW_COPY[locale]
+  const heroImage = getAboutHeroImage(siteImages.about.conceptLounge)
 
   const heroStats = [
     {
@@ -78,7 +81,7 @@ export function AboutView({ siteImages }: AboutViewProps) {
         <div className="grid min-h-[758px] lg:grid-cols-[minmax(520px,720px)_1fr]">
           <div className="relative min-h-[360px] overflow-hidden lg:min-h-[758px]">
             <Image
-              src={siteImages.about.conceptLounge}
+              src={heroImage}
               alt={copy.hero.imageAlt}
               fill
               priority
@@ -229,6 +232,11 @@ export function AboutView({ siteImages }: AboutViewProps) {
       </main>
     </>
   )
+}
+
+function getAboutHeroImage(value: string) {
+  if (!value || value.includes('concept-lounge')) return ABOUT_HERO_IMAGE
+  return value
 }
 
 const ABOUT_VIEW_COPY = {

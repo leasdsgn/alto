@@ -84,7 +84,7 @@ const DEFAULT_SITE_IMAGES: SiteImages = {
     },
   },
   about: {
-    conceptLounge: '/images/about/concept-lounge.jpg',
+    conceptLounge: '/images/about/about-hero.webp',
     conceptCorridor: '/images/about/concept-corridor.jpg',
     conceptChair:
       'https://a.storyblok.com/f/291441851126938/da52da72c6/images-about-concept-chair.jpg',

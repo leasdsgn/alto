@@ -128,7 +128,7 @@ const SITE_IMAGE_FIELDS: SiteImageField[] = [
     source: 'local',
     field: 'about_concept_lounge',
     label: 'À propos - Hero - Grande photo gauche',
-    localPath: 'images/about/concept-lounge.jpg',
+    localPath: 'images/about/about-hero.webp',
   },
   {
     source: 'local',
