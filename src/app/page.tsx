@@ -71,7 +71,8 @@ export default async function Home() {
           panelImages={{
             arrival: '/images/experience-espaces.png',
             checkin: '/images/experience-localisation.png',
-            checkout: '/images/blog-3.jpg',
+            checkout: '/images/experience-confort.webp',
+            sustainability: '/images/experience-durabilite.webp',
           }}
         />
         <TestimonialsSection />

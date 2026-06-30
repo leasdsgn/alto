@@ -658,7 +658,7 @@ const SECTIONS: ComponentDefinition[] = [
       eyebrow: textField('Sur-titre', 0),
       button_label: textField('Libellé bouton', 1),
       button_link: linkField('Lien bouton', 2),
-      panels: bloksField('Panneaux (3)', 3, ['panel'], 3),
+      panels: bloksField('Panneaux (4)', 3, ['panel'], 4),
     },
   },
   {

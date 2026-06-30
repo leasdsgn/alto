@@ -44,7 +44,8 @@ export function ApartmentEditorialSections({ review = DEFAULT_REVIEW }: { review
         panelImages={{
           arrival: '/images/experience-espaces.png',
           checkin: '/images/experience-localisation.png',
-          checkout: '/images/blog-3.jpg',
+          checkout: '/images/experience-confort.webp',
+          sustainability: '/images/experience-durabilite.webp',
         }}
       />
       <div className="max-w-content px-gutter md:px-gutter-md mx-auto">

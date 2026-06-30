@@ -94,6 +94,7 @@ type AssetKey =
   | 'experienceArrival'
   | 'experienceCheckin'
   | 'experienceCheckout'
+  | 'experienceDurability'
   | 'apartmentsHero'
   | 'aboutHero'
   | 'aboutGuarantees'
@@ -162,7 +163,12 @@ const ASSETS: LocalAssetDefinition[] = [
     localPath: 'images/experience-localisation.png',
     alt: 'Localisation Alto',
   },
-  { key: 'experienceCheckout', localPath: 'images/blog-3.jpg', alt: 'Confort Alto' },
+  { key: 'experienceCheckout', localPath: 'images/experience-confort.webp', alt: 'Confort Alto' },
+  {
+    key: 'experienceDurability',
+    localPath: 'images/experience-durabilite.webp',
+    alt: 'Durabilité Alto',
+  },
   {
     key: 'apartmentsHero',
     localPath: 'images/appartements-hero.webp',
@@ -426,10 +432,16 @@ function updateExperiencePanels(
         label: 'Confort',
         title: 'Standards hôteliers. Soin des détails, équipements modernes.',
       },
+      {
+        component: 'panel',
+        label: 'Durabilité',
+        title: 'Matériaux durables et sourcés. Vigilance sur l’impact des installations.',
+      },
     ])
     setByIndex(panels, 0, 'image', assets.experienceArrival)
     setByIndex(panels, 1, 'image', assets.experienceCheckin)
     setByIndex(panels, 2, 'image', assets.experienceCheckout)
+    setByIndex(panels, 3, 'image', assets.experienceDurability)
     blok.panels = panels
   })
 }
@@ -583,7 +595,7 @@ async function ensureAsset(
     throw new Error(`Upload S3 échoué pour ${shortFilename}: ${await uploadResponse.text()}`)
   }
 
-  const finishResponse = await fetch(`${API}/assets/${signedResponse.id}/finish_upload`, {
+  const finishResponse = await apiFetch(`${API}/assets/${signedResponse.id}/finish_upload`, {
     headers,
   })
 
@@ -601,7 +613,7 @@ async function ensureAsset(
 }
 
 async function getSignedResponse(filename: string, folderId: number) {
-  const response = await fetch(`${API}/assets/`, {
+  const response = await apiFetch(`${API}/assets/`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({
@@ -624,7 +636,7 @@ async function getSignedResponse(filename: string, folderId: number) {
 }
 
 async function getAssetById(assetId: number) {
-  const response = await fetch(`${API}/assets/${assetId}`, {
+  const response = await apiFetch(`${API}/assets/${assetId}`, {
     headers,
   })
 

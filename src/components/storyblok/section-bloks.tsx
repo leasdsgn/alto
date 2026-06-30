@@ -68,7 +68,7 @@ export function HomeAboutSectionBlok({ blok }: { blok: Blok }) {
 
 export function PanelsSectionBlok({ blok }: { blok: Blok }) {
   const panels = bloksOf<{ image?: unknown; label?: unknown; title?: unknown }>(blok.panels)
-  const [first, second, third] = panels
+  const [first, second, third, fourth] = panels
 
   return (
     <div {...editable(blok)}>
@@ -76,7 +76,8 @@ export function PanelsSectionBlok({ blok }: { blok: Blok }) {
         panelImages={{
           arrival: assetUrl(first?.image, '/images/experience-espaces.png'),
           checkin: assetUrl(second?.image, '/images/experience-localisation.png'),
-          checkout: assetUrl(third?.image, '/images/blog-3.jpg'),
+          checkout: assetUrl(third?.image, '/images/experience-confort.webp'),
+          sustainability: assetUrl(fourth?.image, '/images/experience-durabilite.webp'),
         }}
         copy={{
           about: textOr(blok.eyebrow, 'À PROPOS'),
@@ -105,6 +106,14 @@ export function PanelsSectionBlok({ blok }: { blok: Blok }) {
                 'Standards hôteliers. Soin des détails, équipements modernes.',
               ),
               editableAttributes: third ? editable(third as Blok) : undefined,
+            },
+            {
+              label: textOr(fourth?.label, 'Durabilité'),
+              title: textOr(
+                fourth?.title,
+                'Matériaux durables et sourcés. Vigilance sur l’impact des installations.',
+              ),
+              editableAttributes: fourth ? editable(fourth as Blok) : undefined,
             },
           ],
         }}

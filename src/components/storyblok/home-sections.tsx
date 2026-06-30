@@ -24,7 +24,8 @@ const DEFAULTS = {
   experience: {
     arrival: '/images/experience-espaces.png',
     checkin: '/images/experience-localisation.png',
-    checkout: '/images/blog-3.jpg',
+    checkout: '/images/experience-confort.webp',
+    sustainability: '/images/experience-durabilite.webp',
   },
 }
 
@@ -94,6 +95,7 @@ export function HomeExperienceStory({ blok }: { blok: StoryblokBlok }) {
   const first = panels[0]
   const second = panels[1]
   const third = panels[2]
+  const fourth = panels[3]
 
   return (
     <div {...editableAttrs(blok)}>
@@ -102,6 +104,7 @@ export function HomeExperienceStory({ blok }: { blok: StoryblokBlok }) {
           arrival: asset(first?.image, DEFAULTS.experience.arrival),
           checkin: asset(second?.image, DEFAULTS.experience.checkin),
           checkout: asset(third?.image, DEFAULTS.experience.checkout),
+          sustainability: asset(fourth?.image, DEFAULTS.experience.sustainability),
         }}
         copy={{
           about: text(blok.label, 'À PROPOS'),
@@ -130,6 +133,14 @@ export function HomeExperienceStory({ blok }: { blok: StoryblokBlok }) {
                 'Standards hôteliers. Soin des détails, équipements modernes.',
               ),
               editableAttributes: third ? editableAttrs(third) : undefined,
+            },
+            {
+              label: text(fourth?.label, 'Durabilité'),
+              title: text(
+                fourth?.title,
+                'Matériaux durables et sourcés. Vigilance sur l’impact des installations.',
+              ),
+              editableAttributes: fourth ? editableAttrs(fourth) : undefined,
             },
           ],
         }}

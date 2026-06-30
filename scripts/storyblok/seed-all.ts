@@ -457,6 +457,11 @@ function buildHomeDefaultBody() {
           label: 'Confort',
           title: 'Standards hôteliers. Soin des détails, équipements modernes.',
         }),
+        blok('panel', {
+          image: '',
+          label: 'Durabilité',
+          title: 'Matériaux durables et sourcés. Vigilance sur l’impact des installations.',
+        }),
       ],
     }),
     blok('testimonials_section', {

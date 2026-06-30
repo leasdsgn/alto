@@ -14,6 +14,7 @@ interface ExperienceSectionProps {
     arrival: string
     checkin: string
     checkout: string
+    sustainability?: string
   }
   copy?: ExperienceSectionCopy
 }
@@ -29,7 +30,7 @@ type EditableAttributes = Record<string, string | undefined>
 type ExperienceSectionCopy = {
   about: string
   button: string
-  panels: [ExperiencePanelCopy, ExperiencePanelCopy, ExperiencePanelCopy]
+  panels: readonly ExperiencePanelCopy[]
 }
 
 export function ExperienceSection({ panelImages, copy: copyOverride }: ExperienceSectionProps) {
@@ -38,26 +39,18 @@ export function ExperienceSection({ panelImages, copy: copyOverride }: Experienc
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
 
-  const panels = [
-    {
-      label: copy.panels[0].label,
-      title: copy.panels[0].title,
-      image: panelImages.arrival,
-      editableAttributes: copy.panels[0].editableAttributes,
-    },
-    {
-      label: copy.panels[1].label,
-      title: copy.panels[1].title,
-      image: panelImages.checkin,
-      editableAttributes: copy.panels[1].editableAttributes,
-    },
-    {
-      label: copy.panels[2].label,
-      title: copy.panels[2].title,
-      image: panelImages.checkout,
-      editableAttributes: copy.panels[2].editableAttributes,
-    },
+  const panelImageList = [
+    panelImages.arrival,
+    panelImages.checkin,
+    panelImages.checkout,
+    panelImages.sustainability ?? '/images/experience-durabilite.webp',
   ]
+  const panels = copy.panels.map((panel, index) => ({
+    label: panel.label,
+    title: panel.title,
+    image: panelImageList[index] ?? panelImageList[0],
+    editableAttributes: panel.editableAttributes,
+  }))
 
   useLayoutEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -162,6 +155,10 @@ const EXPERIENCE_COPY = {
         title: 'Bonnes adresses. Au cœur de l’action ou loin des sentiers battus.',
       },
       { label: 'Confort', title: 'Standards hôteliers. Soin des détails, équipements modernes.' },
+      {
+        label: 'Durabilité',
+        title: 'Matériaux durables et sourcés. Vigilance sur l’impact des installations.',
+      },
     ],
   },
   en: {
@@ -174,6 +171,10 @@ const EXPERIENCE_COPY = {
         title: 'Good addresses. At the heart of the action or away from the expected path.',
       },
       { label: 'Comfort', title: 'Hotel standards. Attention to detail and modern amenities.' },
+      {
+        label: 'Sustainability',
+        title: 'Durable, sourced materials. Careful attention to installation impact.',
+      },
     ],
   },
 } as const
