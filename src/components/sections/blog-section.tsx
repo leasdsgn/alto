@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { BlogArticle } from '@/lib/blog-data'
 import { Button } from '@/components/ui/button'
 import { useLocale } from '@/components/providers/locale-provider'
@@ -85,9 +86,11 @@ export function BlogSection({ articles, copy: copyOverride }: BlogSectionProps) 
           </div>
 
           {articles.slice(0, 5).map((article) => (
-            <div
+            <Link
               key={article.slug}
+              href={`/blog/${article.slug}`}
               data-card
+              aria-label={article.title}
               className="group relative h-[420px] w-[294px] shrink-0 overflow-hidden rounded-xl md:h-[598px] md:w-[396px]"
             >
               <Image
@@ -117,7 +120,7 @@ export function BlogSection({ articles, copy: copyOverride }: BlogSectionProps) 
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
