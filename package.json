@@ -17,6 +17,7 @@
     "storyblok:sync-cms-assets": "bun run scripts/storyblok/sync-cms-assets.ts",
     "storyblok:seed-all": "bun run scripts/storyblok/seed-all.ts",
     "storyblok:seed-schema": "bun run scripts/storyblok/seed-all.ts --schema-only",
+    "storyblok:apply-legal-defaults": "bun run scripts/storyblok/apply-legal-defaults.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
