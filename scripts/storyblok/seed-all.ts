@@ -24,6 +24,7 @@ import {
 const SCHEMA_ONLY = process.argv.includes('--schema-only')
 const WHATSAPP_LINK =
   'https://wa.me/33617222098?text=Bonjour%2C%20je%20souhaite%20contacter%20Alto%20au%20sujet%20d%27un%20s%C3%A9jour.'
+const APARTMENT_FAQ_PREVIEW_PATH = '/appartements/voltaire-iii'
 
 interface StorySeed {
   name: string
@@ -172,7 +173,7 @@ const GLOBAL_STORIES: StorySeed[] = [
   {
     name: 'FAQ appartements',
     fullSlug: 'globals/apartment-faq',
-    realPath: '/',
+    realPath: APARTMENT_FAQ_PREVIEW_PATH,
     parent: 'globals',
     defaultContent: {
       component: 'faq_global',
@@ -206,7 +207,6 @@ function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
   return {
     component: 'page',
     body,
-    seo: [],
   }
 }
 

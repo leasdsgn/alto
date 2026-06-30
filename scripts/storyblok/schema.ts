@@ -126,18 +126,6 @@ const bloksField = (
 
 const ATOMS: ComponentDefinition[] = [
   {
-    name: 'meta',
-    display_name: 'SEO - Métadonnées',
-    is_root: false,
-    is_nestable: true,
-    schema: {
-      title: textField('Titre (balise <title>)', 0),
-      description: textareaField('Description (meta)', 1),
-      og_image: imageField('Image de partage (OG)', 2),
-      no_index: boolField('Cacher des moteurs de recherche', 3),
-    },
-  },
-  {
     name: 'link',
     display_name: 'Atome - Lien',
     is_root: false,
@@ -904,7 +892,6 @@ const ROOTS: ComponentDefinition[] = [
     is_nestable: false,
     schema: {
       body: bloksField('Sections de la page', 0, PAGE_SECTION_WHITELIST),
-      seo: bloksField('SEO', 1, ['meta'], 1),
     },
   },
   {

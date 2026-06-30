@@ -11,7 +11,6 @@ import { SearchParamsSync } from '@/components/booking/search-params-sync'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
-import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
 interface PageProps {
   searchParams: Promise<{
@@ -38,7 +37,7 @@ const APARTMENTS_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return getStoryblokPageMetadata('pages/appartements', locale, APARTMENTS_METADATA[locale])
+  return APARTMENTS_METADATA[locale]
 }
 
 export default async function AppartementsPage({ searchParams }: PageProps) {

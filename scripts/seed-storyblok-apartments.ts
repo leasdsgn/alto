@@ -193,22 +193,10 @@ const COMPONENTS = [
         pos: 14,
         translatable: true,
       },
-      seo_title: {
-        type: 'text',
-        display_name: 'SEO - titre',
-        pos: 15,
-        translatable: true,
-      },
-      seo_description: {
-        type: 'textarea',
-        display_name: 'SEO - description',
-        pos: 16,
-        translatable: true,
-      },
       order: {
         type: 'number',
         display_name: 'Ordre d’affichage',
-        pos: 17,
+        pos: 15,
       },
     },
   },

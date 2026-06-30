@@ -7,7 +7,6 @@ import { FaqSection } from '@/components/sections/faq-section'
 import { Button } from '@/components/ui/button'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
-import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 import { WHATSAPP_LINK } from '@/lib/whatsapp'
 
 const INVESTIR_METADATA: Record<'fr' | 'en', Metadata> = {
@@ -25,7 +24,7 @@ const INVESTIR_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return getStoryblokPageMetadata('pages/investir', locale, INVESTIR_METADATA[locale])
+  return INVESTIR_METADATA[locale]
 }
 
 export default async function InvestirPage() {

@@ -285,9 +285,6 @@ const COMPONENTS = [
       booking_cta_label: textField('CTA réservation - Libellé', 1, true),
       booking_cta_link: linkField('CTA réservation - Lien', 2, true),
       contact_email: textField('Email de contact', 3),
-      default_seo_title: textField('SEO par défaut - Titre', 4, true),
-      default_seo_description: textareaField('SEO par défaut - Description', 5, true),
-      default_share_image: imageField('SEO par défaut - Image de partage', 6),
     },
   },
   {
@@ -561,10 +558,6 @@ async function main() {
       booking_cta_label: 'Réserver',
       booking_cta_link: { linktype: 'story', cached_url: '/appartements' },
       contact_email: '',
-      default_seo_title: 'Alto',
-      default_seo_description:
-        'Appartements singuliers à Paris et Lyon, pensés pour des séjours élégants et confortables.',
-      default_share_image: '',
     },
   })
 

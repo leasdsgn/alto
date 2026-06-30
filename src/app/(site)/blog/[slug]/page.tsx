@@ -24,8 +24,9 @@ export async function generateMetadata({
     }
   }
 
-  const title = `${article.title} | Alto`
-  const description = article.subtitle
+  const title = article.seoTitle ?? `${article.title} | Alto`
+  const description = article.seoDescription ?? article.subtitle
+  const image = article.ogImage ?? article.heroImage ?? article.image
 
   return {
     title,
@@ -33,9 +34,15 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      images: [{ url: article.heroImage ?? article.image }],
+      images: [{ url: image }],
       type: 'article',
     },
+    robots: article.noIndex
+      ? {
+          index: false,
+          follow: false,
+        }
+      : undefined,
   }
 }
 

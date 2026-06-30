@@ -4,7 +4,6 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
-import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
 const CANCELLATION_METADATA: Record<'fr' | 'en', Metadata> = {
   fr: {
@@ -19,7 +18,7 @@ const CANCELLATION_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return getStoryblokPageMetadata('pages/annulation', locale, CANCELLATION_METADATA[locale])
+  return CANCELLATION_METADATA[locale]
 }
 
 export default async function AnnulationPage() {

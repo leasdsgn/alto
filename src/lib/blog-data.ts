@@ -8,6 +8,10 @@ export interface BlogArticle {
   category: string
   image: string
   heroImage?: string
+  seoTitle?: string
+  seoDescription?: string
+  ogImage?: string
+  noIndex?: boolean
   section: BlogSectionKey
   sections: Array<{
     label?: string

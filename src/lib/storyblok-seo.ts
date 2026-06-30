@@ -1,39 +1,27 @@
 import type { Metadata } from 'next'
 import { assetUrl } from '@/lib/storyblok-asset'
-import { getStoryBySlug, type StoryblokStory } from '@/lib/storyblok-page'
+import { getStoryBySlug } from '@/lib/storyblok-page'
 import type { InquiryLocale } from '@/types/inquiry'
 
-interface StoryblokSeoContent {
-  seo?: unknown
-}
-
-interface StoryblokSeoBlok {
-  title?: unknown
-  description?: unknown
+interface StoryblokBlogSeoContent {
+  seo_title?: unknown
+  seo_description?: unknown
   og_image?: unknown
   no_index?: unknown
 }
 
-export async function getStoryblokPageMetadata(
-  slug: string,
+export async function getStoryblokBlogMetadata(
   locale: InquiryLocale,
   fallback: Metadata,
 ): Promise<Metadata> {
-  const story = await getStoryBySlug<StoryblokSeoContent>(slug, locale)
-  return storyblokSeoToMetadata(story, fallback)
-}
+  const story = await getStoryBySlug<StoryblokBlogSeoContent>('blog/index', locale)
+  const content = story?.content
+  if (!content) return fallback
 
-export function storyblokSeoToMetadata(
-  story: StoryblokStory<StoryblokSeoContent> | null,
-  fallback: Metadata,
-): Metadata {
-  const seo = firstSeoBlok(story?.content?.seo)
-  if (!seo) return fallback
-
-  const title = stringOrNull(seo.title) ?? metadataTitleToString(fallback.title)
-  const description = stringOrNull(seo.description) ?? fallback.description ?? undefined
-  const ogImage = assetUrl(seo.og_image)
-  const noIndex = seo.no_index === true
+  const title = stringOrNull(content.seo_title) ?? metadataTitleToString(fallback.title)
+  const description = stringOrNull(content.seo_description) ?? fallback.description ?? undefined
+  const ogImage = assetUrl(content.og_image)
+  const noIndex = content.no_index === true
 
   return {
     ...fallback,
@@ -54,12 +42,6 @@ export function storyblokSeoToMetadata(
   }
 }
 
-function firstSeoBlok(value: unknown): StoryblokSeoBlok | null {
-  if (!Array.isArray(value)) return null
-  const seo = value.find(isRecord)
-  return seo ?? null
-}
-
 function stringOrNull(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
@@ -70,8 +52,4 @@ function metadataTitleToString(value: Metadata['title']): string | undefined {
   if ('default' in value && value.default) return value.default
   if ('absolute' in value && value.absolute) return value.absolute
   return undefined
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
 }

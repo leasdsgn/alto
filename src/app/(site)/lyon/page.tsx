@@ -13,7 +13,6 @@ import { StickyCta } from '@/components/ui/sticky-cta'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
-import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
 const LYON_METADATA: Record<'fr' | 'en', Metadata> = {
   fr: {
@@ -30,7 +29,7 @@ const LYON_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return getStoryblokPageMetadata('pages/lyon', locale, LYON_METADATA[locale])
+  return LYON_METADATA[locale]
 }
 
 export default async function LyonPage() {

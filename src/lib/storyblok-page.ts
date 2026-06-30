@@ -55,8 +55,3 @@ export const getStoryBySlug = cache(
 function stripLeadingSlash(value: string) {
   return value.startsWith('/') ? value.slice(1) : value
 }
-
-export interface PageBlokContent {
-  body?: unknown
-  seo?: unknown
-}

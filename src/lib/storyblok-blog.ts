@@ -105,6 +105,10 @@ function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): Blog
       assetUrl(content.header_image) ??
       assetUrl(content.article_hero_image) ??
       undefined,
+    seoTitle: asString(content.seo_title) ?? undefined,
+    seoDescription: asString(content.seo_description) ?? undefined,
+    ogImage: assetUrl(content.og_image) ?? undefined,
+    noIndex: content.no_index === true,
     section: inferBlogSection({
       section: asString(content.section) ?? asString(content.group),
       city: asString(content.city),

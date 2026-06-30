@@ -13,7 +13,6 @@ import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
-import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
 const HOME_METADATA: Record<'fr' | 'en', Metadata> = {
   fr: {
@@ -28,7 +27,7 @@ const HOME_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return getStoryblokPageMetadata('pages/home', locale, HOME_METADATA[locale])
+  return HOME_METADATA[locale]
 }
 
 export default async function Home() {

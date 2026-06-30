@@ -43,6 +43,8 @@ const PAGE_SLUG_TO_PATH: Record<string, string> = {
   annulation: '/annulation',
 }
 
+const APARTMENT_FAQ_PREVIEW_PATH = '/appartements/voltaire-iii'
+
 function resolvePreviewTarget(
   query: Record<string, string | string[] | undefined>,
   slug: string[],
@@ -67,6 +69,10 @@ function resolvePreviewTarget(
       slug: normalized,
       fallbackPath: PAGE_SLUG_TO_PATH[pageKey] ?? `/${pageKey}`,
     }
+  }
+
+  if (normalized === 'globals/apartment-faq') {
+    return { kind: 'redirect', slug: '', fallbackPath: APARTMENT_FAQ_PREVIEW_PATH }
   }
 
   if (normalized.startsWith('globals/')) {
