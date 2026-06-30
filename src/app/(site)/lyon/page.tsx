@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { LyonHeroSection } from '@/components/sections/lyon-hero-section'
 import { StatsSection } from '@/components/sections/stats-section'
@@ -13,11 +14,24 @@ import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
-export const metadata = {
-  title: 'Alto Lyon - Appartements de charme à Lyon',
-  description:
-    'Découvrez nos appartements soignés dans les plus beaux quartiers de Lyon : Bellecour, Vieux Lyon, Terreaux.',
+const LYON_METADATA: Record<'fr' | 'en', Metadata> = {
+  fr: {
+    title: 'Alto Lyon - Appartements de charme à Lyon',
+    description:
+      'Découvrez nos appartements soignés dans les plus beaux quartiers de Lyon : Bellecour, Vieux Lyon, Terreaux.',
+  },
+  en: {
+    title: 'Alto Lyon - Design apartments in Lyon',
+    description:
+      'Discover our curated apartments in Lyon’s best districts: Bellecour, Vieux Lyon and Terreaux.',
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getStaticServerLocale()
+  return getStoryblokPageMetadata('pages/lyon', locale, LYON_METADATA[locale])
 }
 
 export default async function LyonPage() {

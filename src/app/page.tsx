@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { HeroSection } from '@/components/sections/hero-section'
 import { AboutSection } from '@/components/sections/about-section'
@@ -12,6 +13,23 @@ import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
+
+const HOME_METADATA: Record<'fr' | 'en', Metadata> = {
+  fr: {
+    title: 'Alto - Location courte durée haut de gamme',
+    description: 'Appartements de luxe en location courte durée à Paris et Lyon.',
+  },
+  en: {
+    title: 'Alto - High-end short-term rentals',
+    description: 'Luxury short-term rental apartments in Paris and Lyon.',
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getStaticServerLocale()
+  return getStoryblokPageMetadata('pages/home', locale, HOME_METADATA[locale])
+}
 
 export default async function Home() {
   const locale = getStaticServerLocale()

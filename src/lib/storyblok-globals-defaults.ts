@@ -112,7 +112,11 @@ export const FOOTER_DEFAULTS: StoryblokFooter = {
   logoAriaLabel: 'Accueil Alto',
   ctaTitle: 'Une question ? Notre équipe vous répond.',
   ctaBody: 'Disponible du lundi au vendredi, de 9h à 17h.',
-  ctaButton: { label: 'Nous contacter', href: '/contact', opensInNewTab: false },
+  ctaButton: {
+    label: 'Chat on WhatsApp',
+    href: 'https://wa.me/33617222098?text=Bonjour%2C%20je%20souhaite%20contacter%20Alto%20au%20sujet%20d%27un%20s%C3%A9jour.',
+    opensInNewTab: true,
+  },
   navLinks: [
     { label: 'Accueil', href: '/', opensInNewTab: false },
     { label: 'Paris', href: '/appartements?city=paris', opensInNewTab: false },

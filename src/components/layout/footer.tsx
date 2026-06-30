@@ -8,6 +8,11 @@ interface FooterProps {
   reserveStickyCtaSpace?: boolean | 'mobile'
 }
 
+const WHATSAPP_MESSAGE = "Bonjour, je souhaite contacter Alto au sujet d'un séjour."
+const WHATSAPP_PHONE_NUMBER = '33617222098'
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
+const WHATSAPP_BUTTON_IMAGE = '/images/icons/whatsapp-button-white-medium.png'
+
 export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
   const footer = useFooterGlobals()
   const bottomPadding =
@@ -73,7 +78,6 @@ export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
 
 function FooterContactCta() {
   const footer = useFooterGlobals()
-  const cta = footer.ctaButton
 
   return (
     <section className="border-divider bg-sand border-t">
@@ -86,16 +90,21 @@ function FooterContactCta() {
           </div>
         </div>
 
-        {cta && (
-          <Link
-            href={cta.href}
-            target={cta.opensInNewTab ? '_blank' : undefined}
-            rel={cta.opensInNewTab ? 'noopener noreferrer' : undefined}
-            className="bg-coffee text-cream text-body inline-flex h-14 w-fit items-center justify-center rounded-full px-10 transition-opacity hover:opacity-85"
-          >
-            {cta.label}
-          </Link>
-        )}
+        <Link
+          href={WHATSAPP_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ouvrir une conversation WhatsApp avec Alto"
+          className="inline-flex w-fit transition-opacity hover:opacity-85"
+        >
+          <Image
+            src={WHATSAPP_BUTTON_IMAGE}
+            alt="Chat on WhatsApp"
+            width={378}
+            height={80}
+            className="h-12 w-auto md:h-14"
+          />
+        </Link>
       </div>
     </section>
   )

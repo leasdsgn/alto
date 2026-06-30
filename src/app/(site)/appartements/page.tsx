@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
@@ -9,8 +10,8 @@ import { getApartmentSearchResult } from '@/components/sections/apartments-secti
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { getStaticServerLocale } from '@/lib/i18n/server'
-import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
 interface PageProps {
   searchParams: Promise<{
@@ -23,6 +24,23 @@ interface PageProps {
 
 const APARTMENTS_HERO_IMAGE = '/images/appartements-hero.webp'
 
+const APARTMENTS_METADATA: Record<'fr' | 'en', Metadata> = {
+  fr: {
+    title: 'Nos appartements | Alto',
+    description:
+      'Découvrez les appartements Alto disponibles à Paris et Lyon pour vos séjours courte durée.',
+  },
+  en: {
+    title: 'Our apartments | Alto',
+    description: 'Discover Alto apartments available in Paris and Lyon for short-term stays.',
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getStaticServerLocale()
+  return getStoryblokPageMetadata('pages/appartements', locale, APARTMENTS_METADATA[locale])
+}
+
 export default async function AppartementsPage({ searchParams }: PageProps) {
   const locale = getStaticServerLocale()
   const sp = await searchParams
@@ -34,7 +52,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
     sp.guests ?? 'na',
   ].join(':')
 
-  const [story, searchResult, siteImages] = await Promise.all([
+  const [story, searchResult] = await Promise.all([
     getStoryBySlug('pages/appartements', locale),
     getApartmentSearchResult({
       city: sp.city,
@@ -42,10 +60,9 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       checkOut: sp.checkOut,
       guests: guestsCount,
     }),
-    getSiteImages(locale),
   ])
 
-  const heroImage = getApartmentsHeroImage(siteImages.pages.apartmentsHero)
+  const heroImage = APARTMENTS_HERO_IMAGE
 
   const hasStoryBody =
     story &&
@@ -108,11 +125,6 @@ function withApartmentsHeroFallback<T extends { content: Record<string, unknown>
       }),
     },
   }
-}
-
-function getApartmentsHeroImage(value: string) {
-  if (!value || value.includes('alto-salon')) return APARTMENTS_HERO_IMAGE
-  return value
 }
 
 function hasCustomStoryblokAsset(value: unknown): boolean {

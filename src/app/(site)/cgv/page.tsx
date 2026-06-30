@@ -1,12 +1,25 @@
+import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
-export const metadata = {
-  title: 'Conditions et termes - Alto',
-  description: 'Conditions de réservation Alto.',
+const TERMS_METADATA: Record<'fr' | 'en', Metadata> = {
+  fr: {
+    title: 'Conditions et termes - Alto',
+    description: 'Conditions de réservation Alto.',
+  },
+  en: {
+    title: 'Terms and conditions - Alto',
+    description: 'Alto booking terms and conditions.',
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getStaticServerLocale()
+  return getStoryblokPageMetadata('pages/cgv', locale, TERMS_METADATA[locale])
 }
 
 export default async function CgvPage() {

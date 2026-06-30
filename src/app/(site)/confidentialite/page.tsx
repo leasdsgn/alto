@@ -1,12 +1,25 @@
+import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
-export const metadata = {
-  title: 'Politique de confidentialité - Alto',
-  description: 'Politique de confidentialité Alto.',
+const PRIVACY_METADATA: Record<'fr' | 'en', Metadata> = {
+  fr: {
+    title: 'Politique de confidentialité - Alto',
+    description: 'Politique de confidentialité Alto.',
+  },
+  en: {
+    title: 'Privacy policy - Alto',
+    description: 'Alto privacy policy.',
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getStaticServerLocale()
+  return getStoryblokPageMetadata('pages/confidentialite', locale, PRIVACY_METADATA[locale])
 }
 
 export default async function ConfidentialitePage() {

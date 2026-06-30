@@ -6,10 +6,15 @@ import { ApartmentsSection, getApartmentCards } from '@/components/sections/apar
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return NOTRE_HISTOIRE_METADATA[locale]
+  return getStoryblokPageMetadata(
+    'pages/notre-histoire',
+    locale,
+    NOTRE_HISTOIRE_METADATA[locale],
+  )
 }
 
 export default async function NotreHistoirePage() {

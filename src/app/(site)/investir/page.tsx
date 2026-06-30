@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
@@ -7,6 +8,25 @@ import { Button } from '@/components/ui/button'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
+
+const INVESTIR_METADATA: Record<'fr' | 'en', Metadata> = {
+  fr: {
+    title: 'Investir avec Alto',
+    description:
+      'Découvrez le modèle Alto pour investir dans des appartements haut de gamme pensés pour la location courte et moyenne durée.',
+  },
+  en: {
+    title: 'Invest with Alto',
+    description:
+      'Discover Alto’s model for investing in high-end apartments designed for short and mid-term rentals.',
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getStaticServerLocale()
+  return getStoryblokPageMetadata('pages/investir', locale, INVESTIR_METADATA[locale])
+}
 
 export default async function InvestirPage() {
   const locale = getStaticServerLocale()

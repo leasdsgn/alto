@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ArticleView } from '@/components/blog/article-view'
 import { Footer } from '@/components/layout/footer'
@@ -5,6 +6,38 @@ import { ApartmentsSection, getApartmentCards } from '@/components/sections/apar
 import { getBlogEditorialMeta } from '@/lib/blog-page'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const locale = getStaticServerLocale()
+  const articles = await getBlogArticles(locale)
+  const article = articles.find((entry) => entry.slug === slug)
+
+  if (!article) {
+    return {
+      title: 'Article introuvable | Alto',
+      description: 'Cet article n’est pas disponible.',
+    }
+  }
+
+  const title = `${article.title} | Alto`
+  const description = article.subtitle
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: article.heroImage ?? article.image }],
+      type: 'article',
+    },
+  }
+}
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

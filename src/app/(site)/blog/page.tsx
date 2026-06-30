@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { BlogIndex } from '@/components/blog/blog-index'
 import { Footer } from '@/components/layout/footer'
@@ -8,6 +9,25 @@ import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
+
+const BLOG_METADATA: Record<'fr' | 'en', Metadata> = {
+  fr: {
+    title: 'Journal | Alto',
+    description:
+      'Conseils de ville, idées de séjour et repères pratiques pour préparer votre voyage à Paris ou Lyon.',
+  },
+  en: {
+    title: 'Journal | Alto',
+    description:
+      'City notes, stay ideas and practical references to prepare your trip to Paris or Lyon.',
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getStaticServerLocale()
+  return getStoryblokPageMetadata('pages/blog', locale, BLOG_METADATA[locale])
+}
 
 export default async function BlogPage() {
   const locale = getStaticServerLocale()

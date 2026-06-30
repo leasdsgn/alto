@@ -1,8 +1,17 @@
+import { draftMode } from 'next/headers'
+
 export const STORYBLOK_PREVIEW_PARAM = '_storyblok'
 export type StoryblokVersion = 'draft' | 'published'
 
 export async function getStoryblokVersion(): Promise<StoryblokVersion> {
   if (process.env.NODE_ENV !== 'production') return 'draft'
+  try {
+    const draft = await draftMode()
+    if (draft.isEnabled) return 'draft'
+  } catch {
+    return 'published'
+  }
+
   return 'published'
 }
 

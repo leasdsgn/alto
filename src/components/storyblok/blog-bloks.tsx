@@ -2,7 +2,7 @@ import { storyblokEditable } from '@storyblok/react/rsc'
 import { BlogIndex } from '@/components/blog/blog-index'
 import { BLOG_PAGE_COPY, buildBlogEditorialSections } from '@/lib/blog-page'
 import { getBlogArticles } from '@/lib/storyblok-blog'
-import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 
 type Blok = Record<string, unknown>
@@ -12,7 +12,10 @@ const editable = (blok: Blok) => storyblokEditable(blok as Editable)
 
 export async function BlogIndexSectionBlok({ blok }: { blok: Blok }) {
   const locale = getStaticServerLocale()
-  const [articles, siteImages] = await Promise.all([getBlogArticles(locale), getSiteImages(locale)])
+  const [articles, globals] = await Promise.all([
+    getBlogArticles(locale),
+    getStoryblokGlobals(locale),
+  ])
   const sections = buildBlogEditorialSections(locale, articles)
 
   return (
@@ -20,9 +23,9 @@ export async function BlogIndexSectionBlok({ blok }: { blok: Blok }) {
       <BlogIndex
         copy={BLOG_PAGE_COPY[locale]}
         sections={sections}
-        locationAvatars={siteImages.shared.locationAvatars}
-        travelerAvatars={siteImages.shared.travelerAvatars}
-        storyCardImages={[siteImages.blog.storyArrival, siteImages.blog.storyCheckin]}
+        locationAvatars={globals.sharedAssets.locationAvatars.map((asset) => asset.src)}
+        travelerAvatars={globals.sharedAssets.travelerAvatars.map((asset) => asset.src)}
+        storyCardImages={['/images/alto-salon.jpg', '/images/blog-3.jpg']}
       />
     </div>
   )
