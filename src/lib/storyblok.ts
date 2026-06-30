@@ -38,7 +38,6 @@ import {
   StatsSectionBlok,
   TextSectionBlok,
 } from '@/components/storyblok/shared-bloks'
-import { ContactFormSectionBlok } from '@/components/storyblok/contact-bloks'
 import { BlogIndexSectionBlok } from '@/components/storyblok/blog-bloks'
 import {
   HomeAboutStory,
@@ -93,7 +92,6 @@ export const getStoryblokApi = storyblokInit({
     guarantees_section: GuaranteesSectionBlok,
     invest_model_section: InvestModelSectionBlok,
     invest_stats_section: InvestStatsSectionBlok,
-    contact_form_section: ContactFormSectionBlok,
     blog_index_section: BlogIndexSectionBlok,
     rich_text_section: RichTextSectionBlok,
     divider_section: DividerSectionBlok,

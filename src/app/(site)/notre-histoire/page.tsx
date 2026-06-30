@@ -1,20 +1,16 @@
 import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
-import { AboutView } from '@/components/about/about-view'
+import { AboutView, type AboutViewImages } from '@/components/about/about-view'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentsSection, getApartmentCards } from '@/components/sections/apartments-section'
 import { getStaticServerLocale } from '@/lib/i18n/server'
-import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return getStoryblokPageMetadata(
-    'pages/notre-histoire',
-    locale,
-    NOTRE_HISTOIRE_METADATA[locale],
-  )
+  return getStoryblokPageMetadata('pages/notre-histoire', locale, NOTRE_HISTOIRE_METADATA[locale])
 }
 
 export default async function NotreHistoirePage() {
@@ -34,15 +30,48 @@ export default async function NotreHistoirePage() {
     )
   }
 
-  const [siteImages, apartments] = await Promise.all([getSiteImages(locale), getApartmentCards()])
+  const [globals, apartments] = await Promise.all([
+    getStoryblokGlobals(locale),
+    getApartmentCards(),
+  ])
 
   return (
     <>
-      <AboutView siteImages={siteImages} />
+      <AboutView siteImages={getFallbackAboutImages(globals.sharedAssets)} />
       <ApartmentsSection apartments={apartments} />
       <Footer />
     </>
   )
+}
+
+function getFallbackAboutImages(sharedAssets: {
+  locationAvatars: { src: string }[]
+  travelerAvatars: { src: string }[]
+}): AboutViewImages {
+  return {
+    shared: {
+      locationAvatars: [
+        sharedAssets.locationAvatars[0]?.src ?? '/images/blog-1.jpg',
+        sharedAssets.locationAvatars[1]?.src ?? '/images/hero-home.webp',
+        sharedAssets.locationAvatars[2]?.src ?? '/images/blog-3.jpg',
+      ],
+      travelerAvatars: [
+        sharedAssets.travelerAvatars[0]?.src ?? '/images/avatars/voyageur-1.png',
+        sharedAssets.travelerAvatars[1]?.src ?? '/images/avatars/voyageur-2.png',
+        sharedAssets.travelerAvatars[2]?.src ?? '/images/avatars/voyageur-3.png',
+      ],
+    },
+    about: {
+      conceptLounge: '/images/about/about-hero.webp',
+      conceptChair: '/images/alto-salon.jpg',
+      conceptCorridor: '/images/about/concept-corridor.jpg',
+      founders: {
+        paul: '/images/about/founder-paul.jpg',
+        mayeul: '/images/about/founder-mayeul.jpg',
+        benjamin: '/images/about/founder-benjamin.jpg',
+      },
+    },
+  }
 }
 
 const NOTRE_HISTOIRE_METADATA = {

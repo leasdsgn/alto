@@ -33,6 +33,9 @@ export interface StoryblokHeader {
   mobileFooterButtonHref: string
 }
 
+const WHATSAPP_FALLBACK_LINK =
+  'https://wa.me/33617222098?text=Bonjour%2C%20je%20souhaite%20contacter%20Alto%20au%20sujet%20d%27un%20s%C3%A9jour.'
+
 export interface StoryblokFooter {
   logo: string
   logoAriaLabel: string
@@ -95,7 +98,7 @@ export const HEADER_DEFAULTS: StoryblokHeader = {
   navSecondary: [
     { label: 'Paris', href: '/appartements?city=paris', opensInNewTab: false },
     { label: 'Lyon', href: '/appartements?city=lyon', opensInNewTab: false },
-    { label: 'Contact', href: '/contact', opensInNewTab: false },
+    { label: 'WhatsApp', href: WHATSAPP_FALLBACK_LINK, opensInNewTab: true },
   ],
   mobileOpenLabel: 'Ouvrir le menu',
   mobileCloseLabel: 'Fermer le menu',
@@ -114,7 +117,7 @@ export const FOOTER_DEFAULTS: StoryblokFooter = {
   ctaBody: 'Disponible du lundi au vendredi, de 9h à 17h.',
   ctaButton: {
     label: 'Chat on WhatsApp',
-    href: 'https://wa.me/33617222098?text=Bonjour%2C%20je%20souhaite%20contacter%20Alto%20au%20sujet%20d%27un%20s%C3%A9jour.',
+    href: WHATSAPP_FALLBACK_LINK,
     opensInNewTab: true,
   },
   navLinks: [

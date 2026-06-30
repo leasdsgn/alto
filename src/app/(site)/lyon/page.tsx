@@ -12,7 +12,6 @@ import { Footer } from '@/components/layout/footer'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
-import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
@@ -52,27 +51,26 @@ export default async function LyonPage() {
     )
   }
 
-  const [articles, lyonApartments, siteImages] = await Promise.all([
+  const [articles, lyonApartments] = await Promise.all([
     getBlogArticles(locale),
     getApartmentsForSearch({ city: 'lyon' }),
-    getSiteImages(locale),
   ])
 
   return (
     <>
       <main>
-        <LyonHeroSection backgroundImage={siteImages.lyon.heroBackground} />
+        <LyonHeroSection backgroundImage={LYON_FALLBACK_IMAGES.heroBackground} />
         <StatsSection
-          pressLogo={siteImages.lyon.pressLogo}
-          monocleLogo={siteImages.lyon.monocleLogo}
+          pressLogo={LYON_FALLBACK_IMAGES.pressLogo}
+          monocleLogo={LYON_FALLBACK_IMAGES.monocleLogo}
         />
         <LyonApartmentsSection apartments={lyonApartments.slice(0, 3)} />
-        <LyonServicesSection image={siteImages.lyon.servicesImage} />
+        <LyonServicesSection image={LYON_FALLBACK_IMAGES.servicesImage} />
         <LyonQuartiersSection
           images={{
-            bellecour: siteImages.lyon.bellecour,
-            vieuxLyon: siteImages.lyon.vieuxLyon,
-            terreaux: siteImages.lyon.terreaux,
+            bellecour: LYON_FALLBACK_IMAGES.bellecour,
+            vieuxLyon: LYON_FALLBACK_IMAGES.vieuxLyon,
+            terreaux: LYON_FALLBACK_IMAGES.terreaux,
           }}
         />
         <LyonBlogSection articles={articles.filter((article) => article.section === 'lyon')} />
@@ -83,3 +81,13 @@ export default async function LyonPage() {
     </>
   )
 }
+
+const LYON_FALLBACK_IMAGES = {
+  heroBackground: '/images/lyon/hero-lyon.jpg',
+  bellecour: '/images/lyon/apt-bellecour.jpg',
+  vieuxLyon: '/images/lyon/apt-vieux-lyon.jpg',
+  terreaux: '/images/lyon/apt-terreaux.jpg',
+  servicesImage: '/images/lyon/services-image.jpg',
+  pressLogo: '/images/lyon/press-logo.png',
+  monocleLogo: '/images/lyon/monocle-logo.png',
+} as const

@@ -6,10 +6,27 @@ import { AboutGuarantees } from '@/components/about/about-guarantees'
 import { Header } from '@/components/layout/header'
 import { useLocale } from '@/components/providers/locale-provider'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
-import type { SiteImages } from '@/lib/storyblok-site-images'
+import { WHATSAPP_LINK } from '@/lib/whatsapp'
 
 interface AboutViewProps {
-  siteImages: SiteImages
+  siteImages: AboutViewImages
+}
+
+export interface AboutViewImages {
+  shared: {
+    locationAvatars: readonly [string, string, string]
+    travelerAvatars: readonly [string, string, string]
+  }
+  about: {
+    conceptLounge: string
+    conceptCorridor: string
+    conceptChair: string
+    founders: {
+      paul: string
+      mayeul: string
+      benjamin: string
+    }
+  }
 }
 
 const ABOUT_HERO_IMAGE = '/images/about/about-hero.webp'
@@ -214,7 +231,9 @@ export function AboutView({ siteImages }: AboutViewProps) {
                 <p className="text-cream text-h4">{copy.team.body}</p>
 
                 <Link
-                  href="/contact"
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="border-cream text-cream hover:bg-cream hover:text-coffee inline-flex h-[50px] items-center justify-center self-start rounded-full border px-8 text-sm leading-[1.5] transition-colors"
                 >
                   {copy.team.link}

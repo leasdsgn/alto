@@ -4,6 +4,7 @@ import { BLOG_PAGE_COPY, buildBlogEditorialSections } from '@/lib/blog-page'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import { getStaticServerLocale } from '@/lib/i18n/server'
+import { assetUrl } from '@/lib/storyblok-asset'
 
 type Blok = Record<string, unknown>
 type Editable = Parameters<typeof storyblokEditable>[0]
@@ -25,7 +26,10 @@ export async function BlogIndexSectionBlok({ blok }: { blok: Blok }) {
         sections={sections}
         locationAvatars={globals.sharedAssets.locationAvatars.map((asset) => asset.src)}
         travelerAvatars={globals.sharedAssets.travelerAvatars.map((asset) => asset.src)}
-        storyCardImages={['/images/alto-salon.jpg', '/images/blog-3.jpg']}
+        storyCardImages={[
+          assetUrl(blok.story_arrival_image, '/images/alto-salon.jpg'),
+          assetUrl(blok.story_checkin_image, '/images/blog-3.jpg'),
+        ]}
       />
     </div>
   )

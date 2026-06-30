@@ -11,6 +11,7 @@ import { useSearchStore } from '@/lib/stores/search'
 import { formatDateShort } from '@/lib/format-date'
 import { formatCurrency } from '@/lib/formatters'
 import { getQuoteAccommodationCents, getQuoteTotalCents } from '@/lib/guesty-pricing'
+import { WHATSAPP_LINK } from '@/lib/whatsapp'
 import type { GuestyCalendarDay, GuestyQuote } from '@/types/guesty'
 
 interface BookingProps {
@@ -443,7 +444,13 @@ export function ApartmentBooking({
       {!isMobileSheet && (
         <div className="rounded-[8px] bg-[#f9f9f2] px-10 pt-[31px] pb-8">
           <p className="text-coffee text-body">{copy.helpTitle}</p>
-          <Button href="/contact" className="mt-6 min-w-[208px]" iconRight={<ArrowOutwardIcon />}>
+          <Button
+            href={WHATSAPP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 min-w-[208px]"
+            iconRight={<ArrowOutwardIcon />}
+          >
             {copy.helpCta}
           </Button>
         </div>

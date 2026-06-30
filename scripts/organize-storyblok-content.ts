@@ -81,7 +81,6 @@ async function deleteStory(id: number) {
 }
 
 function pathForStory(story: StoryblokStory) {
-  if (story.full_slug === 'site-images') return '/'
   if (story.full_slug === 'blog/index') return '/blog'
   if (story.full_slug === 'blog') return '/blog'
   if (story.full_slug.startsWith('blog/')) return `/${story.full_slug}`
@@ -113,7 +112,7 @@ async function main() {
 
   for (const story of stories) {
     const path = pathForStory(story)
-    const name = story.full_slug === 'site-images' ? 'Accueil' : story.name
+    const name = story.name
 
     if (path !== story.path || name !== story.name) {
       await updateStory(story.id, { path, name })

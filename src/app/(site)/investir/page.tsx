@@ -6,9 +6,9 @@ import { Footer } from '@/components/layout/footer'
 import { FaqSection } from '@/components/sections/faq-section'
 import { Button } from '@/components/ui/button'
 import { getStaticServerLocale } from '@/lib/i18n/server'
-import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
+import { WHATSAPP_LINK } from '@/lib/whatsapp'
 
 const INVESTIR_METADATA: Record<'fr' | 'en', Metadata> = {
   fr: {
@@ -46,13 +46,12 @@ export default async function InvestirPage() {
   }
 
   const copy = INVEST_COPY[locale]
-  const siteImages = await getSiteImages(locale)
 
   return (
     <>
       <div className="relative h-[442px] overflow-hidden">
         <Image
-          src={siteImages.pages.investHero}
+          src={INVESTIR_FALLBACK_IMAGES.hero}
           alt={copy.heroAlt}
           fill
           sizes="100vw"
@@ -102,7 +101,7 @@ export default async function InvestirPage() {
           <div className="max-w-content px-gutter py-section md:px-gutter-md mx-auto grid grid-cols-1 gap-12 lg:grid-cols-[304px_1fr]">
             <div className="relative h-[350px] overflow-hidden rounded-lg lg:h-[468px]">
               <Image
-                src={siteImages.pages.investModel}
+                src={INVESTIR_FALLBACK_IMAGES.model}
                 alt={copy.modelAlt}
                 fill
                 sizes="304px"
@@ -164,8 +163,16 @@ export default async function InvestirPage() {
           </p>
 
           <div className="mt-8 flex gap-3">
-            <Button>{copy.investorDeck}</Button>
-            <Button variant="outline" className="border-silver text-silver">
+            <Button href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+              {copy.investorDeck}
+            </Button>
+            <Button
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="outline"
+              className="border-silver text-silver"
+            >
               {copy.contactButton}
             </Button>
           </div>
@@ -178,6 +185,11 @@ export default async function InvestirPage() {
     </>
   )
 }
+
+const INVESTIR_FALLBACK_IMAGES = {
+  hero: '/images/alto-salon.jpg',
+  model: '/images/alto-salon.jpg',
+} as const
 
 const INVEST_COPY = {
   fr: {

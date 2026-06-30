@@ -3,15 +3,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useFooterGlobals } from '@/components/providers/storyblok-globals-provider'
+import { WHATSAPP_BUTTON_IMAGE, WHATSAPP_LINK } from '@/lib/whatsapp'
 
 interface FooterProps {
   reserveStickyCtaSpace?: boolean | 'mobile'
 }
-
-const WHATSAPP_MESSAGE = "Bonjour, je souhaite contacter Alto au sujet d'un séjour."
-const WHATSAPP_PHONE_NUMBER = '33617222098'
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
-const WHATSAPP_BUTTON_IMAGE = '/images/icons/whatsapp-button-white-medium.png'
 
 export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
   const footer = useFooterGlobals()

@@ -1,7 +1,7 @@
 import { storyblokEditable } from '@storyblok/react/rsc'
 import Image from 'next/image'
 import Link from 'next/link'
-import { AboutView } from '@/components/about/about-view'
+import { AboutView, type AboutViewImages } from '@/components/about/about-view'
 import {
   assetAlt,
   assetUrl,
@@ -12,7 +12,7 @@ import {
   type StoryblokLinkField,
 } from '@/lib/storyblok-asset'
 import { PLACEHOLDER_IMAGE } from '@/lib/storyblok-defaults'
-import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 
 type Blok = Record<string, unknown>
@@ -22,7 +22,33 @@ const editable = (blok: Blok) => storyblokEditable(blok as Editable)
 
 export async function NotreHistoireSectionBlok({ blok }: { blok: Blok }) {
   const locale = getStaticServerLocale()
-  const siteImages = await getSiteImages(locale)
+  const globals = await getStoryblokGlobals(locale)
+  const locationAvatars = globals.sharedAssets.locationAvatars
+  const travelerAvatars = globals.sharedAssets.travelerAvatars
+  const siteImages: AboutViewImages = {
+    shared: {
+      locationAvatars: [
+        locationAvatars[0]?.src ?? '/images/blog-1.jpg',
+        locationAvatars[1]?.src ?? '/images/hero-home.webp',
+        locationAvatars[2]?.src ?? '/images/blog-3.jpg',
+      ],
+      travelerAvatars: [
+        travelerAvatars[0]?.src ?? '/images/avatars/voyageur-1.png',
+        travelerAvatars[1]?.src ?? '/images/avatars/voyageur-2.png',
+        travelerAvatars[2]?.src ?? '/images/avatars/voyageur-3.png',
+      ],
+    },
+    about: {
+      conceptLounge: assetUrl(blok.hero_image, '/images/about/about-hero.webp'),
+      conceptChair: assetUrl(blok.concept_image, PLACEHOLDER_IMAGE),
+      conceptCorridor: assetUrl(blok.guarantees_image, '/images/about/concept-corridor.jpg'),
+      founders: {
+        paul: assetUrl(blok.founder_paul_image, '/images/about/founder-paul.jpg'),
+        mayeul: assetUrl(blok.founder_mayeul_image, '/images/about/founder-mayeul.jpg'),
+        benjamin: assetUrl(blok.founder_benjamin_image, '/images/about/founder-benjamin.jpg'),
+      },
+    },
+  }
 
   return (
     <div {...editable(blok)}>

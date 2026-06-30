@@ -7,7 +7,7 @@ import { ServicesSection } from '@/components/sections/services-section'
 import { BLOG_PAGE_COPY, buildBlogEditorialSections } from '@/lib/blog-page'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
-import { getSiteImages } from '@/lib/storyblok-site-images'
+import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokPageMetadata } from '@/lib/storyblok-seo'
 
@@ -46,10 +46,10 @@ export default async function BlogPage() {
     )
   }
 
-  const [articles, apartments, siteImages] = await Promise.all([
+  const [articles, apartments, globals] = await Promise.all([
     getBlogArticles(locale),
     getApartmentCards(),
-    getSiteImages(locale),
+    getStoryblokGlobals(locale),
   ])
   const sections = buildBlogEditorialSections(locale, articles)
 
@@ -58,9 +58,9 @@ export default async function BlogPage() {
       <BlogIndex
         copy={BLOG_PAGE_COPY[locale]}
         sections={sections}
-        locationAvatars={siteImages.shared.locationAvatars}
-        travelerAvatars={siteImages.shared.travelerAvatars}
-        storyCardImages={[siteImages.blog.storyArrival, siteImages.blog.storyCheckin]}
+        locationAvatars={globals.sharedAssets.locationAvatars.map((avatar) => avatar.src)}
+        travelerAvatars={globals.sharedAssets.travelerAvatars.map((avatar) => avatar.src)}
+        storyCardImages={BLOG_FALLBACK_STORY_IMAGES}
       />
       <div className="bg-cream">
         <ServicesSection />
@@ -70,3 +70,5 @@ export default async function BlogPage() {
     </>
   )
 }
+
+const BLOG_FALLBACK_STORY_IMAGES = ['/images/alto-salon.jpg', '/images/blog-3.jpg'] as const
