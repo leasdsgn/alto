@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
+import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { Button } from '@/components/ui/button'
 import type { BlogArticle } from '@/lib/blog-data'
 import type { BlogEditorialMeta } from '@/lib/blog-page'
@@ -58,8 +59,11 @@ const NEIGHBORHOOD_BY_SLUG = {
   'choisir-un-pied-a-terre-bien-place': 'Adresse',
 } as const
 
+const ARTICLE_HERO_IMAGE = '/images/blog/article-hero.webp'
+
 export function ArticleView({ article, locale, relatedArticles, cta }: ArticleViewProps) {
   const copy = ARTICLE_VIEW_COPY[locale]
+  const heroImage = article.heroImage ?? ARTICLE_HERO_IMAGE
   const anchorSections =
     article.sections.length > 0
       ? article.sections
@@ -71,7 +75,7 @@ export function ArticleView({ article, locale, relatedArticles, cta }: ArticleVi
     <>
       <section className="relative h-[512px] overflow-hidden">
         <Image
-          src={article.image}
+          src={heroImage}
           alt={article.title}
           fill
           sizes="100vw"
@@ -82,7 +86,9 @@ export function ArticleView({ article, locale, relatedArticles, cta }: ArticleVi
         <Header />
 
         <div className="max-w-content px-gutter md:px-gutter-md relative mx-auto flex h-full flex-col justify-center pt-20">
-          <p className="text-cream text-body max-w-[1212px]">{copy.eyebrow}</p>
+          <p className="text-cream text-body max-w-[1212px]">
+            <BrandKickerText value={copy.eyebrow} />
+          </p>
           <h1 className="text-cream text-h3 mt-8 max-w-[954px] font-bold">{article.title}</h1>
 
           <div className="mt-8 flex flex-wrap gap-4">

@@ -1,89 +1,48 @@
+import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { CancelReservationCard } from '@/components/booking/cancel-reservation-card'
-import { findInquiryByReservation } from '@/lib/inquiries-repository'
-import { verifyCancellationToken } from '@/lib/cancel-token'
-import { formatDate } from '@/lib/formatters'
-import { getServerLocale } from '@/lib/i18n/server'
+import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getStoryBySlug } from '@/lib/storyblok-page'
 
-interface PageProps {
-  searchParams: Promise<{ token?: string }>
+export const metadata = {
+  title: 'Politique d’annulation - Alto',
+  description: 'Politique d’annulation Alto.',
 }
 
-export default async function AnnulationPage({ searchParams }: PageProps) {
-  const search = await searchParams
-  const locale = await getServerLocale()
-  const copy = CANCELLATION_COPY[locale]
+export default async function AnnulationPage() {
+  const locale = getStaticServerLocale()
+  const story = await getStoryBySlug('pages/annulation', locale)
 
-  let state:
-    | { type: 'valid'; token: string; listingTitle: string; checkIn: string; checkOut: string; status: string }
-    | { type: 'error'; title: string; body: string }
-
-  if (!search.token) {
-    state = {
-      type: 'error',
-      title: copy.invalidTitle,
-      body: copy.incompleteBody,
-    }
-  } else {
-    try {
-      const payload = verifyCancellationToken(search.token)
-      const inquiry = await findInquiryByReservation(payload.reservationId)
-
-      if (!inquiry || inquiry.guest.email.toLowerCase() !== payload.email.toLowerCase()) {
-        state = {
-          type: 'error',
-          title: copy.notFoundTitle,
-          body: copy.notFoundBody,
-        }
-      } else {
-        state = {
-          type: 'valid',
-          token: search.token,
-          listingTitle: inquiry.listing_title,
-          checkIn: formatDate(inquiry.check_in, inquiry.locale),
-          checkOut: formatDate(inquiry.check_out, inquiry.locale),
-          status: inquiry.status,
-        }
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'invalid_token'
-      state =
-        message === 'expired_token'
-          ? {
-              type: 'error',
-              title: copy.expiredTitle,
-              body: copy.expiredBody,
-            }
-          : {
-              type: 'error',
-              title: copy.invalidTitle,
-              body: copy.invalidBody,
-            }
-    }
+  if (
+    story &&
+    Array.isArray((story.content as { body?: unknown }).body) &&
+    (story.content as { body: unknown[] }).body.length > 0
+  ) {
+    return (
+      <>
+        <Header variant="dark" />
+        <StoryblokStory story={story} />
+        <Footer />
+      </>
+    )
   }
+
+  const copy = CANCELLATION_COPY[locale]
 
   return (
     <>
       <Header variant="dark" />
-
-      <main className="mx-auto max-w-[860px] px-6 py-16 md:px-12 lg:px-0">
-        {state.type === 'valid' ? (
-          <CancelReservationCard
-            token={state.token}
-            listingTitle={state.listingTitle}
-            checkIn={state.checkIn}
-            checkOut={state.checkOut}
-            status={state.status}
-          />
-        ) : (
-          <div className="border-divider bg-cream rounded-2xl border p-8">
-            <h1 className="text-coffee text-3xl font-semibold">{state.title}</h1>
-            <p className="text-taupe mt-4 text-sm leading-relaxed">{state.body}</p>
+      <main className="max-w-content px-gutter py-section md:px-gutter-md md:py-section-md mx-auto w-full">
+        <div className="max-w-[720px]">
+          <p className="text-silver font-display text-xs tracking-[0.24px] italic">Alto</p>
+          <h1 className="text-coffee mt-3 text-2xl font-bold md:text-4xl">{copy.title}</h1>
+          <div className="text-coffee mt-10 space-y-6 text-sm leading-[1.8]">
+            {copy.body.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </div>
-        )}
+        </div>
       </main>
-
       <Footer />
     </>
   )
@@ -91,24 +50,21 @@ export default async function AnnulationPage({ searchParams }: PageProps) {
 
 const CANCELLATION_COPY = {
   fr: {
-    invalidTitle: 'Lien invalide',
-    incompleteBody:
-      'Le lien d’annulation est incomplet. Utilisez le lien présent dans votre email de confirmation.',
-    notFoundTitle: 'Réservation introuvable',
-    notFoundBody: 'Nous n’avons pas retrouvé de réservation correspondant à ce lien.',
-    expiredTitle: 'Lien expiré',
-    expiredBody:
-      'Le lien d’annulation a expiré. Contactez Alto si vous devez encore annuler votre séjour.',
-    invalidBody: 'Ce lien d’annulation n’est plus valide.',
+    title: 'Politique d’annulation',
+    body: [
+      'Les conditions d’annulation applicables sont celles communiquées au moment de la réservation.',
+      'Toute demande d’annulation doit être adressée directement à Alto ou traitée depuis les outils de gestion Guesty utilisés par Alto.',
+      'Les remboursements éventuels, litiges, refus bancaires et ajustements de paiement sont gérés hors du site Alto, selon les règles applicables à la réservation et les outils utilisés par Alto.',
+      'Pour toute question liée à une réservation, contactez Alto à l’adresse contact@alto-paris.com.',
+    ],
   },
   en: {
-    invalidTitle: 'Invalid link',
-    incompleteBody: 'The cancellation link is incomplete. Use the link in your confirmation email.',
-    notFoundTitle: 'Booking not found',
-    notFoundBody: 'We could not find a booking matching this link.',
-    expiredTitle: 'Expired link',
-    expiredBody:
-      'The cancellation link has expired. Contact Alto if you still need to cancel your stay.',
-    invalidBody: 'This cancellation link is no longer valid.',
+    title: 'Cancellation policy',
+    body: [
+      'The applicable cancellation terms are the ones shown at the time of booking.',
+      'Any cancellation request must be sent directly to Alto or handled from the Guesty management tools used by Alto.',
+      'Any refunds, disputes, bank declines, and payment adjustments are handled outside the Alto website, according to the rules attached to the booking and the tools used by Alto.',
+      'For any booking-related question, contact Alto at contact@alto-paris.com.',
+    ],
   },
 } as const

@@ -7,6 +7,7 @@ import { ApartmentEditorialSections } from '@/components/sections/apartment-edit
 import { AppartementsGrid } from '@/components/sections/appartements-grid'
 import { getApartmentSearchResult } from '@/components/sections/apartments-section'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
+import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getSiteImages } from '@/lib/storyblok-site-images'
 import { getStoryBySlug } from '@/lib/storyblok-page'
@@ -19,6 +20,8 @@ interface PageProps {
     guests?: string
   }>
 }
+
+const APARTMENTS_HERO_IMAGE = '/images/appartements-hero.webp'
 
 export default async function AppartementsPage({ searchParams }: PageProps) {
   const locale = getStaticServerLocale()
@@ -42,6 +45,8 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
     getSiteImages(locale),
   ])
 
+  const heroImage = getApartmentsHeroImage(siteImages.pages.apartmentsHero)
+
   const hasStoryBody =
     story &&
     Array.isArray((story.content as { body?: unknown }).body) &&
@@ -54,9 +59,9 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       </Suspense>
 
       {hasStoryBody ? (
-        <StoryblokStory story={story} />
+        <StoryblokStory story={withApartmentsHeroFallback(story, heroImage)} />
       ) : (
-        <FallbackHero imageSrc={siteImages.pages.apartmentsHero} locale={locale} />
+        <FallbackHero imageSrc={heroImage} locale={locale} />
       )}
 
       <main className="max-w-content px-gutter pb-section-md md:px-gutter-md mx-auto w-full">
@@ -73,6 +78,62 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
       <Footer />
     </>
   )
+}
+
+function withApartmentsHeroFallback<T extends { content: Record<string, unknown> }>(
+  story: T,
+  heroImage: string,
+): T {
+  const body = story.content.body
+  if (!Array.isArray(body)) return story
+
+  return {
+    ...story,
+    content: {
+      ...story.content,
+      body: body.map((blok, index) => {
+        if (
+          index !== 0 ||
+          !isRecord(blok) ||
+          blok.component !== 'hero_compact_section' ||
+          hasCustomStoryblokAsset(blok.background_image)
+        ) {
+          return blok
+        }
+
+        return {
+          ...blok,
+          background_image: heroImage,
+        }
+      }),
+    },
+  }
+}
+
+function getApartmentsHeroImage(value: string) {
+  if (!value || value.includes('alto-salon')) return APARTMENTS_HERO_IMAGE
+  return value
+}
+
+function hasCustomStoryblokAsset(value: unknown): boolean {
+  const asset = getStoryblokAssetValue(value)
+  if (!asset) return false
+
+  return !asset.includes('/images/alto-salon.jpg') && !asset.includes('alto-salon')
+}
+
+function getStoryblokAssetValue(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null
+  if (!isRecord(value)) return null
+
+  if (typeof value.filename === 'string' && value.filename.trim()) return value.filename.trim()
+  if (typeof value.url === 'string' && value.url.trim()) return value.url.trim()
+
+  return null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
 function FallbackHero({ imageSrc, locale }: { imageSrc: string; locale: 'fr' | 'en' }) {
@@ -93,7 +154,9 @@ function FallbackHero({ imageSrc, locale }: { imageSrc: string; locale: 'fr' | '
 
       <div className="absolute inset-0 flex items-end">
         <div className="max-w-content px-gutter md:px-gutter-md mx-auto w-full pb-20">
-          <p className="text-cream text-body max-w-[505px]">{copy.kicker}</p>
+          <p className="text-cream text-body max-w-[505px]">
+            <BrandKickerText value={copy.kicker} />
+          </p>
           <h1 className="text-cream text-h3 mt-1">{copy.title}</h1>
         </div>
       </div>

@@ -100,6 +100,11 @@ function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): Blog
       assetUrl(content.heroImage) ??
       assetUrl(content.og_image) ??
       '/images/alto-salon.jpg',
+    heroImage:
+      assetUrl(content.hero_image) ??
+      assetUrl(content.header_image) ??
+      assetUrl(content.article_hero_image) ??
+      undefined,
     section: inferBlogSection({
       section: asString(content.section) ?? asString(content.group),
       city: asString(content.city),

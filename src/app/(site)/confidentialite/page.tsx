@@ -34,7 +34,7 @@ export default async function ConfidentialitePage() {
       <Header variant="dark" />
       <main className="max-w-content px-gutter py-section md:px-gutter-md md:py-section-md mx-auto w-full">
         <div className="max-w-[720px]">
-          <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">Alto</p>
+          <p className="text-silver font-display text-xs tracking-[0.24px] italic">Alto</p>
           <h1 className="text-coffee mt-3 text-2xl font-bold md:text-4xl">{copy.title}</h1>
           <div className="text-coffee mt-10 space-y-6 text-sm leading-[1.8]">
             {copy.body.map((paragraph) => (

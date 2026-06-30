@@ -4,6 +4,7 @@ import { useRef, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
+import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { Button } from '@/components/ui/button'
 import type { BlogSectionKey } from '@/lib/blog-data'
 import type { BlogEditorialSection, BlogPageCopy } from '@/lib/blog-page'
@@ -57,7 +58,9 @@ export function BlogIndex({
 
         <div className="max-w-content px-gutter md:px-gutter-md relative mx-auto pt-28 pb-14 md:pt-36 md:pb-20">
           <div className="mx-auto flex max-w-[980px] flex-col items-center text-center">
-            <p className="text-cream/92 text-body max-w-[760px]">{copy.heroEyebrow}</p>
+            <p className="text-cream/92 text-body max-w-[760px]">
+              <BrandKickerText value={copy.heroEyebrow} />
+            </p>
             <h1 className="text-cream text-h4 md:text-h3 mt-6 max-w-[954px] font-bold tracking-[-0.04em]">
               {copy.heroTitle}
             </h1>

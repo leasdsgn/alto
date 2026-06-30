@@ -7,6 +7,7 @@ export interface BlogArticle {
   date: string
   category: string
   image: string
+  heroImage?: string
   section: BlogSectionKey
   sections: Array<{
     label?: string
