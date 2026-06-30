@@ -84,8 +84,8 @@ function pathForStory(story: StoryblokStory) {
   if (story.full_slug === 'blog/index') return '/blog'
   if (story.full_slug === 'blog') return '/blog'
   if (story.full_slug.startsWith('blog/')) return `/${story.full_slug}`
-  if (story.full_slug.startsWith('_categories/')) return null
-  if (story.full_slug.startsWith('_settings/')) return null
+  if (story.full_slug.startsWith('_categories/')) return '/blog'
+  if (story.full_slug.startsWith('_settings/')) return '/'
   if (story.full_slug === 'global-faq') return '/appartements'
   if (story.full_slug.startsWith('appartements/')) return `/${story.full_slug}`
   if (story.full_slug.startsWith('apartments/')) {

@@ -57,7 +57,7 @@ const richtextField = (displayName: string, pos: number) => ({
 })
 
 const imageField = (displayName: string, pos: number, required = false) => ({
-  type: 'image',
+  type: 'asset',
   pos,
   display_name: displayName,
   required,

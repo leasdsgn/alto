@@ -73,6 +73,14 @@ function resolvePreviewTarget(
     return { kind: 'story', slug: normalized, fallbackPath: '/' }
   }
 
+  if (normalized.startsWith('_settings/')) {
+    return { kind: 'story', slug: 'pages/home', fallbackPath: '/' }
+  }
+
+  if (normalized.startsWith('_categories/')) {
+    return { kind: 'story', slug: 'pages/blog', fallbackPath: '/blog' }
+  }
+
   if (normalized.startsWith('articles/')) {
     return {
       kind: 'story',
