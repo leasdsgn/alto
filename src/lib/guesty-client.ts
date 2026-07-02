@@ -19,8 +19,8 @@ import {
 import { withGuestyRateLimit, writeApiRateLimit } from './guesty-rate-limit'
 import {
   appendListingVisibilityField,
-  filterListingsShownOnWebsite,
 } from './guesty-listing-visibility'
+import { filterListingsAvailableOnWebsite } from './guesty-listing-visibility-server'
 
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
 const TOKEN_URL = `${BEAPI_BASE_URL}/oauth2/token`
@@ -366,9 +366,9 @@ export const guestyClient = {
   },
 }
 
-function filterListingsResponse(response: { results: GuestyListing[] }) {
+async function filterListingsResponse(response: { results: GuestyListing[] }) {
   return {
     ...response,
-    results: filterListingsShownOnWebsite(response.results),
+    results: await filterListingsAvailableOnWebsite(response.results),
   }
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/components/providers/locale-provider'
+import { SHARED_TESTIMONIALS_DEFAULTS } from '@/lib/storyblok-testimonials-defaults'
 
 interface TestimonialsSectionProps {
   copy?: TestimonialsSectionCopy
@@ -79,29 +80,7 @@ export function TestimonialsSection({ copy: copyOverride }: TestimonialsSectionP
 const TESTIMONIALS_COPY = {
   fr: {
     title: 'Témoignages',
-    items: [
-      {
-        quote:
-          'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
-        name: 'Marie & Thomas',
-        apartment: 'Le Faubourg',
-        stay: 'Avril 2026',
-      },
-      {
-        quote:
-          'Le check-in autonome à minuit, sans stress. Et le quartier est parfait pour découvrir Paris à pied.',
-        name: 'James W.',
-        apartment: 'L’Opera',
-        stay: 'Mars 2026',
-      },
-      {
-        quote:
-          'Trois nuits, et on a déjà réservé pour l’été. Le Saint-Germain est devenu notre adresse parisienne.',
-        name: 'Sofia & Leo',
-        apartment: 'Le Saint-Germain',
-        stay: 'Février 2026',
-      },
-    ],
+    items: SHARED_TESTIMONIALS_DEFAULTS,
   },
   en: {
     title: 'Guest reviews',

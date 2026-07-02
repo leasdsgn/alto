@@ -1,6 +1,7 @@
 import type { GuestyListing } from '@/types/guesty'
 
 export const SHOW_ON_WEBSITE_CUSTOM_FIELD = 'show_on_website'
+export const DEFAULT_SHOW_ON_WEBSITE_CUSTOM_FIELD_ID = '6a468efbb27c470012897c6b'
 
 const FIELD_NAME_KEYS = [
   'key',
@@ -102,7 +103,14 @@ function getFieldValue(field: Record<string, unknown>) {
 }
 
 function isShowOnWebsiteKey(value: string) {
-  return normalizeFieldName(value) === SHOW_ON_WEBSITE_CUSTOM_FIELD
+  return (
+    normalizeFieldName(value) === SHOW_ON_WEBSITE_CUSTOM_FIELD ||
+    value === getShowOnWebsiteCustomFieldId()
+  )
+}
+
+function getShowOnWebsiteCustomFieldId() {
+  return process.env.GUESTY_SHOW_ON_WEBSITE_FIELD_ID || DEFAULT_SHOW_ON_WEBSITE_CUSTOM_FIELD_ID
 }
 
 function normalizeFieldName(value: string) {

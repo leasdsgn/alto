@@ -20,6 +20,7 @@ import {
   sleep,
   upsertComponent,
 } from './seed-utils'
+import { SHARED_TESTIMONIALS_DEFAULTS } from '../../src/lib/storyblok-testimonials-defaults'
 
 const SCHEMA_ONLY = process.argv.includes('--schema-only')
 const WHATSAPP_LINK =
@@ -168,7 +169,10 @@ const GLOBAL_STORIES: StorySeed[] = [
     fullSlug: 'globals/shared-testimonials',
     realPath: '/',
     parent: 'globals',
-    defaultContent: { component: 'shared_testimonials_global', items: [] },
+    defaultContent: {
+      component: 'shared_testimonials_global',
+      items: buildSharedTestimonialsItems(),
+    },
   },
   {
     name: 'FAQ appartements',
@@ -208,6 +212,10 @@ function pageContent(body: ReturnType<typeof blok>[]): Record<string, unknown> {
     component: 'page',
     body,
   }
+}
+
+function buildSharedTestimonialsItems() {
+  return SHARED_TESTIMONIALS_DEFAULTS.map((testimonial) => blok('testimonial', { ...testimonial }))
 }
 
 export type LegalPageKind = 'cgv' | 'confidentialite' | 'annulation'

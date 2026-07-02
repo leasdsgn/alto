@@ -1,4 +1,5 @@
 import type { GuestyCancellationReason } from '@/lib/instant-charge-payment'
+import type { GuestyCustomFields } from '@/types/guesty'
 
 const OPENAPI_BASE_URL = 'https://open-api.guesty.com'
 const TOKEN_URL = `${OPENAPI_BASE_URL}/oauth2/token`
@@ -98,7 +99,33 @@ export interface GuestyOpenApiReservation {
   payments?: GuestyOpenApiPayment[]
 }
 
+export interface GuestyOpenApiListingVisibility {
+  _id?: string
+  id?: string
+  customFields?: GuestyCustomFields
+}
+
+interface GuestyOpenApiListingVisibilityPage {
+  results?: GuestyOpenApiListingVisibility[]
+  count?: number
+  limit?: number
+  skip?: number
+}
+
 export const guestyOpenApi = {
+  getListingVisibilityPage({ limit, skip }: { limit: number; skip: number }) {
+    const params = new URLSearchParams({
+      fields: 'customFields',
+      limit: String(limit),
+      skip: String(skip),
+    })
+    return openApiFetch<GuestyOpenApiListingVisibilityPage>(`/v1/listings?${params}`)
+  },
+
+  getListingCustomFields(listingId: string) {
+    return openApiFetch<GuestyCustomFields>(`/v1/listings/${listingId}/custom-fields`)
+  },
+
   getReservation(reservationId: string) {
     if (process.env.GUESTY_MOCK === 'true') {
       return Promise.resolve(buildMockReservation(reservationId))

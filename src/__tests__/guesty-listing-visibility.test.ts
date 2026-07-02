@@ -35,6 +35,19 @@ describe('guesty-listing-visibility', () => {
     ).toBe(true)
   })
 
+  it('accepte le fieldId Open API du custom field show_on_website', () => {
+    expect(
+      isListingShownOnWebsite({
+        customFields: [
+          {
+            fieldId: '6a468efbb27c470012897c6b',
+            value: true,
+          },
+        ],
+      }),
+    ).toBe(true)
+  })
+
   it('rejette les listings sans show_on_website à true', () => {
     expect(isListingShownOnWebsite({ customFields: undefined })).toBe(false)
     expect(

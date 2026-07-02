@@ -10,7 +10,7 @@ import {
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
 import { validateReservationInput } from '@/lib/reservation-validation'
-import { assertListingShownOnWebsite } from '@/lib/guesty-listing-visibility'
+import { assertListingAvailableOnWebsite } from '@/lib/guesty-listing-visibility-server'
 import type {
   GuestyInstantChargeReservation,
   GuestyInstantReservationRequest,
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       guestyClient.getListing(data.listingId),
       guestyClient.createQuote(data.listingId, data.checkIn, data.checkOut, data.guestsCount),
     ])
-    assertListingShownOnWebsite(listing)
+    await assertListingAvailableOnWebsite(data.listingId, listing)
 
     const validated = validateReservationInput({
       listing,

@@ -4,7 +4,7 @@ import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
-import { assertListingShownOnWebsite } from '@/lib/guesty-listing-visibility'
+import { assertListingAvailableOnWebsite } from '@/lib/guesty-listing-visibility-server'
 
 const schema = z.object({
   listingId: z.string().min(1),
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     const { listingId, checkIn, checkOut, guestsCount } = parsed.data
     const listing = await getCachedListingForVisibility(listingId)
-    assertListingShownOnWebsite(listing)
+    await assertListingAvailableOnWebsite(listingId, listing)
 
     const data = await getCachedQuote(listingId, checkIn, checkOut, guestsCount)
     return NextResponse.json(data)
