@@ -4,8 +4,9 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { defineSeoMetadata } from '@/lib/seo'
 
-const TERMS_METADATA: Record<'fr' | 'en', Metadata> = {
+const TERMS_METADATA: Record<'fr' | 'en', { title: string; description: string }> = {
   fr: {
     title: 'Conditions et termes - Alto',
     description: 'Conditions de réservation Alto.',
@@ -18,7 +19,11 @@ const TERMS_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return TERMS_METADATA[locale]
+  return defineSeoMetadata({
+    ...TERMS_METADATA[locale],
+    path: '/cgv',
+    image: '/images/appartements-hero.webp',
+  })
 }
 
 export default async function CgvPage() {

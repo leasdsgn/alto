@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
+import { Breadcrumbs } from '@/components/seo/breadcrumbs'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { Button } from '@/components/ui/button'
 import type { BlogArticle } from '@/lib/blog-data'
@@ -86,6 +87,14 @@ export function ArticleView({ article, locale, relatedArticles, cta }: ArticleVi
         <Header />
 
         <div className="max-w-content px-gutter md:px-gutter-md relative mx-auto flex h-full flex-col justify-center pt-20">
+          <Breadcrumbs
+            items={[
+              { label: 'Accueil', href: '/' },
+              { label: 'Journal', href: '/blog' },
+              { label: article.title },
+            ]}
+            className="text-cream/80 mb-8"
+          />
           <p className="text-cream text-body max-w-[1212px]">
             <BrandKickerText value={copy.eyebrow} />
           </p>

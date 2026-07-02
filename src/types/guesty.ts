@@ -1,3 +1,9 @@
+export type GuestyCustomFields =
+  | Array<Record<string, unknown>>
+  | Record<string, unknown>
+  | null
+  | undefined
+
 export interface GuestyListing {
   _id: string
   title: string
@@ -33,6 +39,7 @@ export interface GuestyListing {
     basePrice: number
     currency: string
   }
+  customFields?: GuestyCustomFields
   totalPrice?: number
   minNights: number
   maxNights: number

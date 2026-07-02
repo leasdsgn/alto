@@ -8,9 +8,12 @@ import { ApartmentEditorialSections } from '@/components/sections/apartment-edit
 import { AppartementsGrid } from '@/components/sections/appartements-grid'
 import { getApartmentSearchResult } from '@/components/sections/apartments-section'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
+import { JsonLd } from '@/components/seo/json-ld'
+import { InternalLinkSection } from '@/components/seo/internal-link-section'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { buildBreadcrumbJsonLd, defineSeoMetadata } from '@/lib/seo'
 
 interface PageProps {
   searchParams: Promise<{
@@ -23,7 +26,7 @@ interface PageProps {
 
 const APARTMENTS_HERO_IMAGE = '/images/appartements-hero.webp'
 
-const APARTMENTS_METADATA: Record<'fr' | 'en', Metadata> = {
+const APARTMENTS_METADATA: Record<'fr' | 'en', { title: string; description: string }> = {
   fr: {
     title: 'Nos appartements | Alto',
     description:
@@ -37,7 +40,11 @@ const APARTMENTS_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return APARTMENTS_METADATA[locale]
+  return defineSeoMetadata({
+    ...APARTMENTS_METADATA[locale],
+    path: '/appartements',
+    image: APARTMENTS_HERO_IMAGE,
+  })
 }
 
 export default async function AppartementsPage({ searchParams }: PageProps) {
@@ -70,6 +77,12 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
 
   return (
     <>
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Appartements', path: '/appartements' },
+        ])}
+      />
       <Suspense fallback={null}>
         <SearchParamsSync />
       </Suspense>
@@ -86,6 +99,29 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
           apartments={searchResult.apartments}
           initialCity={sp.city}
           searchStatus={searchResult.status}
+        />
+
+        <InternalLinkSection
+          eyebrow="Alto"
+          title="Explorer par intention"
+          className="mt-12"
+          items={[
+            {
+              label: 'Séjourner à Lyon',
+              href: '/lyon',
+              description: 'Voir les appartements Alto et les quartiers à privilégier à Lyon.',
+            },
+            {
+              label: 'Conseils de séjour',
+              href: '/blog',
+              description: 'Lire les guides de quartiers, adresses et conseils pratiques Alto.',
+            },
+            {
+              label: 'Notre histoire',
+              href: '/notre-histoire',
+              description: 'Découvrir la vision Alto et les standards appliqués à chaque adresse.',
+            },
+          ]}
         />
       </main>
 

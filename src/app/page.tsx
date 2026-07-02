@@ -13,8 +13,9 @@ import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
+import { defineSeoMetadata } from '@/lib/seo'
 
-const HOME_METADATA: Record<'fr' | 'en', Metadata> = {
+const HOME_METADATA: Record<'fr' | 'en', { title: string; description: string }> = {
   fr: {
     title: 'Alto - Location courte durée haut de gamme',
     description: 'Appartements de luxe en location courte durée à Paris et Lyon.',
@@ -27,7 +28,11 @@ const HOME_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return HOME_METADATA[locale]
+  return defineSeoMetadata({
+    ...HOME_METADATA[locale],
+    path: '/',
+    image: '/images/hero-room.webp',
+  })
 }
 
 export default async function Home() {

@@ -251,7 +251,7 @@ function buildCacheKey({
   to: string
   nights: number
 }) {
-  return ['guesty:search_availability', normalize(city) || 'all', guests, from, to, nights].join(
+  return ['guesty:search_availability:v2', normalize(city) || 'all', guests, from, to, nights].join(
     ':',
   )
 }

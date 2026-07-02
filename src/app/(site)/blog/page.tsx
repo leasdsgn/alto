@@ -4,12 +4,14 @@ import { BlogIndex } from '@/components/blog/blog-index'
 import { Footer } from '@/components/layout/footer'
 import { ApartmentsSection, getApartmentCards } from '@/components/sections/apartments-section'
 import { ServicesSection } from '@/components/sections/services-section'
+import { JsonLd } from '@/components/seo/json-ld'
 import { BLOG_PAGE_COPY, buildBlogEditorialSections } from '@/lib/blog-page'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokBlogMetadata } from '@/lib/storyblok-seo'
+import { buildBreadcrumbJsonLd } from '@/lib/seo'
 
 const BLOG_METADATA: Record<'fr' | 'en', Metadata> = {
   fr: {
@@ -40,6 +42,12 @@ export default async function BlogPage() {
   ) {
     return (
       <>
+        <JsonLd
+          data={buildBreadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Journal', path: '/blog' },
+          ])}
+        />
         <StoryblokStory story={story} />
         <Footer />
       </>
@@ -55,6 +63,12 @@ export default async function BlogPage() {
 
   return (
     <>
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Journal', path: '/blog' },
+        ])}
+      />
       <BlogIndex
         copy={BLOG_PAGE_COPY[locale]}
         sections={sections}

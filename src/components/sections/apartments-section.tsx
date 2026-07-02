@@ -7,7 +7,7 @@ import { type Apartment, type ApartmentCardData } from '@/types/apartment'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 
-const BASE_PRICE_REVALIDATE_SECONDS = 12 * 60 * 60
+const APARTMENT_CARD_REVALIDATE_SECONDS = 5 * 60
 const APARTMENT_STARTING_PRICES_CACHE_TAG = 'guesty-apartment-starting-prices'
 const LISTING_CARD_FIELDS = [
   '_id',
@@ -25,6 +25,15 @@ const LISTING_CARD_FIELDS = [
   'prices.currency',
   'minNights',
   'maxNights',
+] as const
+const LISTING_DETAIL_FIELDS = [
+  ...LISTING_CARD_FIELDS,
+  'description',
+  'publicDescription.summary',
+  'publicDescription.space',
+  'publicDescription.neighborhood',
+  'publicDescription.transit',
+  'amenities',
 ] as const
 const LISTING_SEARCH_FIELDS = [...LISTING_CARD_FIELDS, 'totalPrice'] as const
 
@@ -122,21 +131,25 @@ const getCachedSearchQuote = unstable_cache(
   { revalidate: 300 },
 )
 
-const getCachedListings = unstable_cache(() => guestyClient.getListings(), ['guesty-listings'], {
-  revalidate: 300,
-})
+const getCachedListings = unstable_cache(
+  () => guestyClient.getListings({ fields: LISTING_DETAIL_FIELDS }),
+  ['guesty-visible-listings-v1'],
+  {
+    revalidate: 300,
+  },
+)
 
 const getCachedListingCards = unstable_cache(
   () => guestyClient.getListings({ fields: LISTING_CARD_FIELDS }),
-  ['guesty-listing-cards'],
+  ['guesty-visible-listing-cards-v1'],
   { revalidate: 300 },
 )
 
 const getCachedApartmentCardSnapshot = unstable_cache(
   loadApartmentCardSnapshot,
-  ['guesty-apartment-card-base-price-snapshot-v1'],
+  ['guesty-visible-apartment-card-base-price-snapshot-v1'],
   {
-    revalidate: BASE_PRICE_REVALIDATE_SECONDS,
+    revalidate: APARTMENT_CARD_REVALIDATE_SECONDS,
     tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],
   },
 )
@@ -358,7 +371,7 @@ async function getApartments(): Promise<Apartment[]> {
   } catch {
     // fall through to fallback
   }
-  return FALLBACK_APARTMENTS
+  return getFallbackApartments()
 }
 
 async function getApartmentCards(): Promise<ApartmentCardData[]> {
@@ -373,7 +386,7 @@ async function loadApartmentCardSnapshot(): Promise<ApartmentCardData[]> {
     // fall through to fallback
   }
 
-  return FALLBACK_APARTMENTS.map(toApartmentCardData)
+  return getFallbackApartments().map(toApartmentCardData)
 }
 
 async function preloadApartmentStartingPrices() {
@@ -451,10 +464,12 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
       status: 'ready' as const,
     }
   } catch {
+    const fallbackApartments = getFallbackApartments().map(toApartmentCardData)
+
     return {
       apartments: city
-        ? applyCityFilter(FALLBACK_APARTMENTS.map(toApartmentCardData), city)
-        : FALLBACK_APARTMENTS.map(toApartmentCardData),
+        ? applyCityFilter(fallbackApartments, city)
+        : fallbackApartments,
       hasDateSearch: false,
       status: 'fallback' as const,
     }
@@ -548,6 +563,11 @@ function toApartmentCardData(apartment: (typeof FALLBACK_APARTMENTS)[number]): A
     maxNights: apartment.maxNights,
     priceSource: 'starting',
   }
+}
+
+function getFallbackApartments() {
+  if (process.env.GUESTY_ALLOW_FALLBACK_APARTMENTS !== 'true') return []
+  return FALLBACK_APARTMENTS
 }
 
 function isFallbackApartmentId(id: string) {

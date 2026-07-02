@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { assetUrl } from '@/lib/storyblok-asset'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { defineSeoMetadata } from '@/lib/seo'
 import type { InquiryLocale } from '@/types/inquiry'
 
 interface StoryblokBlogSeoContent {
@@ -18,28 +19,20 @@ export async function getStoryblokBlogMetadata(
   const content = story?.content
   if (!content) return fallback
 
-  const title = stringOrNull(content.seo_title) ?? metadataTitleToString(fallback.title)
-  const description = stringOrNull(content.seo_description) ?? fallback.description ?? undefined
+  const title = stringOrNull(content.seo_title) ?? metadataTitleToString(fallback.title) ?? 'Journal'
+  const description =
+    stringOrNull(content.seo_description) ??
+    (typeof fallback.description === 'string' ? fallback.description : '')
   const ogImage = assetUrl(content.og_image)
   const noIndex = content.no_index === true
 
-  return {
-    ...fallback,
+  return defineSeoMetadata({
     title,
     description,
-    openGraph: {
-      ...fallback.openGraph,
-      title,
-      description,
-      images: ogImage ? [{ url: ogImage }] : fallback.openGraph?.images,
-    },
-    robots: noIndex
-      ? {
-          index: false,
-          follow: false,
-        }
-      : fallback.robots,
-  }
+    path: '/blog',
+    image: ogImage,
+    noIndex,
+  })
 }
 
 function stringOrNull(value: unknown): string | null {

@@ -4,8 +4,9 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { defineSeoMetadata } from '@/lib/seo'
 
-const CANCELLATION_METADATA: Record<'fr' | 'en', Metadata> = {
+const CANCELLATION_METADATA: Record<'fr' | 'en', { title: string; description: string }> = {
   fr: {
     title: 'Politique d’annulation - Alto',
     description: 'Politique d’annulation Alto.',
@@ -18,7 +19,11 @@ const CANCELLATION_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return CANCELLATION_METADATA[locale]
+  return defineSeoMetadata({
+    ...CANCELLATION_METADATA[locale],
+    path: '/annulation',
+    image: '/images/appartements-hero.webp',
+  })
 }
 
 export default async function AnnulationPage() {

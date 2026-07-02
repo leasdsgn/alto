@@ -17,6 +17,10 @@ import {
   writeRateLimit,
 } from './guesty-oauth-cache'
 import { withGuestyRateLimit, writeApiRateLimit } from './guesty-rate-limit'
+import {
+  appendListingVisibilityField,
+  filterListingsShownOnWebsite,
+} from './guesty-listing-visibility'
 
 const BEAPI_BASE_URL = 'https://booking.guesty.com'
 const TOKEN_URL = `${BEAPI_BASE_URL}/oauth2/token`
@@ -213,7 +217,9 @@ function getRetryAfterMs(response: Response) {
 function buildListingsPath(query: GuestyListingsQuery = {}) {
   const params = new URLSearchParams()
 
-  if (query.fields?.length) params.set('fields', query.fields.join(' '))
+  if (query.fields?.length) {
+    params.set('fields', appendListingVisibilityField(query.fields).join(' '))
+  }
   if (query.checkIn) params.set('checkIn', query.checkIn)
   if (query.checkOut) params.set('checkOut', query.checkOut)
   if (query.guests) params.set('minOccupancy', String(query.guests))
@@ -284,7 +290,9 @@ async function mock<K extends keyof GuestyMock>(method: K): Promise<GuestyMock[K
 export const guestyClient = {
   getListings(query?: GuestyListingsQuery) {
     if (USE_MOCK) return mock('getListings').then((fn) => fn())
-    return guestyFetch<{ results: GuestyListing[] }>(buildListingsPath(query), { revalidate: 300 })
+    return guestyFetch<{ results: GuestyListing[] }>(buildListingsPath(query), {
+      revalidate: 300,
+    }).then(filterListingsResponse)
   },
 
   getListing(listingId: string) {
@@ -310,7 +318,7 @@ export const guestyClient = {
     return guestyFetch<{ results: GuestyListing[] }>(
       buildListingsPath({ checkIn, checkOut, guests, fields: options.fields }),
       { revalidate: 60 },
-    )
+    ).then(filterListingsResponse)
   },
 
   createQuote(listingId: string, checkIn: string, checkOut: string, guestsCount: number) {
@@ -356,4 +364,11 @@ export const guestyClient = {
       },
     )
   },
+}
+
+function filterListingsResponse(response: { results: GuestyListing[] }) {
+  return {
+    ...response,
+    results: filterListingsShownOnWebsite(response.results),
+  }
 }

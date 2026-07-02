@@ -47,6 +47,7 @@ function listing(
       notes: 'Non-fumeur',
     },
     prices: { basePrice: price, currency: 'EUR' },
+    customFields: [{ fieldName: 'show_on_website', value: true }],
     minNights: 2,
     maxNights: 30,
   }

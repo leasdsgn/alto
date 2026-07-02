@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { WHATSAPP_LINK } from '@/lib/whatsapp'
+import { defineSeoMetadata } from '@/lib/seo'
 
-const INVESTIR_METADATA: Record<'fr' | 'en', Metadata> = {
+const INVESTIR_METADATA: Record<'fr' | 'en', { title: string; description: string }> = {
   fr: {
     title: 'Investir avec Alto',
     description:
@@ -24,7 +25,11 @@ const INVESTIR_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return INVESTIR_METADATA[locale]
+  return defineSeoMetadata({
+    ...INVESTIR_METADATA[locale],
+    path: '/investir',
+    image: INVESTIR_FALLBACK_IMAGES.hero,
+  })
 }
 
 export default async function InvestirPage() {

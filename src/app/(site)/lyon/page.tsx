@@ -10,11 +10,14 @@ import { LyonBlogSection } from '@/components/sections/lyon-blog-section'
 import { FaqSection } from '@/components/sections/faq-section'
 import { Footer } from '@/components/layout/footer'
 import { StickyCta } from '@/components/ui/sticky-cta'
+import { JsonLd } from '@/components/seo/json-ld'
+import { InternalLinkSection } from '@/components/seo/internal-link-section'
 import { getStaticServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
+import { buildBreadcrumbJsonLd, defineSeoMetadata } from '@/lib/seo'
 
-const LYON_METADATA: Record<'fr' | 'en', Metadata> = {
+const LYON_METADATA: Record<'fr' | 'en', { title: string; description: string }> = {
   fr: {
     title: 'Alto Lyon - Appartements de charme à Lyon',
     description:
@@ -29,7 +32,11 @@ const LYON_METADATA: Record<'fr' | 'en', Metadata> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getStaticServerLocale()
-  return LYON_METADATA[locale]
+  return defineSeoMetadata({
+    ...LYON_METADATA[locale],
+    path: '/lyon',
+    image: LYON_FALLBACK_IMAGES.heroBackground,
+  })
 }
 
 export default async function LyonPage() {
@@ -43,7 +50,14 @@ export default async function LyonPage() {
   ) {
     return (
       <>
+        <JsonLd
+          data={buildBreadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Lyon', path: '/lyon' },
+          ])}
+        />
         <StoryblokStory story={story} />
+        <LyonInternalLinks />
         <Footer reserveStickyCtaSpace />
         <StickyCta />
       </>
@@ -57,6 +71,12 @@ export default async function LyonPage() {
 
   return (
     <>
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Lyon', path: '/lyon' },
+        ])}
+      />
       <main>
         <LyonHeroSection backgroundImage={LYON_FALLBACK_IMAGES.heroBackground} />
         <StatsSection
@@ -75,9 +95,38 @@ export default async function LyonPage() {
         <LyonBlogSection articles={articles.filter((article) => article.section === 'lyon')} />
         <FaqSection />
       </main>
+      <LyonInternalLinks />
       <Footer reserveStickyCtaSpace />
       <StickyCta />
     </>
+  )
+}
+
+function LyonInternalLinks() {
+  return (
+    <div className="max-w-content px-gutter pb-section md:px-gutter-md mx-auto w-full">
+      <InternalLinkSection
+        eyebrow="Lyon"
+        title="Continuer votre recherche"
+        items={[
+          {
+            label: 'Tous les appartements',
+            href: '/appartements?city=lyon',
+            description: 'Comparer les appartements Alto disponibles à Lyon selon vos dates.',
+          },
+          {
+            label: 'Guides de Lyon',
+            href: '/blog',
+            description: 'Lire nos repères sur Bellecour, Terreaux, le Vieux Lyon et la Presqu’île.',
+          },
+          {
+            label: 'Notre histoire',
+            href: '/notre-histoire',
+            description: 'Comprendre la manière dont Alto sélectionne et prépare ses adresses.',
+          },
+        ]}
+      />
+    </div>
   )
 }
 

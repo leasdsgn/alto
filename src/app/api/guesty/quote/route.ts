@@ -4,6 +4,7 @@ import { z } from 'zod/v4'
 import { guestyClient } from '@/lib/guesty-client'
 import { toErrorResponse, parseGuestyError } from '@/lib/guesty-errors'
 import { assertSameOrigin } from '@/lib/api-guard'
+import { assertListingShownOnWebsite } from '@/lib/guesty-listing-visibility'
 
 const schema = z.object({
   listingId: z.string().min(1),
@@ -18,6 +19,12 @@ const getCachedQuote = unstable_cache(
     guestyClient.createQuote(listingId, checkIn, checkOut, guestsCount),
   ['guesty-api-quote'],
   { revalidate: 60 },
+)
+
+const getCachedListingForVisibility = unstable_cache(
+  (listingId: string) => guestyClient.getListing(listingId),
+  ['guesty-api-listing-visibility'],
+  { revalidate: 300 },
 )
 
 export async function POST(request: NextRequest) {
@@ -41,6 +48,9 @@ export async function POST(request: NextRequest) {
     locale = parsed.data.preferredLanguage
 
     const { listingId, checkIn, checkOut, guestsCount } = parsed.data
+    const listing = await getCachedListingForVisibility(listingId)
+    assertListingShownOnWebsite(listing)
+
     const data = await getCachedQuote(listingId, checkIn, checkOut, guestsCount)
     return NextResponse.json(data)
   } catch (error) {

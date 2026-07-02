@@ -7,6 +7,8 @@ import { ApartmentFaq } from '@/components/apartment/faq'
 import { ApartmentMap } from '@/components/apartment/apartment-map'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
 import { ApartmentEditorialSections } from '@/components/sections/apartment-editorial-sections'
+import { Breadcrumbs } from '@/components/seo/breadcrumbs'
+import { InternalLinkSection } from '@/components/seo/internal-link-section'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { type Apartment } from '@/types/apartment'
 import type { InquiryLocale } from '@/types/inquiry'
@@ -245,6 +247,15 @@ export function ApartmentView({
         className="max-w-content px-gutter md:px-gutter-md mx-auto w-full pt-10 pb-16 lg:pt-14 lg:pb-24"
         style={{ background: 'var(--Floral-white, #FFFFF8)' }}
       >
+        <Breadcrumbs
+          items={[
+            { label: 'Accueil', href: '/' },
+            { label: 'Appartements', href: '/appartements' },
+            { label: apartment.name },
+          ]}
+          className="mb-8"
+        />
+
         <section>
           <h1 className="text-coffee text-h4 sm:text-h3 max-w-4xl font-bold">{apartment.name}</h1>
 
@@ -346,6 +357,12 @@ export function ApartmentView({
             </section>
           )}
 
+          <InternalLinkSection
+            eyebrow="Alto"
+            title="Préparer votre séjour"
+            items={getApartmentInternalLinks(cityName)}
+          />
+
           <ApartmentEditorialSections review={review} />
         </div>
       </main>
@@ -353,6 +370,36 @@ export function ApartmentView({
       <Footer reserveStickyCtaSpace="mobile" />
     </>
   )
+}
+
+function getApartmentInternalLinks(cityName: string | null) {
+  const city = normalizeValue(cityName)
+  const cityLink =
+    city.includes('lyon')
+      ? {
+          label: 'Appartements à Lyon',
+          href: '/lyon',
+          description: 'Découvrir les adresses Alto, les quartiers et les repères utiles à Lyon.',
+        }
+      : {
+          label: 'Tous les appartements',
+          href: '/appartements',
+          description: 'Comparer les appartements Alto disponibles pour vos prochaines dates.',
+        }
+
+  return [
+    cityLink,
+    {
+      label: 'Journal Alto',
+      href: '/blog',
+      description: 'Lire nos guides de quartiers et conseils pratiques avant votre arrivée.',
+    },
+    {
+      label: 'Notre approche',
+      href: '/notre-histoire',
+      description: 'Comprendre les standards Alto et la manière dont les appartements sont pensés.',
+    },
+  ]
 }
 
 function pickReview(globalTestimonials: StoryblokTestimonial[]): ReviewItem {

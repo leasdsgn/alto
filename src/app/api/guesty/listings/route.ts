@@ -1,6 +1,22 @@
 import { NextResponse } from 'next/server'
 import { guestyClient } from '@/lib/guesty-client'
 
+const LISTING_API_FIELDS = [
+  '_id',
+  'title',
+  'nickname',
+  'address',
+  'pictures',
+  'accommodates',
+  'bedrooms',
+  'bathrooms',
+  'amenities',
+  'publicDescription',
+  'prices',
+  'minNights',
+  'maxNights',
+] as const
+
 function sanitizeListing(listing: Record<string, unknown>) {
   return {
     _id: listing._id,
@@ -21,7 +37,7 @@ function sanitizeListing(listing: Record<string, unknown>) {
 
 export async function GET() {
   try {
-    const data = await guestyClient.getListings()
+    const data = await guestyClient.getListings({ fields: LISTING_API_FIELDS })
     return NextResponse.json({
       results: data.results.map((l) => sanitizeListing(l as unknown as Record<string, unknown>)),
     })

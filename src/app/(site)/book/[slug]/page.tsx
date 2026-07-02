@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
 import Link from 'next/link'
@@ -10,6 +11,7 @@ import { parseGuestyError } from '@/lib/guesty-errors'
 import { t } from '@/lib/i18n/booking-dictionary'
 import { getServerLocale } from '@/lib/i18n/server'
 import { calculateNights } from '@/lib/reservation-validation'
+import { defineSeoMetadata } from '@/lib/seo'
 import type { InquiryLocale } from '@/types/inquiry'
 import type { GuestyQuote } from '@/types/guesty'
 
@@ -24,6 +26,21 @@ const getCachedQuote = unstable_cache(
   ['guesty-quote'],
   { revalidate: 60 },
 )
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+
+  return defineSeoMetadata({
+    title: 'Réservation | Alto',
+    description: 'Parcours de réservation Alto.',
+    path: `/book/${slug}`,
+    noIndex: true,
+  })
+}
 
 export default async function ReserverPage({ params, searchParams }: PageProps) {
   const { slug } = await params
