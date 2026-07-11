@@ -67,6 +67,18 @@ function getPageStories(): StorySeed[] {
       ]),
     },
     {
+      name: 'Réservation',
+      fullSlug: 'pages/booking',
+      realPath: '/preview/pages/booking',
+      parent: 'pages',
+      defaultContent: pageContent([
+        blok('booking_deposit_notice', {
+          title: 'Dépôt de garantie Swikly',
+          body: 'Une caution Swikly sera demandée avant votre arrivée. Elle est obligatoire pour maintenir la réservation et Alto pourra annuler le séjour si elle n’est pas complétée dans les délais indiqués.',
+        }),
+      ]),
+    },
+    {
       name: 'Notre histoire',
       fullSlug: 'pages/notre-histoire',
       realPath: '/notre-histoire',

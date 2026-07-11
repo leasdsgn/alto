@@ -91,9 +91,24 @@ export const HEADER_DEFAULTS: StoryblokHeader = {
   bookLabel: 'Réserver',
   mapLabel: 'Voir la carte',
   navPrimary: [
-    { label: 'Appartements', href: '/appartements', description: 'Paris & Lyon', opensInNewTab: false },
-    { label: 'Blog', href: '/blog', description: 'Adresses, quartiers, voyages', opensInNewTab: false },
-    { label: 'Notre histoire', href: '/notre-histoire', description: 'L’approche Alto', opensInNewTab: false },
+    {
+      label: 'Appartements',
+      href: '/appartements',
+      description: 'Paris & Lyon',
+      opensInNewTab: false,
+    },
+    {
+      label: 'Blog',
+      href: '/blog',
+      description: 'Adresses, quartiers, voyages',
+      opensInNewTab: false,
+    },
+    {
+      label: 'Notre histoire',
+      href: '/notre-histoire',
+      description: 'L’approche Alto',
+      opensInNewTab: false,
+    },
   ],
   navSecondary: [
     { label: 'Paris', href: '/appartements?city=paris', opensInNewTab: false },
@@ -114,7 +129,7 @@ export const FOOTER_DEFAULTS: StoryblokFooter = {
   logo: '/images/logo-alto-light.png',
   logoAriaLabel: 'Accueil Alto',
   ctaTitle: 'Une question ? Notre équipe vous répond.',
-  ctaBody: 'Disponible du lundi au vendredi, de 9h à 17h.',
+  ctaBody: 'Disponible tous les jours de 8 h à 20 h.',
   ctaButton: {
     label: 'Chat on WhatsApp',
     href: WHATSAPP_FALLBACK_LINK,

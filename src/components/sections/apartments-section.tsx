@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
+import { filterApartmentsByCity } from '@/lib/apartment-city'
 import { getQuoteTotalCents } from '@/lib/guesty-pricing'
 import { type GuestyListing } from '@/types/guesty'
 import { type Apartment, type ApartmentCardData } from '@/types/apartment'
@@ -356,14 +357,6 @@ const FALLBACK_APARTMENTS = [
   },
 ]
 
-function normalizeCity(value: string | undefined | null): string {
-  return (value ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-}
-
 async function getApartments(): Promise<Apartment[]> {
   try {
     const { results } = await getCachedListings()
@@ -407,12 +400,6 @@ export interface SearchCriteria {
   guests?: number
 }
 
-function applyCityFilter<T extends { city?: string }>(items: T[], city: string): T[] {
-  const needle = normalizeCity(city)
-  if (!needle) return items
-  return items.filter((apt) => normalizeCity(apt.city).includes(needle))
-}
-
 async function getApartmentSearchResult(criteria: SearchCriteria) {
   const { city, checkIn, checkOut, guests } = criteria
   const hasDates = Boolean(checkIn && checkOut)
@@ -423,7 +410,7 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
         fields: LISTING_SEARCH_FIELDS,
       })
       const apartments = city
-        ? applyCityFilter(
+        ? filterApartmentsByCity(
             results.map((listing) => mapListingCard(listing)),
             city,
           )
@@ -456,7 +443,7 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
 
   try {
     const apartments = await getApartmentCards()
-    const filtered = city ? applyCityFilter(apartments, city) : apartments
+    const filtered = city ? filterApartmentsByCity(apartments, city) : apartments
 
     return {
       apartments: filtered,
@@ -467,9 +454,7 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
     const fallbackApartments = getFallbackApartments().map(toApartmentCardData)
 
     return {
-      apartments: city
-        ? applyCityFilter(fallbackApartments, city)
-        : fallbackApartments,
+      apartments: city ? filterApartmentsByCity(fallbackApartments, city) : fallbackApartments,
       hasDateSearch: false,
       status: 'fallback' as const,
     }
@@ -597,8 +582,8 @@ export async function ApartmentsSection({
   const locale = getStaticServerLocale()
   const copy = titles ?? APARTMENTS_SECTION_COPY[locale]
   const data = apartments ?? (await getApartmentCards())
-  const paris = applyCityFilter(data, 'paris')
-  const lyon = applyCityFilter(data, 'lyon')
+  const paris = filterApartmentsByCity(data, 'paris')
+  const lyon = filterApartmentsByCity(data, 'lyon')
 
   return (
     <section className="max-w-content px-gutter py-section md:px-gutter-md md:py-section-md mx-auto flex flex-col gap-12">

@@ -14,6 +14,7 @@ import { today, getLocalTimeZone } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
 import { useLocale } from '@/components/providers/locale-provider'
+import { buildApartmentSearchParams } from '@/lib/apartment-search'
 import { useSearchStore } from '@/lib/stores/search'
 import { Button } from '@/components/ui/button'
 
@@ -47,7 +48,7 @@ export function SearchBarMobile({
   const router = useRouter()
   const locale = useLocale()
   const copy = MOBILE_SEARCH_COPY[locale]
-  const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
+  const { city, dates, hasSelectedDates, guests, setCity, setDates, setGuests } = useSearchStore()
   const [dateOpen, setDateOpen] = useState(false)
 
   const minDate = today(getLocalTimeZone())
@@ -58,11 +59,13 @@ export function SearchBarMobile({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const params = new URLSearchParams()
-    params.set('city', city.toLowerCase())
-    params.set('checkIn', dates.start.toString())
-    params.set('checkOut', dates.end.toString())
-    params.set('guests', String(guests))
+    const params = buildApartmentSearchParams({
+      city,
+      guests,
+      dates: hasSelectedDates
+        ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
+        : null,
+    })
     router.push(`/appartements?${params}`)
   }
 
@@ -124,7 +127,7 @@ export function SearchBarMobile({
         </div>
 
         <DateRangePicker
-          value={dates}
+          value={hasSelectedDates ? dates : null}
           onChange={handleDateChange}
           minValue={minDate}
           startName="checkIn"
@@ -167,14 +170,8 @@ export function SearchBarMobile({
             className="bg-cream border-divider w-[calc(100vw-2rem)] max-w-sm rounded-lg border p-5 shadow-none"
             placement={calendarPlacement}
           >
-            <div
-              className="relative mx-auto flex w-full justify-center"
-            >
-              <RangeCalendar
-                aria-label={copy.stayDates}
-                minValue={minDate}
-                className="mx-auto"
-              >
+            <div className="relative mx-auto flex w-full justify-center">
+              <RangeCalendar aria-label={copy.stayDates} minValue={minDate} className="mx-auto">
                 <RangeCalendar.Header>
                   <RangeCalendar.Heading className="text-coffee text-sm font-bold" />
                   <RangeCalendar.NavButton slot="previous" />

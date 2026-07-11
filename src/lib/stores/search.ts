@@ -15,9 +15,11 @@ interface DateRange {
 interface SearchState {
   city: string
   dates: DateRange
+  hasSelectedDates: boolean
   guests: number
   setCity: (city: string) => void
   setDates: (dates: DateRange) => void
+  clearDates: () => void
   setGuests: (guests: number) => void
   reset: () => void
 }
@@ -25,11 +27,13 @@ interface SearchState {
 export const useSearchStore = create<SearchState>((set) => ({
   city: 'Paris',
   dates: getDefaultDates(),
+  hasSelectedDates: false,
   guests: 1,
   setCity: (city) => set({ city }),
-  setDates: (dates) => set({ dates }),
+  setDates: (dates) => set({ dates, hasSelectedDates: true }),
+  clearDates: () => set({ hasSelectedDates: false }),
   setGuests: (guests) => set({ guests }),
-  reset: () => set({ city: 'Paris', dates: getDefaultDates(), guests: 1 }),
+  reset: () => set({ city: 'Paris', dates: getDefaultDates(), hasSelectedDates: false, guests: 1 }),
 }))
 
 export function clampGuestsToCapacity(guests: number, capacity?: number): number {

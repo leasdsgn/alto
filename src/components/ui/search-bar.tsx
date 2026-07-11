@@ -7,12 +7,15 @@ import { ListBox, ListBoxItem } from 'react-aria-components'
 import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import { useLocale } from '@/components/providers/locale-provider'
+import { buildApartmentSearchParams } from '@/lib/apartment-search'
 import { useSearchStore } from '@/lib/stores/search'
 
 const CITIES = ['Paris', 'Lyon']
 const DATE_COPY = {
   fr: {
     city: 'Ville',
+    checkIn: 'Arrivée',
+    checkOut: 'Départ',
     guests: 'Voyageurs',
     search: 'Rechercher',
     removeGuest: 'Retirer un voyageur',
@@ -35,6 +38,8 @@ const DATE_COPY = {
   },
   en: {
     city: 'City',
+    checkIn: 'Check-in',
+    checkOut: 'Check-out',
     guests: 'Guests',
     search: 'Search',
     removeGuest: 'Remove one guest',
@@ -79,7 +84,7 @@ export function SearchBar({
   const router = useRouter()
   const locale = useLocale()
   const copy = DATE_COPY[locale]
-  const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
+  const { city, dates, hasSelectedDates, guests, setCity, setDates, setGuests } = useSearchStore()
   const minDate = today(getLocalTimeZone())
   const [dateOpen, setDateOpen] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
@@ -142,11 +147,13 @@ export function SearchBar({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const params = new URLSearchParams()
-    params.set('city', city.toLowerCase())
-    params.set('checkIn', dates.start.toString())
-    params.set('checkOut', dates.end.toString())
-    params.set('guests', String(guests))
+    const params = buildApartmentSearchParams({
+      city,
+      guests,
+      dates: hasSelectedDates
+        ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
+        : null,
+    })
     router.push(`/appartements?${params}`)
   }
 
@@ -195,14 +202,14 @@ export function SearchBar({
             <div className="flex items-center gap-1.5 px-[15px]">
               <CalendarIcon />
               <span className="text-taupe text-[12px] leading-[1.55] font-bold tracking-[0.24px]">
-                {formatDate(dates.start)}
+                {hasSelectedDates ? formatDate(dates.start) : copy.checkIn}
               </span>
             </div>
             <Separator />
             <div className="flex items-center gap-1.5 px-[15px]">
               <CalendarIcon />
               <span className="text-taupe text-[12px] leading-[1.55] font-bold tracking-[0.24px]">
-                {formatDate(dates.end)}
+                {hasSelectedDates ? formatDate(dates.end) : copy.checkOut}
               </span>
             </div>
           </div>
@@ -247,9 +254,12 @@ export function SearchBar({
                   <div key={`e${i}`} className="size-8" />
                 ))}
                 {days.map((date) => {
-                  const isStart = date.compare(dates.start) === 0
-                  const isEnd = date.compare(effectiveEnd) === 0
-                  const inRange = date.compare(dates.start) > 0 && date.compare(effectiveEnd) < 0
+                  const isStart = hasSelectedDates && date.compare(dates.start) === 0
+                  const isEnd = hasSelectedDates && date.compare(effectiveEnd) === 0
+                  const inRange =
+                    hasSelectedDates &&
+                    date.compare(dates.start) > 0 &&
+                    date.compare(effectiveEnd) < 0
                   const disabled = date.compare(minDate) < 0
                   return (
                     <button

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useLocale } from '@/components/providers/locale-provider'
+import { buildApartmentSearchParams } from '@/lib/apartment-search'
 import { useSearchStore } from '@/lib/stores/search'
 
 const CITIES = ['Paris', 'Lyon']
@@ -14,20 +15,22 @@ export function BookingNavPill() {
   const router = useRouter()
   const locale = useLocale()
   const copy = BOOKING_NAV_COPY[locale]
-  const { city, dates, guests, setCity, setGuests } = useSearchStore()
+  const { city, dates, hasSelectedDates, guests, setCity, setGuests } = useSearchStore()
 
   function handleSubmit() {
-    const params = new URLSearchParams()
-    params.set('city', city.toLowerCase())
-    params.set('checkIn', dates.start.toString())
-    params.set('checkOut', dates.end.toString())
-    params.set('guests', String(guests))
+    const params = buildApartmentSearchParams({
+      city,
+      guests,
+      dates: hasSelectedDates
+        ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
+        : null,
+    })
     router.push(`/appartements?${params}`)
   }
 
   return (
     <div
-      className="bg-cream flex h-[35px] cursor-pointer items-center rounded-full border border-divider px-1"
+      className="bg-cream border-divider flex h-[35px] cursor-pointer items-center rounded-full border px-1"
       onClick={(event) => {
         if ((event.target as HTMLElement).closest('button')) return
         handleSubmit()
@@ -39,7 +42,7 @@ export function BookingNavPill() {
       <FieldButton
         icon={<CalendarIcon />}
         label={copy.checkIn}
-        value={formatShort(dates.start)}
+        value={hasSelectedDates ? formatShort(dates.start) : ''}
         onClick={handleSubmit}
       />
 
@@ -47,7 +50,7 @@ export function BookingNavPill() {
       <FieldButton
         icon={<CalendarIcon />}
         label={copy.checkOut}
-        value={formatShort(dates.end)}
+        value={hasSelectedDates ? formatShort(dates.end) : ''}
         onClick={handleSubmit}
       />
 
@@ -122,7 +125,7 @@ function FieldButton({
     <button
       type="button"
       onClick={onClick}
-      className="text-taupe flex h-full items-center gap-1.5 rounded-full px-3 transition-colors hover:bg-sand"
+      className="text-taupe hover:bg-sand flex h-full items-center gap-1.5 rounded-full px-3 transition-colors"
     >
       <span className="shrink-0">{icon}</span>
       <span className="text-overline font-bold tracking-[0.02em]">{label}</span>
@@ -174,7 +177,15 @@ function FieldDivider() {
 
 function CalendarIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1"
+      strokeLinecap="round"
+    >
       <rect x="1" y="2" width="10" height="9" rx="1.5" />
       <path d="M4 1v2M8 1v2M1 5h10" />
     </svg>
@@ -183,7 +194,14 @@ function CalendarIcon() {
 
 function CircleIcon({ kind }: { kind: 'plus' | 'minus' }) {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="0.8">
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="0.8"
+    >
       <circle cx="5" cy="5" r="4.5" />
       <path d="M3 5h4" />
       {kind === 'plus' && <path d="M5 3v4" />}
@@ -193,7 +211,15 @@ function CircleIcon({ kind }: { kind: 'plus' | 'minus' }) {
 
 function SearchIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="#fffff8" strokeWidth="1.5" strokeLinecap="round">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="#fffff8"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    >
       <circle cx="6" cy="6" r="4" />
       <path d="M10 10l2.5 2.5" />
     </svg>

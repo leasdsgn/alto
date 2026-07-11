@@ -2,18 +2,17 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { getGalleryPhotos } from '@/lib/apartment-gallery'
 
 interface GalleryProps {
   name: string
   images?: string[]
 }
 
-const PLACEHOLDER_IMAGES = Array(5).fill(null)
-
 export function ApartmentGallery({ name, images }: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const providedPhotos = (images ?? []).filter(Boolean)
-  const photos = (providedPhotos.length > 0 ? providedPhotos : PLACEHOLDER_IMAGES).slice(0, 5)
+  const photos = getGalleryPhotos(providedPhotos)
   const orderedIndexes = [
     activeIndex,
     ...photos.map((_, index) => index).filter((index) => index !== activeIndex),

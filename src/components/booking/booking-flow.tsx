@@ -465,10 +465,6 @@ function PaymentSection(props: PaymentSectionProps) {
         </div>
       ) : null}
 
-      <p className="border-divider bg-cream text-coffee rounded-lg border p-4 text-sm leading-relaxed">
-        {t(props.locale, 'depositNotice')}
-      </p>
-
       <PolicyCheckboxes
         locale={props.locale}
         values={policy}

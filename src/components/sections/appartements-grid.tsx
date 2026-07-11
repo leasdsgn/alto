@@ -10,6 +10,7 @@ import { FilterToolbarButton } from '@/components/ui/filter-toolbar-button'
 import { SearchBar } from '@/components/ui/search-bar'
 import { SearchBarMobile } from '@/components/ui/search-bar-mobile'
 import { useLocale } from '@/components/providers/locale-provider'
+import { getApartmentCityKey, isApartmentInCity, normalizeCity } from '@/lib/apartment-city'
 import { type InquiryLocale } from '@/types/inquiry'
 import { type ApartmentPriceSource } from '@/types/apartment'
 
@@ -42,19 +43,7 @@ export function AppartementsGrid({
   const locale = useLocale()
   const copy = APARTMENTS_GRID_COPY[locale]
   const normalizedInitialCity = normalizeFilterValue(initialCity)
-  const cityFilters = useMemo(() => {
-    const options = Array.from(
-      new Set(apartments.map((apartment) => normalizeFilterValue(apartment.city)).filter(Boolean)),
-    )
-
-    return [
-      { id: 'all', label: copy.all },
-      ...options.map((city) => ({ id: city, label: formatFilterLabel(city) })),
-    ]
-  }, [apartments, copy.all])
-  const defaultCity = cityFilters.some((city) => city.id === normalizedInitialCity)
-    ? normalizedInitialCity
-    : 'all'
+  const defaultCity = normalizedInitialCity || 'all'
 
   const activeCity = defaultCity
   const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null)
@@ -65,7 +54,7 @@ export function AppartementsGrid({
     const source =
       activeCity === 'all'
         ? apartments
-        : apartments.filter((apartment) => normalizeFilterValue(apartment.city) === activeCity)
+        : apartments.filter((apartment) => getApartmentCityKey(apartment) === activeCity)
 
     const options = Array.from(
       new Set(source.map((apartment) => getNeighborhoodLabel(apartment)).filter(Boolean)),
@@ -83,8 +72,7 @@ export function AppartementsGrid({
   const filtered = useMemo(
     () =>
       apartments.filter((apartment) => {
-        if (activeCity !== 'all' && normalizeFilterValue(apartment.city) !== activeCity)
-          return false
+        if (activeCity !== 'all' && !isApartmentInCity(apartment, activeCity)) return false
         if (
           activeNeighborhood &&
           normalizeFilterValue(getNeighborhoodLabel(apartment)) !== activeNeighborhood
@@ -250,15 +238,7 @@ export function AppartementsGrid({
 }
 
 function normalizeFilterValue(value: string | null | undefined) {
-  return (value ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-}
-
-function formatFilterLabel(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1)
+  return normalizeCity(value)
 }
 
 function getNeighborhoodLabel(apartment: Apartment) {
@@ -328,12 +308,7 @@ function MapApartmentResult({
           </div>
         </div>
 
-        <div className="text-coffee text-body-sm flex items-center gap-1 leading-[1.5]">
-          <StarIcon />
-          <span>4,9 (113)</span>
-        </div>
-
-        <div className="flex min-w-0 items-center justify-end gap-3">
+        <div className="col-start-2 flex min-w-0 items-center justify-end gap-3">
           <span className="text-silver text-body whitespace-nowrap">
             {getPriceLabel(apartment, copy, locale)}
           </span>
@@ -400,14 +375,6 @@ function formatCurrency(value: number, locale: InquiryLocale) {
 
 function isDisplayablePrice(value: number | null): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value > 0
-}
-
-function StarIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-      <path d="M7 1.15 8.62 4.43l3.62.53-2.62 2.55.62 3.6L7 9.41l-3.24 1.7.62-3.6-2.62-2.55 3.62-.53L7 1.15Z" />
-    </svg>
-  )
 }
 
 function SpecIcon({ kind }: { kind: 'guests' | 'surface' | 'bedrooms' }) {

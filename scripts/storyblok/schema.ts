@@ -392,6 +392,16 @@ const SECTIONS: ComponentDefinition[] = [
     },
   },
   {
+    name: 'booking_deposit_notice',
+    display_name: 'Réservation - Mention caution',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      title: textField('Titre', 0, true),
+      body: textareaField('Mention relative à la caution', 1, true),
+    },
+  },
+  {
     name: 'home_about_section',
     display_name: 'Accueil - À propos (kicker + citation + stats)',
     is_root: false,

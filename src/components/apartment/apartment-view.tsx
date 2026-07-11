@@ -267,7 +267,6 @@ export function ApartmentView({
             {apartment.bedrooms > 0 && (
               <MetaStat icon={<BedroomIcon />} value={copy.bedroom(apartment.bedrooms)} />
             )}
-            <MetaStat icon={<RatingIcon />} value="4,9 (113)" />
             <MetaStat value={copy.trips} />
           </div>
 
@@ -374,18 +373,17 @@ export function ApartmentView({
 
 function getApartmentInternalLinks(cityName: string | null) {
   const city = normalizeValue(cityName)
-  const cityLink =
-    city.includes('lyon')
-      ? {
-          label: 'Appartements à Lyon',
-          href: '/lyon',
-          description: 'Découvrir les adresses Alto, les quartiers et les repères utiles à Lyon.',
-        }
-      : {
-          label: 'Tous les appartements',
-          href: '/appartements',
-          description: 'Comparer les appartements Alto disponibles pour vos prochaines dates.',
-        }
+  const cityLink = city.includes('lyon')
+    ? {
+        label: 'Appartements à Lyon',
+        href: '/lyon',
+        description: 'Découvrir les adresses Alto, les quartiers et les repères utiles à Lyon.',
+      }
+    : {
+        label: 'Tous les appartements',
+        href: '/appartements',
+        description: 'Comparer les appartements Alto disponibles pour vos prochaines dates.',
+      }
 
   return [
     cityLink,
@@ -578,14 +576,6 @@ function BedroomIcon() {
       <path d="M2.5 13V6.5M16.5 13V9.5a2 2 0 0 0-2-2H7" />
       <path d="M2.5 11h14" />
       <circle cx="5.5" cy="9" r="1.2" />
-    </svg>
-  )
-}
-
-function RatingIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-      <path d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.44L7 8.885l-3.09 1.625.59-3.44L2 4.635l3.455-.505L7 1z" />
     </svg>
   )
 }
