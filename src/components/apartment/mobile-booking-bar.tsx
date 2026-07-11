@@ -21,7 +21,7 @@ export function MobileBookingBar(props: MobileBookingBarProps) {
   const { dates, guests } = useSearchStore()
   const [isOpen, setIsOpen] = useState(false)
   const copy = MOBILE_BOOKING_COPY[locale]
-  const dateLabel = `${formatDateShort(dates.start)} - ${formatDateShort(dates.end)}`
+  const dateLabel = `${formatDateShort(dates.start, locale)} - ${formatDateShort(dates.end, locale)}`
 
   useEffect(() => {
     if (!isOpen) return

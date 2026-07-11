@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useSearchStore } from '@/lib/stores/search'
+import { clampGuestsToCapacity, useSearchStore } from '@/lib/stores/search'
 
 describe('useSearchStore', () => {
   beforeEach(() => {
@@ -39,5 +39,19 @@ describe('useSearchStore', () => {
     const startDay = dates.start.day
     const endDay = dates.end.day
     expect(endDay).not.toBe(startDay)
+  })
+})
+
+describe('clampGuestsToCapacity', () => {
+  it('réduit le nombre de voyageurs à la capacité du logement', () => {
+    expect(clampGuestsToCapacity(3, 2)).toBe(2)
+  })
+
+  it('conserve un nombre de voyageurs déjà valide', () => {
+    expect(clampGuestsToCapacity(2, 4)).toBe(2)
+  })
+
+  it('conserve au minimum un voyageur', () => {
+    expect(clampGuestsToCapacity(0, 4)).toBe(1)
   })
 })

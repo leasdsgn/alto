@@ -83,7 +83,7 @@ export default async function LyonPage() {
           pressLogo={LYON_FALLBACK_IMAGES.pressLogo}
           monocleLogo={LYON_FALLBACK_IMAGES.monocleLogo}
         />
-        <LyonApartmentsSection apartments={lyonApartments.slice(0, 3)} />
+        <LyonApartmentsSection apartments={lyonApartments} />
         <LyonServicesSection image={LYON_FALLBACK_IMAGES.servicesImage} />
         <LyonQuartiersSection
           images={{
@@ -117,7 +117,8 @@ function LyonInternalLinks() {
           {
             label: 'Guides de Lyon',
             href: '/blog',
-            description: 'Lire nos repères sur Bellecour, Terreaux, le Vieux Lyon et la Presqu’île.',
+            description:
+              'Lire nos repères sur Bellecour, Terreaux, le Vieux Lyon et la Presqu’île.',
           },
           {
             label: 'Notre histoire',

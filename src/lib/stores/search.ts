@@ -31,3 +31,8 @@ export const useSearchStore = create<SearchState>((set) => ({
   setGuests: (guests) => set({ guests }),
   reset: () => set({ city: 'Paris', dates: getDefaultDates(), guests: 1 }),
 }))
+
+export function clampGuestsToCapacity(guests: number, capacity?: number): number {
+  if (!capacity || capacity < 1) return Math.max(1, guests)
+  return Math.min(Math.max(1, guests), capacity)
+}

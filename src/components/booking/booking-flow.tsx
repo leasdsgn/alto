@@ -89,6 +89,7 @@ export function BookingFlow(props: BookingFlowProps) {
     mode: 'payment',
     amount: props.amountCents,
     currency: props.currency,
+    locale,
     paymentMethodTypes: ['card'],
     setupFutureUsage: 'off_session',
   }
