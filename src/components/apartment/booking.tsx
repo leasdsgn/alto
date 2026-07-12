@@ -84,10 +84,12 @@ export function ApartmentBooking({
   const isBelowMinNights = nights < effectiveMinNights
   const isAboveMaxNights = Boolean(maxNights && nights > maxNights)
   const isAboveCapacity = Boolean(capacity && guests > capacity)
+  const hasLoadedAvailability = !listingId || availabilityStatus === 'ready'
   const hasVerifiedQuote =
     !listingId || (quoteStatus === 'ready' && verifiedQuoteKey === quoteRequestKey)
   const canReserve =
     shouldVerifyQuote &&
+    hasLoadedAvailability &&
     hasVerifiedQuote &&
     nights > 0 &&
     !hasKnownUnavailableSelection &&
@@ -218,6 +220,7 @@ export function ApartmentBooking({
     if (
       !listingId ||
       !shouldVerifyQuote ||
+      !hasLoadedAvailability ||
       nights <= 0 ||
       hasKnownUnavailableSelection ||
       isBelowMinNights ||
@@ -276,6 +279,7 @@ export function ApartmentBooking({
   }, [
     listingId,
     shouldVerifyQuote,
+    hasLoadedAvailability,
     nights,
     hasKnownUnavailableSelection,
     isBelowMinNights,
