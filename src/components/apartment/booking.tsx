@@ -7,10 +7,12 @@ import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
 import { Button } from '@/components/ui/button'
 import { useLocale } from '@/components/providers/locale-provider'
+import { useFooterGlobals } from '@/components/providers/storyblok-globals-provider'
 import { clampGuestsToCapacity, useSearchStore } from '@/lib/stores/search'
 import { formatDateShort } from '@/lib/format-date'
 import { formatCurrency } from '@/lib/formatters'
 import { getQuoteAccommodationCents, getQuoteTotalCents } from '@/lib/guesty-pricing'
+import { getEffectiveMinimumNights } from '@/lib/booking-minimum-stay'
 import { WHATSAPP_LINK } from '@/lib/whatsapp'
 import type { GuestyCalendarDay, GuestyQuote } from '@/types/guesty'
 
@@ -45,12 +47,14 @@ export function ApartmentBooking({
   variant = 'card',
 }: BookingProps) {
   const locale = useLocale()
+  const contact = useFooterGlobals().ctaButton
   const { dates, guests, setDates, setGuests } = useSearchStore()
   const checkIn = dates.start.toString()
   const checkOut = dates.end.toString()
   const reserveHref = `/book/${slug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}`
   const [dateOpen, setDateOpen] = useState(false)
   const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set())
+  const [minimumNightsByDate, setMinimumNightsByDate] = useState<Map<string, number>>(new Map())
   const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityStatus>(
     listingId ? 'loading' : 'idle',
   )
@@ -59,6 +63,11 @@ export function ApartmentBooking({
   const [verifiedQuoteKey, setVerifiedQuoteKey] = useState<string | null>(null)
   const [shouldVerifyQuote, setShouldVerifyQuote] = useState(initialShouldVerifyQuote)
   const nights = dates.end.compare(dates.start)
+  const effectiveMinNights = getEffectiveMinimumNights(
+    minNights,
+    dates.start.toString(),
+    minimumNightsByDate,
+  )
   const fallbackTotal = useMemo(() => {
     if (!isDisplayablePrice(price)) return null
     return price * Math.max(nights, 0)
@@ -72,7 +81,7 @@ export function ApartmentBooking({
   const hasKnownUnavailableSelection =
     availabilityStatus === 'ready' &&
     rangeHasUnavailableNight(dates.start, dates.end, unavailableDates)
-  const isBelowMinNights = Boolean(minNights && nights < minNights)
+  const isBelowMinNights = nights < effectiveMinNights
   const isAboveMaxNights = Boolean(maxNights && nights > maxNights)
   const isAboveCapacity = Boolean(capacity && guests > capacity)
   const hasVerifiedQuote =
@@ -91,7 +100,7 @@ export function ApartmentBooking({
     isBelowMinNights,
     isAboveMaxNights,
     isAboveCapacity,
-    minNights,
+    minNights: effectiveMinNights,
     maxNights,
     capacity,
     quoteStatus,
@@ -151,13 +160,19 @@ export function ApartmentBooking({
         const unavailable = new Set(
           days.filter((day) => day.status !== 'available').map((day) => day.date.slice(0, 10)),
         )
+        const minimumStays = new Map<string, number>()
+        for (const day of days) {
+          if (day.minNights > 0) minimumStays.set(day.date.slice(0, 10), day.minNights)
+        }
 
         setUnavailableDates(unavailable)
+        setMinimumNightsByDate(minimumStays)
         setAvailabilityStatus('ready')
       } catch (error) {
         if (!controller.signal.aborted) {
           console.warn('[apartment booking] availability failed', error)
           setUnavailableDates(new Set())
+          setMinimumNightsByDate(new Map())
           setAvailabilityStatus('error')
         }
       }
@@ -175,7 +190,7 @@ export function ApartmentBooking({
     const nextRange = findNextAvailableRange({
       minDate,
       unavailableDates,
-      nights: Math.max(minNights ?? 1, 1),
+      nights: effectiveMinNights,
       maxNights,
     })
 
@@ -186,7 +201,7 @@ export function ApartmentBooking({
     dates.end,
     maxNights,
     minDate,
-    minNights,
+    effectiveMinNights,
     setDates,
     unavailableDates,
   ])
@@ -346,6 +361,7 @@ export function ApartmentBooking({
           </DateField.Group>
 
           <DateRangePicker.Popover
+            isNonModal
             className="bg-cream border-divider rounded-lg border p-5 shadow-[0_8px_24px_rgba(48,26,10,0.1)]"
             placement="bottom start"
           >
@@ -453,9 +469,9 @@ export function ApartmentBooking({
           <p className="text-taupe text-body-sm mt-2">{copy.helpAvailability}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
-              href={WHATSAPP_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={contact?.href ?? WHATSAPP_LINK}
+              target={contact?.opensInNewTab ? '_blank' : undefined}
+              rel={contact?.opensInNewTab ? 'noopener noreferrer' : undefined}
               iconRight={<ArrowOutwardIcon />}
             >
               {copy.helpWhatsapp}

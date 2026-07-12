@@ -26,6 +26,7 @@ export async function getBlogArticles(
   locale: InquiryLocale,
   versionOverride?: StoryblokVersion,
 ): Promise<BlogArticle[]> {
+  if (locale === 'en') return getFallbackBlogArticles('en')
   const articles = await fetchStoryblokArticles(locale, versionOverride)
   return articles.length > 0 ? articles : getFallbackBlogArticles(locale)
 }

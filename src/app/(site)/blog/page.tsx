@@ -6,7 +6,7 @@ import { ApartmentsSection, getApartmentCards } from '@/components/sections/apar
 import { ServicesSection } from '@/components/sections/services-section'
 import { JsonLd } from '@/components/seo/json-ld'
 import { BLOG_PAGE_COPY, buildBlogEditorialSections } from '@/lib/blog-page'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import { getStoryBySlug } from '@/lib/storyblok-page'
@@ -27,15 +27,16 @@ const BLOG_METADATA: Record<'fr' | 'en', Metadata> = {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   return getStoryblokBlogMetadata(locale, BLOG_METADATA[locale])
 }
 
 export default async function BlogPage() {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   const story = await getStoryBySlug('pages/blog', locale)
 
   if (
+    locale === 'fr' &&
     story &&
     Array.isArray((story.content as { body?: unknown }).body) &&
     (story.content as { body: unknown[] }).body.length > 0

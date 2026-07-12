@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { type Map as MapboxMap } from 'mapbox-gl'
+import { useLocale } from '@/components/providers/locale-provider'
 
 interface ApartmentMapProps {
   name: string
@@ -12,6 +13,8 @@ interface ApartmentMapProps {
 }
 
 export function ApartmentMap({ name, lat, lng, address, neighborhood }: ApartmentMapProps) {
+  const locale = useLocale()
+  const copy = MAP_COPY[locale]
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapboxMap | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -85,15 +88,15 @@ export function ApartmentMap({ name, lat, lng, address, neighborhood }: Apartmen
   }, [address, hasCoordinates, lat, lng, name])
 
   if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
-    return <ApartmentMapPlaceholder message="La carte n’est pas disponible pour le moment." />
+    return <ApartmentMapPlaceholder message={copy.unavailable} />
   }
 
   if (!hasCoordinates) {
-    return <ApartmentMapPlaceholder message="Adresse non géolocalisée pour cet appartement." />
+    return <ApartmentMapPlaceholder message={copy.missingAddress} />
   }
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-divider bg-sand/40">
+    <div className="border-divider bg-sand/40 relative overflow-hidden rounded-lg border">
       <style>{`
         .alto-apartment-map-pin {
           width: 34px;
@@ -125,28 +128,42 @@ export function ApartmentMap({ name, lat, lng, address, neighborhood }: Apartmen
         }
       `}</style>
 
-      <div ref={mapContainerRef} className="h-apartment-location-map md:h-apartment-location-map-md" />
+      <div
+        ref={mapContainerRef}
+        className="h-apartment-location-map md:h-apartment-location-map-md"
+      />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 bg-linear-to-b from-cream/80 to-transparent p-5">
+      <div className="from-cream/80 pointer-events-none absolute inset-x-0 top-0 bg-linear-to-b to-transparent p-5">
         <p className="text-coffee text-body-xl font-semibold">{neighborhood || address}</p>
         {address ? <p className="text-ash text-body-sm mt-1">{address}</p> : null}
       </div>
 
       {!isLoaded ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-sand/70 backdrop-blur-sm">
-          <p className="text-taupe text-xs font-bold uppercase tracking-[0.24px]">
-            Chargement de la carte
-          </p>
+        <div className="bg-sand/70 absolute inset-0 flex items-center justify-center backdrop-blur-sm">
+          <p className="text-taupe text-xs font-bold tracking-[0.24px] uppercase">{copy.loading}</p>
         </div>
       ) : null}
     </div>
   )
 }
 
+const MAP_COPY = {
+  fr: {
+    unavailable: 'La carte n’est pas disponible pour le moment.',
+    missingAddress: 'Adresse non géolocalisée pour cet appartement.',
+    loading: 'Chargement de la carte',
+  },
+  en: {
+    unavailable: 'The map is currently unavailable.',
+    missingAddress: 'This apartment does not have a geolocated address.',
+    loading: 'Loading map',
+  },
+} as const
+
 function ApartmentMapPlaceholder({ message }: { message: string }) {
   return (
-    <div className="flex h-apartment-location-map items-center justify-center rounded-lg border border-divider bg-sand/40 p-8 text-center md:h-apartment-location-map-md">
-      <p className="text-taupe text-xs font-bold uppercase tracking-[0.24px]">{message}</p>
+    <div className="h-apartment-location-map border-divider bg-sand/40 md:h-apartment-location-map-md flex items-center justify-center rounded-lg border p-8 text-center">
+      <p className="text-taupe text-xs font-bold tracking-[0.24px] uppercase">{message}</p>
     </div>
   )
 }

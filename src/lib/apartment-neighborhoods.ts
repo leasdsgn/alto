@@ -15,9 +15,9 @@ const NEIGHBORHOOD_BY_SLUG: Record<string, string> = {
   'terreaux-ii': 'Terreaux',
   'terreaux-iii': 'Terreaux',
   'terreaux-iv': 'Terreaux',
-  'constantine-i': 'Bellecour',
-  'constantine-ii': 'Bellecour',
-  'constantine-i-et-ii': 'Bellecour',
+  'constantine-i': 'Terreaux',
+  'constantine-ii': 'Terreaux',
+  'constantine-i-et-ii': 'Terreaux',
 }
 
 export function getNeighborhoodBySlug(slug: string) {

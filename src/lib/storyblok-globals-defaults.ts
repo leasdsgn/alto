@@ -125,6 +125,39 @@ export const HEADER_DEFAULTS: StoryblokHeader = {
   mobileFooterButtonHref: '/appartements',
 }
 
+export const HEADER_DEFAULTS_EN: StoryblokHeader = {
+  ...HEADER_DEFAULTS,
+  bookLabel: 'Book',
+  mapLabel: 'View map',
+  navPrimary: [
+    {
+      label: 'Apartments',
+      href: '/appartements',
+      description: 'Paris & Lyon',
+      opensInNewTab: false,
+    },
+    {
+      label: 'Journal',
+      href: '/blog',
+      description: 'Addresses, neighborhoods, travel',
+      opensInNewTab: false,
+    },
+    {
+      label: 'Our story',
+      href: '/notre-histoire',
+      description: 'The Alto approach',
+      opensInNewTab: false,
+    },
+  ],
+  mobileOpenLabel: 'Open menu',
+  mobileCloseLabel: 'Close menu',
+  mobileNavigationLabel: 'Navigation',
+  mobileQuickAccessLabel: 'Quick access',
+  mobileFooterText:
+    'High-end stays in Paris and Lyon, with a clear and straightforward booking experience.',
+  mobileFooterButtonLabel: 'Book a stay',
+}
+
 export const FOOTER_DEFAULTS: StoryblokFooter = {
   logo: '/images/logo-alto-light.png',
   logoAriaLabel: 'Accueil Alto',
@@ -147,6 +180,25 @@ export const FOOTER_DEFAULTS: StoryblokFooter = {
   ],
   copyright: 'Tous droits réservés | Alto© 2026',
   navAriaLabel: 'Navigation du pied de page',
+}
+
+export const FOOTER_DEFAULTS_EN: StoryblokFooter = {
+  ...FOOTER_DEFAULTS,
+  logoAriaLabel: 'Alto home',
+  ctaTitle: 'Any questions? Our team is here to help.',
+  ctaBody: 'Available every day from 8 am to 8 pm.',
+  navLinks: [
+    { label: 'Home', href: '/', opensInNewTab: false },
+    { label: 'Paris', href: '/appartements?city=paris', opensInNewTab: false },
+    { label: 'Lyon', href: '/appartements?city=lyon', opensInNewTab: false },
+    { label: 'Apartments', href: '/appartements', opensInNewTab: false },
+    { label: 'Journal', href: '/blog', opensInNewTab: false },
+    { label: 'About', href: '/notre-histoire', opensInNewTab: false },
+    { label: 'Invest', href: '/investir', opensInNewTab: false },
+    { label: 'Legal', href: '/cgv', opensInNewTab: false },
+  ],
+  copyright: 'All rights reserved | Alto© 2026',
+  navAriaLabel: 'Footer navigation',
 }
 
 export const STICKY_CTA_DEFAULTS: StoryblokStickyCta = {

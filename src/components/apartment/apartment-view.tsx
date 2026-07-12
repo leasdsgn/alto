@@ -175,8 +175,10 @@ const FALLBACK_FEATURES_EN: FeatureItem[] = [
 
 const APARTMENT_COPY = {
   fr: {
-    trips: '114 voyages',
     fallbackNeighborhood: 'Quartier central',
+    home: 'Accueil',
+    apartments: 'Appartements',
+    prepareStay: 'Préparer votre séjour',
     guests: (count: number) => `${count} p.`,
     bedroom: (count: number) => `${count} chambre${count > 1 ? 's' : ''}`,
     apartmentsTitle: (city: string | null) =>
@@ -190,8 +192,10 @@ const APARTMENT_COPY = {
     fallbackFeatures: FALLBACK_FEATURES,
   },
   en: {
-    trips: '114 stays',
     fallbackNeighborhood: 'Central neighborhood',
+    home: 'Home',
+    apartments: 'Apartments',
+    prepareStay: 'Prepare your stay',
     guests: (count: number) => `${count} guest${count > 1 ? 's' : ''}`,
     bedroom: (count: number) => `${count} bedroom${count > 1 ? 's' : ''}`,
     apartmentsTitle: (city: string | null) =>
@@ -206,11 +210,19 @@ const APARTMENT_COPY = {
   },
 } as const
 
-const FALLBACK_REVIEW: ReviewItem = {
-  quote:
-    'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
-  name: 'Sofia & Léo',
-  stay: 'Mars 2026',
+const FALLBACK_REVIEW: Record<InquiryLocale, ReviewItem> = {
+  fr: {
+    quote:
+      'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
+    name: 'Sofia & Léo',
+    stay: 'Mars 2026',
+  },
+  en: {
+    quote:
+      'We felt at home from the very first minute. The apartment is exactly as shown in the photos, only better.',
+    name: 'Sofia & Leo',
+    stay: 'March 2026',
+  },
 }
 
 export function ApartmentView({
@@ -228,7 +240,7 @@ export function ApartmentView({
   const galleryImages = getGalleryImages(apartment)
   const featureItems = getFeatureItems(apartment, copy)
   const faqItems = getFaqItems(apartment, globalFaq, copy)
-  const review = pickReview(globalTestimonials)
+  const review = pickReview(globalTestimonials, locale)
   const recommendationItems = getRecommendationItems(
     apartment,
     recommendations,
@@ -249,8 +261,8 @@ export function ApartmentView({
       >
         <Breadcrumbs
           items={[
-            { label: 'Accueil', href: '/' },
-            { label: 'Appartements', href: '/appartements' },
+            { label: copy.home, href: '/' },
+            { label: copy.apartments, href: '/appartements' },
             { label: apartment.name },
           ]}
           className="mb-8"
@@ -267,7 +279,6 @@ export function ApartmentView({
             {apartment.bedrooms > 0 && (
               <MetaStat icon={<BedroomIcon />} value={copy.bedroom(apartment.bedrooms)} />
             )}
-            <MetaStat value={copy.trips} />
           </div>
 
           <div className="mt-6">
@@ -358,11 +369,11 @@ export function ApartmentView({
 
           <InternalLinkSection
             eyebrow="Alto"
-            title="Préparer votre séjour"
-            items={getApartmentInternalLinks(cityName)}
+            title={copy.prepareStay}
+            items={getApartmentInternalLinks(cityName, locale)}
           />
 
-          <ApartmentEditorialSections review={review} />
+          <ApartmentEditorialSections review={review} locale={locale} />
         </div>
       </main>
 
@@ -371,7 +382,36 @@ export function ApartmentView({
   )
 }
 
-function getApartmentInternalLinks(cityName: string | null) {
+function getApartmentInternalLinks(cityName: string | null, locale: InquiryLocale) {
+  if (locale === 'en') {
+    const city = normalizeValue(cityName)
+    const cityLink = city.includes('lyon')
+      ? {
+          label: 'Apartments in Lyon',
+          href: '/lyon',
+          description: 'Discover Alto addresses, neighborhoods, and useful Lyon landmarks.',
+        }
+      : {
+          label: 'All apartments',
+          href: '/appartements',
+          description: 'Compare available Alto apartments for your next dates.',
+        }
+
+    return [
+      cityLink,
+      {
+        label: 'Alto journal',
+        href: '/blog',
+        description: 'Read our neighborhood guides and practical advice before arrival.',
+      },
+      {
+        label: 'Our approach',
+        href: '/notre-histoire',
+        description: 'Learn about Alto standards and how each apartment is designed.',
+      },
+    ]
+  }
+
   const city = normalizeValue(cityName)
   const cityLink = city.includes('lyon')
     ? {
@@ -400,9 +440,9 @@ function getApartmentInternalLinks(cityName: string | null) {
   ]
 }
 
-function pickReview(globalTestimonials: StoryblokTestimonial[]): ReviewItem {
+function pickReview(globalTestimonials: StoryblokTestimonial[], locale: InquiryLocale): ReviewItem {
   const first = globalTestimonials[0]
-  if (!first) return FALLBACK_REVIEW
+  if (!first) return FALLBACK_REVIEW[locale]
   return {
     quote: first.quote,
     name: first.name,

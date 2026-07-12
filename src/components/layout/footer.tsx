@@ -26,7 +26,7 @@ export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
         className="relative overflow-hidden"
         style={{ background: 'linear-gradient(90deg, #948174 0%, #625143 100%)' }}
       >
-        <div className={`mx-auto max-w-content px-gutter pt-16 md:px-gutter-md ${bottomPadding}`}>
+        <div className={`max-w-content px-gutter md:px-gutter-md mx-auto pt-16 ${bottomPadding}`}>
           <Link href="/" className="inline-flex" aria-label={footer.logoAriaLabel}>
             <Image
               src={footer.logo}
@@ -74,28 +74,31 @@ export function Footer({ reserveStickyCtaSpace = false }: FooterProps) {
 
 function FooterContactCta() {
   const footer = useFooterGlobals()
+  const contact = footer.ctaButton
 
   return (
     <section className="border-divider bg-sand border-t">
-      <div className="mx-auto flex max-w-content flex-col gap-8 px-gutter py-12 md:flex-row md:items-center md:justify-between md:px-gutter-md md:py-16">
+      <div className="max-w-content px-gutter md:px-gutter-md mx-auto flex flex-col gap-8 py-12 md:flex-row md:items-center md:justify-between md:py-16">
         <div className="flex items-start gap-8 md:items-center">
           <span className="bg-signal mt-2 size-3 shrink-0 rounded-full shadow-[0_0_16px_rgba(120,255,71,0.85)] md:mt-0" />
           <div>
-            <h2 className="text-coffee text-h4 font-medium tracking-[-0.24px]">{footer.ctaTitle}</h2>
+            <h2 className="text-coffee text-h4 font-medium tracking-[-0.24px]">
+              {footer.ctaTitle}
+            </h2>
             <p className="text-ash text-body-sm mt-2">{footer.ctaBody}</p>
           </div>
         </div>
 
         <Link
-          href={WHATSAPP_LINK}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Ouvrir une conversation WhatsApp avec Alto"
+          href={contact?.href ?? WHATSAPP_LINK}
+          target={contact?.opensInNewTab ? '_blank' : undefined}
+          rel={contact?.opensInNewTab ? 'noopener noreferrer' : undefined}
+          aria-label={contact?.label ?? 'Ouvrir une conversation WhatsApp avec Alto'}
           className="inline-flex w-fit transition-opacity hover:opacity-85"
         >
           <Image
             src={WHATSAPP_BUTTON_IMAGE}
-            alt="Chat on WhatsApp"
+            alt={contact?.label ?? 'Chat on WhatsApp'}
             width={378}
             height={80}
             className="h-12 w-auto md:h-14"

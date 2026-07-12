@@ -12,7 +12,7 @@ import { Footer } from '@/components/layout/footer'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { JsonLd } from '@/components/seo/json-ld'
 import { InternalLinkSection } from '@/components/seo/internal-link-section'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { buildBreadcrumbJsonLd, defineSeoMetadata } from '@/lib/seo'
@@ -31,7 +31,7 @@ const LYON_METADATA: Record<'fr' | 'en', { title: string; description: string }>
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   return defineSeoMetadata({
     ...LYON_METADATA[locale],
     path: '/lyon',
@@ -40,10 +40,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LyonPage() {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   const story = await getStoryBySlug('pages/lyon', locale)
 
   if (
+    locale === 'fr' &&
     story &&
     Array.isArray((story.content as { body?: unknown }).body) &&
     (story.content as { body: unknown[] }).body.length > 0
@@ -57,7 +58,7 @@ export default async function LyonPage() {
           ])}
         />
         <StoryblokStory story={story} />
-        <LyonInternalLinks />
+        <LyonInternalLinks locale={locale} />
         <Footer reserveStickyCtaSpace />
         <StickyCta />
       </>
@@ -95,41 +96,64 @@ export default async function LyonPage() {
         <LyonBlogSection articles={articles.filter((article) => article.section === 'lyon')} />
         <FaqSection />
       </main>
-      <LyonInternalLinks />
+      <LyonInternalLinks locale={locale} />
       <Footer reserveStickyCtaSpace />
       <StickyCta />
     </>
   )
 }
 
-function LyonInternalLinks() {
+function LyonInternalLinks({ locale }: { locale: 'fr' | 'en' }) {
+  const copy = LYON_INTERNAL_LINKS_COPY[locale]
   return (
     <div className="max-w-content px-gutter pb-section md:px-gutter-md mx-auto w-full">
-      <InternalLinkSection
-        eyebrow="Lyon"
-        title="Continuer votre recherche"
-        items={[
-          {
-            label: 'Tous les appartements',
-            href: '/appartements?city=lyon',
-            description: 'Comparer les appartements Alto disponibles à Lyon selon vos dates.',
-          },
-          {
-            label: 'Guides de Lyon',
-            href: '/blog',
-            description:
-              'Lire nos repères sur Bellecour, Terreaux, le Vieux Lyon et la Presqu’île.',
-          },
-          {
-            label: 'Notre histoire',
-            href: '/notre-histoire',
-            description: 'Comprendre la manière dont Alto sélectionne et prépare ses adresses.',
-          },
-        ]}
-      />
+      <InternalLinkSection eyebrow="Lyon" title={copy.title} items={[...copy.items]} />
     </div>
   )
 }
+
+const LYON_INTERNAL_LINKS_COPY = {
+  fr: {
+    title: 'Continuer votre recherche',
+    items: [
+      {
+        label: 'Tous les appartements',
+        href: '/appartements?city=lyon',
+        description: 'Comparer les appartements Alto disponibles à Lyon selon vos dates.',
+      },
+      {
+        label: 'Guides de Lyon',
+        href: '/blog',
+        description: 'Lire nos repères sur Bellecour, Terreaux, le Vieux Lyon et la Presqu’île.',
+      },
+      {
+        label: 'Notre histoire',
+        href: '/notre-histoire',
+        description: 'Comprendre la manière dont Alto sélectionne et prépare ses adresses.',
+      },
+    ],
+  },
+  en: {
+    title: 'Continue your search',
+    items: [
+      {
+        label: 'All apartments',
+        href: '/appartements?city=lyon',
+        description: 'Compare Alto apartments available in Lyon for your dates.',
+      },
+      {
+        label: 'Lyon guides',
+        href: '/blog',
+        description: 'Read our notes on Bellecour, Terreaux, Vieux Lyon, and Presqu’île.',
+      },
+      {
+        label: 'Our story',
+        href: '/notre-histoire',
+        description: 'Learn how Alto selects and prepares every address.',
+      },
+    ],
+  },
+} as const
 
 const LYON_FALLBACK_IMAGES = {
   heroBackground: '/images/lyon/hero-lyon.jpg',

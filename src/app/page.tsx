@@ -9,7 +9,7 @@ import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { BlogSection } from '@/components/sections/blog-section'
 import { StickyCta } from '@/components/ui/sticky-cta'
 import { Footer } from '@/components/layout/footer'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getBlogArticles } from '@/lib/storyblok-blog'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
@@ -27,7 +27,7 @@ const HOME_METADATA: Record<'fr' | 'en', { title: string; description: string }>
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   return defineSeoMetadata({
     ...HOME_METADATA[locale],
     path: '/',
@@ -36,10 +36,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   const story = await getStoryBySlug('pages/home', locale)
 
   if (
+    locale === 'fr' &&
     story &&
     Array.isArray((story.content as { body?: unknown }).body) &&
     (story.content as { body: unknown[] }).body.length > 0

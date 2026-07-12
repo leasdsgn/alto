@@ -19,25 +19,29 @@
 - [x] Ajouter le contact par e-mail vers `contact@alto-collection.com`.
 - [x] Afficher une disponibilité WhatsApp tous les jours de 8 h à 20 h dans le bloc de réservation et le contenu de repli du pied de page.
 - [x] Rendre le changement FR ou EN accessible depuis le menu.
+- [x] Déployer le schéma Storyblok et publier la story `pages/booking` avec la mention caution.
+- [x] Mettre à jour dans Storyblok le pied de page vers « Disponible tous les jours de 8 h à 20 h ».
+- [x] Rendre le lien et le numéro WhatsApp éditables depuis le CTA du footer Storyblok.
+- [x] Corriger Constantine I, Constantine II et Constantine I et II avec le quartier public « Terreaux ».
+- [x] Corriger sur le site les coordonnées de Terreaux IV pour les aligner sur les autres logements du 21 Rue d’Algérie.
+- [x] Corriger la fausse disponibilité de Constantine I en appliquant le minimum de nuits dynamique du calendrier Guesty.
+- [x] Supprimer le compteur statique « 114 voyages » des fiches appartement.
+- [x] Empêcher le calendrier de faire remonter le panneau de réservation sticky lors de son ouverture.
+- [x] Vérifier le design et le layout de l’accueil en desktop 1440 × 900 et mobile 390 × 844.
+- [x] Synchroniser la locale du rendu serveur avec le cookie FR ou EN.
+- [x] Compléter les chaînes anglaises des pages, fiches, cartes, blocs Lyon, navigation et footer.
+- [x] Utiliser les contenus anglais maintenus dans le code lorsque les traductions Storyblok EN ne sont pas renseignées.
+- [x] Proposer uniquement des options de mise en page contrôlées dans Storyblok : alignement, largeur, hauteur et position d’image.
 
 ## Configuration à maintenir
 
 - [ ] Ajouter le custom field `show_on_website` à chaque futur appartement Guesty et l’activer uniquement pour les logements publiés sur le site.
-- [ ] Déployer le nouveau schéma Storyblok et créer la story `pages/booking` avec `bun run storyblok:seed-all`.
-- [ ] Mettre à jour dans Storyblok le texte du pied de page existant vers « Disponible tous les jours de 8 h à 20 h ».
+- [ ] Corriger également les coordonnées de Terreaux IV dans Guesty lorsque la limitation OAuth de l’Open API sera levée. Le site applique déjà les coordonnées correctes.
 
-## Dépendances Guesty ou données métier
+## Contrôles effectués
 
-- [ ] Corriger le quartier de Constantine I et II, avec « Terreaux » comme libellé public sans détourner le champ ville Guesty.
-- [ ] Corriger l’emplacement erroné d’un appartement sur la carte.
-- [ ] Diagnostiquer la disponibilité annoncée puis refusée pour Constantine I.
-- [ ] Vérifier si le compteur statique « 114 voyages » doit également être supprimé.
-
-## Corrections restant à qualifier
-
-- [ ] Reproduire le déplacement automatique du panneau de réservation lors de la modification des dates après défilement.
-- [ ] Identifier précisément la page utilisant encore l’ancien design avant de la reprendre.
-- [ ] Identifier précisément le layout signalé comme cassé et son viewport.
-- [ ] Compléter la traduction anglaise du reste du site, hors parcours de réservation.
-- [ ] Rendre le numéro WhatsApp éditable par l’équipe depuis Storyblok.
-- [ ] Définir des options de mise en page contrôlées dans Storyblok. Le déplacement libre des textes et titres n’est pas retenu, car il fragiliserait le responsive.
+- [x] Constantine I du 13 au 17 octobre 2026 : disponible, minimum dynamique de 3 nuits respecté.
+- [x] Constantine I du 19 au 20 novembre 2026 : une nuit refusée avec un minimum dynamique de 2 nuits affiché avant le devis.
+- [x] Ouverture du calendrier après défilement : `scrollY` inchangé et panneau maintenu à 112 px du haut.
+- [x] Version anglaise de l’accueil : absence de chaînes françaises résiduelles dans les composants contrôlés.
+- [x] Version anglaise de Constantine I : navigation, réservation, FAQ, éditorial, recommandations et footer traduits.

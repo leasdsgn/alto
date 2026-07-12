@@ -34,7 +34,7 @@ export function ApartmentCard({
   const locale = useLocale()
   const copy = CARD_COPY[locale]
   const specs = [
-    { icon: 'guests' as const, value: `${guests} p.` },
+    { icon: 'guests' as const, value: copy.guests(guests) },
     ...(surface > 0 ? [{ icon: 'surface' as const, value: `${surface} m`, sup: '2' }] : []),
     ...(bedrooms > 0 ? [{ icon: 'bedrooms' as const, value: String(bedrooms) }] : []),
   ]
@@ -92,12 +92,14 @@ export function ApartmentCard({
 
 const CARD_COPY = {
   fr: {
+    guests: (count: number) => `${count} p.`,
     from: 'Dès',
     perNight: '/nuit',
     total: 'au total',
     checkAvailability: 'Voir disponibilités',
   },
   en: {
+    guests: (count: number) => `${count} guest${count > 1 ? 's' : ''}`,
     from: 'From',
     perNight: '/night',
     total: 'total',

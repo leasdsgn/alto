@@ -1,12 +1,13 @@
 import { unstable_cache } from 'next/cache'
 import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
+import { getApartmentCoordinates } from '@/lib/apartment-location-overrides'
 import { filterApartmentsByCity } from '@/lib/apartment-city'
 import { getQuoteTotalCents } from '@/lib/guesty-pricing'
 import { type GuestyListing } from '@/types/guesty'
 import { type Apartment, type ApartmentCardData } from '@/types/apartment'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 
 const APARTMENT_CARD_REVALIDATE_SECONDS = 5 * 60
 const APARTMENT_STARTING_PRICES_CACHE_TAG = 'guesty-apartment-starting-prices'
@@ -52,6 +53,7 @@ function mapListing(listing: GuestyListing): Apartment {
   const city = listing.address?.city
   const slug = slugify(listing.nickname || listing.title)
   const neighborhoodLabel = getNeighborhoodBySlug(slug)
+  const coordinates = getApartmentCoordinates(slug, listing.address ?? {})
   return {
     id: listing._id,
     name: listing.title,
@@ -68,8 +70,8 @@ function mapListing(listing: GuestyListing): Apartment {
         const url = normalizeGuestyImageUrl(picture.original || picture.thumbnail)
         return url ? [url] : []
       }) ?? [],
-    lat: listing.address?.lat,
-    lng: listing.address?.lng,
+    lat: coordinates.lat,
+    lng: coordinates.lng,
     address,
     city,
     neighborhoodLabel,
@@ -87,6 +89,7 @@ function mapListingCard(listing: GuestyListing): ApartmentCardData {
   const city = listing.address?.city
   const slug = slugify(listing.nickname || listing.title || listing._id)
   const neighborhoodLabel = getNeighborhoodBySlug(slug)
+  const coordinates = getApartmentCoordinates(slug, listing.address ?? {})
   const image = normalizeGuestyImageUrl(
     listing.pictures?.[0]?.original || listing.pictures?.[0]?.thumbnail,
   )
@@ -106,8 +109,8 @@ function mapListingCard(listing: GuestyListing): ApartmentCardData {
     slug,
     image,
     images: image ? [image] : [],
-    lat: listing.address?.lat,
-    lng: listing.address?.lng,
+    lat: coordinates.lat,
+    lng: coordinates.lng,
     address: listing.address?.full,
     city,
     neighborhoodLabel,
@@ -579,7 +582,7 @@ export async function ApartmentsSection({
   apartments?: ApartmentCardData[]
   titles?: { paris: string; lyon: string }
 }) {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   const copy = titles ?? APARTMENTS_SECTION_COPY[locale]
   const data = apartments ?? (await getApartmentCards())
   const paris = filterApartmentsByCity(data, 'paris')
