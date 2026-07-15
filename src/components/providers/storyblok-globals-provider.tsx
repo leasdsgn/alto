@@ -8,6 +8,7 @@ import {
   STICKY_CTA_DEFAULTS,
   type StoryblokGlobals,
 } from '@/lib/storyblok-globals-defaults'
+import { SHARED_TESTIMONIALS_DEFAULTS } from '@/lib/storyblok-testimonials-defaults'
 
 const StoryblokGlobalsContext = createContext<StoryblokGlobals | null>(null)
 
@@ -27,7 +28,7 @@ const FALLBACK_GLOBALS: StoryblokGlobals = {
   footer: FOOTER_DEFAULTS,
   stickyCta: STICKY_CTA_DEFAULTS,
   sharedAssets: SHARED_ASSETS_DEFAULTS,
-  sharedTestimonials: [],
+  sharedTestimonials: [...SHARED_TESTIMONIALS_DEFAULTS],
   apartmentFaq: { eyebrow: 'FAQ', title: 'Questions fréquentes', items: [] },
 }
 

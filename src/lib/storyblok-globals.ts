@@ -26,6 +26,7 @@ import {
   type StoryblokStickyCta,
   type StoryblokTestimonial,
 } from '@/lib/storyblok-globals-defaults'
+import { SHARED_TESTIMONIALS_DEFAULTS } from '@/lib/storyblok-testimonials-defaults'
 
 export type {
   HeaderNavItem,
@@ -247,7 +248,8 @@ async function getSharedAssets(locale: InquiryLocale): Promise<StoryblokSharedAs
 
 async function getSharedTestimonials(locale: InquiryLocale): Promise<StoryblokTestimonial[]> {
   const story = await getStoryBySlug('globals/shared-testimonials', locale)
-  return mapTestimonials(story?.content?.items)
+  const testimonials = mapTestimonials(story?.content?.items)
+  return testimonials.length > 0 ? testimonials : [...SHARED_TESTIMONIALS_DEFAULTS]
 }
 
 export function mapTestimonials(value: unknown): StoryblokTestimonial[] {

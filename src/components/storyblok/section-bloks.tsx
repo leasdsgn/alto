@@ -13,6 +13,7 @@ import {
 } from '@/components/providers/storyblok-globals-provider'
 import { assetUrl, bloksOf, linkHref, textOr, type StoryblokLinkField } from '@/lib/storyblok-asset'
 import { PLACEHOLDER_IMAGE } from '@/lib/storyblok-defaults'
+import { SHARED_TESTIMONIALS_DEFAULTS } from '@/lib/storyblok-testimonials-defaults'
 import type { BlogArticle } from '@/lib/blog-data'
 
 type Blok = Record<string, unknown>
@@ -144,7 +145,7 @@ export function TestimonialsSectionBlok({ blok }: { blok: Blok }) {
       ? inlineItems
       : sharedTestimonials.length > 0
         ? sharedTestimonials
-        : inlineItems
+        : SHARED_TESTIMONIALS_DEFAULTS
 
   if (items.length === 0) return <div {...editable(blok)} />
 
