@@ -21,6 +21,10 @@ export function ApartmentGallery({ name, images }: GalleryProps) {
   const photoCount = providedPhotos.length
   const hasMultiplePhotos = photoCount > 1
   const activePhoto = photos[activeIndex]
+  const previewIndexes = Array.from(
+    { length: Math.min(4, Math.max(photoCount - 1, 0)) },
+    (_, offset) => (activeIndex + offset + 1) % photoCount,
+  )
   const copy = GALLERY_COPY[locale]
 
   function showPrevious() {
@@ -55,41 +59,84 @@ export function ApartmentGallery({ name, images }: GalleryProps) {
       aria-roledescription="carousel"
       className="relative"
     >
-      <div
-        className="bg-sand relative aspect-[4/5] touch-pan-y overflow-hidden rounded-lg select-none sm:aspect-[16/10] lg:aspect-[16/9]"
-        onTouchStart={hasMultiplePhotos ? handleTouchStart : undefined}
-        onTouchEnd={hasMultiplePhotos ? handleTouchEnd : undefined}
-      >
-        {activePhoto ? (
-          <Image
-            key={activePhoto}
-            src={activePhoto}
-            alt={`${name} - ${copy.photo} ${activeIndex + 1}`}
-            fill
-            sizes="(max-width: 768px) calc(100vw - 48px), (max-width: 1024px) calc(100vw - 96px), 1132px"
-            quality={85}
-            className="object-cover"
-            priority={activeIndex === 0}
-          />
-        ) : (
-          <div className="bg-sand size-full" />
-        )}
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,2.05fr)_minmax(0,1fr)]">
+        <div
+          className="bg-sand relative aspect-square touch-pan-y overflow-hidden rounded-lg select-none sm:aspect-[16/10] lg:aspect-auto lg:h-[396px]"
+          onTouchStart={hasMultiplePhotos ? handleTouchStart : undefined}
+          onTouchEnd={hasMultiplePhotos ? handleTouchEnd : undefined}
+        >
+          {activePhoto ? (
+            <Image
+              key={activePhoto}
+              src={activePhoto}
+              alt={`${name} - ${copy.photo} ${activeIndex + 1}`}
+              fill
+              sizes="(max-width: 1024px) calc(100vw - 48px), 750px"
+              quality={85}
+              className="object-cover"
+              priority={activeIndex === 0}
+            />
+          ) : (
+            <div className="bg-sand size-full" />
+          )}
 
-        {hasMultiplePhotos && (
-          <>
+          {hasMultiplePhotos && (
             <div className="absolute inset-x-3 top-1/2 flex -translate-y-1/2 items-center justify-between">
               <GalleryButton label={copy.previous} direction="previous" onClick={showPrevious} />
               <GalleryButton label={copy.next} direction="next" onClick={showNext} />
             </div>
+          )}
+        </div>
 
-            <p
-              aria-live="polite"
-              className="bg-coffee/80 text-cream text-overline absolute right-3 bottom-3 rounded-full px-3 py-1.5 font-bold tracking-[0.12em] backdrop-blur-sm"
-            >
-              <span className="sr-only">{copy.position}</span>
-              {activeIndex + 1} / {photoCount}
-            </p>
-          </>
+        {previewIndexes.length > 0 && (
+          <div className="grid grid-cols-4 gap-2 lg:grid-cols-2 lg:gap-3">
+            {previewIndexes.map((index) => (
+              <button
+                key={photos[index]}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`${copy.showPhoto} ${index + 1}`}
+                className="bg-sand relative aspect-square overflow-hidden rounded-lg transition-opacity hover:opacity-85 lg:aspect-auto lg:h-[192px]"
+              >
+                {photos[index] ? (
+                  <Image
+                    src={photos[index]!}
+                    alt={`${name} - ${copy.photo} ${index + 1}`}
+                    fill
+                    sizes="(max-width: 1024px) 25vw, 185px"
+                    quality={75}
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="bg-sand size-full" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {hasMultiplePhotos && (
+          <div
+            aria-live="polite"
+            className="flex items-center justify-center gap-1.5 lg:col-span-2"
+          >
+            {providedPhotos.map((photo, index) => (
+              <button
+                key={photo}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`${copy.showPhoto} ${index + 1}`}
+                aria-current={index === activeIndex ? 'true' : undefined}
+                className={`rounded-full transition-all ${
+                  index === activeIndex ? 'bg-coffee size-2' : 'bg-silver hover:bg-taupe size-1.5'
+                }`}
+              >
+                <span className="sr-only">
+                  {index + 1} / {photoCount}
+                </span>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </section>
@@ -125,13 +172,13 @@ const GALLERY_COPY = {
     photo: 'photo',
     previous: 'Photo précédente',
     next: 'Photo suivante',
-    position: 'Photo affichée : ',
+    showPhoto: 'Afficher la photo',
   },
   en: {
     galleryLabel: 'Photo gallery for',
     photo: 'photo',
     previous: 'Previous photo',
     next: 'Next photo',
-    position: 'Displayed photo: ',
+    showPhoto: 'Show photo',
   },
 } as const
