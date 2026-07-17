@@ -33,7 +33,7 @@ interface PreviewTarget {
 
 const PAGE_SLUG_TO_PATH: Record<string, string> = {
   home: '/',
-  lyon: '/lyon',
+  lyon: '/appartements?city=lyon',
   appartements: '/appartements',
   'notre-histoire': '/notre-histoire',
   investir: '/investir',

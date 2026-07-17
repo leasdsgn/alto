@@ -388,8 +388,8 @@ function getApartmentInternalLinks(cityName: string | null, locale: InquiryLocal
     const cityLink = city.includes('lyon')
       ? {
           label: 'Apartments in Lyon',
-          href: '/lyon',
-          description: 'Discover Alto addresses, neighborhoods, and useful Lyon landmarks.',
+          href: '/appartements?city=lyon',
+          description: 'Compare Alto apartments available in Lyon.',
         }
       : {
           label: 'All apartments',
@@ -416,8 +416,8 @@ function getApartmentInternalLinks(cityName: string | null, locale: InquiryLocal
   const cityLink = city.includes('lyon')
     ? {
         label: 'Appartements à Lyon',
-        href: '/lyon',
-        description: 'Découvrir les adresses Alto, les quartiers et les repères utiles à Lyon.',
+        href: '/appartements?city=lyon',
+        description: 'Comparer les appartements Alto disponibles à Lyon.',
       }
     : {
         label: 'Tous les appartements',

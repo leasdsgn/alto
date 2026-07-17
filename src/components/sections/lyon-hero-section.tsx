@@ -74,7 +74,11 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
           >
             Paris
           </Link>
-          <Link href="/lyon" prefetch={false} className="text-cream text-xs font-bold">
+          <Link
+            href="/appartements?city=lyon"
+            prefetch={false}
+            className="text-cream text-xs font-bold"
+          >
             Lyon
           </Link>
         </nav>

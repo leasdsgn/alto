@@ -126,8 +126,8 @@ const APARTMENTS_LINKS_COPY = {
     links: [
       {
         label: 'Séjourner à Lyon',
-        href: '/lyon',
-        description: 'Voir les appartements Alto et les quartiers à privilégier à Lyon.',
+        href: '/appartements?city=lyon',
+        description: 'Voir les appartements Alto disponibles à Lyon.',
       },
       {
         label: 'Conseils de séjour',
@@ -148,8 +148,8 @@ const APARTMENTS_LINKS_COPY = {
     links: [
       {
         label: 'Stay in Lyon',
-        href: '/lyon',
-        description: 'Browse Alto apartments and the Lyon neighborhoods worth considering.',
+        href: '/appartements?city=lyon',
+        description: 'Browse Alto apartments available in Lyon.',
       },
       {
         label: 'Travel advice',
