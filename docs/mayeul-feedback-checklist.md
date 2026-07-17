@@ -31,6 +31,7 @@
 - [x] Supprimer le compteur statique « 114 voyages » des fiches appartement.
 - [x] Empêcher le calendrier de faire remonter le panneau de réservation sticky lors de son ouverture.
 - [x] Vérifier le design et le layout de l’accueil en desktop 1440 × 900 et mobile 390 × 844.
+- [x] Remplacer le titre typographique de la hero par le tracé SVG officiel de la baseline Alto.
 - [x] Synchroniser la locale du rendu serveur avec le cookie FR ou EN.
 - [x] Compléter les chaînes anglaises des pages, fiches, cartes, blocs Lyon, navigation et footer.
 - [x] Utiliser les contenus anglais maintenus dans le code lorsque les traductions Storyblok EN ne sont pas renseignées.

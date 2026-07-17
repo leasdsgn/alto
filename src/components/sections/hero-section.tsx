@@ -81,14 +81,18 @@ export function HeroSection({
       <Header />
 
       <div className="relative flex h-full w-full flex-col items-center justify-center px-6 pt-28 pb-28 md:pt-36 md:pb-36">
-        <div className="w-full max-w-[1212px] md:-translate-y-6">
-          <h1 className="text-cream md:text-h1 flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-center text-2xl leading-none font-medium tracking-[0.12em] uppercase md:gap-x-8 md:tracking-[0.16em]">
-            <span>{titleParts[0]}</span>
-            <span aria-hidden="true" className="bg-cream size-2 rounded-full md:size-2.5" />
-            <span>{titleParts[1]}</span>
-            <span aria-hidden="true" className="bg-cream size-2 rounded-full md:size-2.5" />
-            <span>{titleParts[2]}</span>
-          </h1>
+        <div className="max-w-content w-full md:-translate-y-6">
+          <h1 className="sr-only">{titleParts.join(' • ')}</h1>
+          <Image
+            src="/images/brand/lst-brand-elements-tagline.svg"
+            alt=""
+            aria-hidden="true"
+            width={1920}
+            height={83}
+            sizes="(max-width: 768px) calc(100vw - 3rem), 1220px"
+            className="h-auto w-full"
+            priority
+          />
         </div>
 
         <div className="absolute inset-x-6 bottom-8 z-50 mx-auto hidden max-w-[800px] md:bottom-12 md:block">
