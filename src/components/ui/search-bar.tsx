@@ -7,7 +7,7 @@ import { ListBox, ListBoxItem } from 'react-aria-components'
 import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import { useLocale } from '@/components/providers/locale-provider'
-import { buildApartmentSearchParams } from '@/lib/apartment-search'
+import { buildApartmentSearchHref } from '@/lib/apartment-search'
 import { useSearchStore } from '@/lib/stores/search'
 
 const CITIES = ['Paris', 'Lyon']
@@ -77,9 +77,11 @@ function firstDayOfWeek(year: number, month: number): number {
 export function SearchBar({
   calendarPlacement = 'bottom start',
   align = 'center',
+  searchOnCityChange = false,
 }: {
   calendarPlacement?: 'bottom start' | 'top start'
   align?: 'center' | 'start'
+  searchOnCityChange?: boolean
 } = {}) {
   const router = useRouter()
   const locale = useLocale()
@@ -145,16 +147,29 @@ export function SearchBar({
   )
   const effectiveEnd = selectingEnd && hoverDate ? hoverDate : dates.end
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const params = buildApartmentSearchParams({
-      city,
+  function getSearchHref(selectedCity = city) {
+    return buildApartmentSearchHref({
+      city: selectedCity,
       guests,
       dates: hasSelectedDates
         ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
         : null,
     })
-    router.push(`/appartements?${params}`)
+  }
+
+  function handleCityChange(key: React.Key | null) {
+    if (key === null) return
+
+    const selectedCity = String(key)
+    if (selectedCity === city) return
+
+    setCity(selectedCity)
+    if (searchOnCityChange) router.replace(getSearchHref(selectedCity), { scroll: false })
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    router.push(getSearchHref())
   }
 
   return (
@@ -168,7 +183,7 @@ export function SearchBar({
         <HeroUISelect
           aria-label={copy.city}
           selectedKey={city}
-          onSelectionChange={(key) => setCity(key as string)}
+          onSelectionChange={handleCityChange}
           isOpen={cityOpen}
           onOpenChange={setCityOpen}
           className="shrink-0"

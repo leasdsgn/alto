@@ -24,3 +24,7 @@ export function buildApartmentSearchParams({
 
   return params
 }
+
+export function buildApartmentSearchHref(input: ApartmentSearchParamsInput): string {
+  return `/appartements?${buildApartmentSearchParams(input)}`
+}

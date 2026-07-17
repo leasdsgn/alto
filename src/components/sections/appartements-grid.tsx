@@ -95,7 +95,7 @@ export function AppartementsGrid({
             className="bg-divider absolute bottom-0 left-1/2 h-px w-screen -translate-x-1/2"
           />
           <div className="min-w-0 flex-1">
-            <SearchBar align="start" />
+            <SearchBar align="start" searchOnCityChange />
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -122,7 +122,7 @@ export function AppartementsGrid({
         </div>
 
         <div className="lg:hidden">
-          <SearchBarMobile />
+          <SearchBarMobile searchOnCityChange />
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">

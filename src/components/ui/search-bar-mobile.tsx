@@ -14,7 +14,7 @@ import { today, getLocalTimeZone } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
 import { useLocale } from '@/components/providers/locale-provider'
-import { buildApartmentSearchParams } from '@/lib/apartment-search'
+import { buildApartmentSearchHref } from '@/lib/apartment-search'
 import { useSearchStore } from '@/lib/stores/search'
 import { Button } from '@/components/ui/button'
 
@@ -42,8 +42,10 @@ const MOBILE_SEARCH_COPY = {
 
 export function SearchBarMobile({
   calendarPlacement = 'bottom start',
+  searchOnCityChange = false,
 }: {
   calendarPlacement?: 'bottom start' | 'top start' | 'bottom' | 'top'
+  searchOnCityChange?: boolean
 } = {}) {
   const router = useRouter()
   const locale = useLocale()
@@ -57,16 +59,29 @@ export function SearchBarMobile({
     if (value) setDates({ start: value.start, end: value.end })
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const params = buildApartmentSearchParams({
-      city,
+  function getSearchHref(selectedCity = city) {
+    return buildApartmentSearchHref({
+      city: selectedCity,
       guests,
       dates: hasSelectedDates
         ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
         : null,
     })
-    router.push(`/appartements?${params}`)
+  }
+
+  function handleCityChange(key: React.Key | null) {
+    if (key === null) return
+
+    const selectedCity = String(key)
+    if (selectedCity === city) return
+
+    setCity(selectedCity)
+    if (searchOnCityChange) router.replace(getSearchHref(selectedCity), { scroll: false })
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    router.push(getSearchHref())
   }
 
   return (
@@ -76,7 +91,7 @@ export function SearchBarMobile({
           <HeroUISelect
             aria-label={copy.city}
             selectedKey={city}
-            onSelectionChange={(key) => setCity(key as string)}
+            onSelectionChange={handleCityChange}
             className="w-auto"
           >
             <Label className="sr-only">{copy.city}</Label>
