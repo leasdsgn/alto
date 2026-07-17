@@ -18,6 +18,7 @@
 - [x] Supprimer la hauteur vide imposée sous la vue liste des appartements.
 - [x] Ramener automatiquement le nombre de voyageurs à la capacité du logement sélectionné.
 - [x] Traduire le panneau de réservation, ses dates, ses messages et les champs Stripe en anglais.
+- [x] Synchroniser la barre de recherche desktop et mobile avec la langue choisie par le serveur ou le visiteur.
 - [x] Ajouter le contact par e-mail vers `contact@alto-collection.com`.
 - [x] Afficher une disponibilité WhatsApp tous les jours de 8 h à 20 h dans le bloc de réservation et le contenu de repli du pied de page.
 - [x] Rendre le changement FR ou EN accessible depuis le menu.

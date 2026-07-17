@@ -81,7 +81,7 @@ export default async function RootLayout({
           suppressHydrationWarning
         >
           <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd()]} />
-          <LocaleProvider>
+          <LocaleProvider initialLocale={locale}>
             <LenisProvider>
               <I18nProvider>
                 <StoryblokGlobalsProvider value={globals}>{children}</StoryblokGlobalsProvider>

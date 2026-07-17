@@ -26,11 +26,11 @@ interface LocaleContextValue {
 const LocaleContext = createContext<LocaleContextValue | null>(null)
 const LOCALE_EVENT = 'alto:locale-change'
 
-function readLocaleCookie(): InquiryLocale {
-  if (typeof document === 'undefined') return DEFAULT_LOCALE
+function readLocaleCookie(fallbackLocale: InquiryLocale): InquiryLocale {
+  if (typeof document === 'undefined') return fallbackLocale
 
   const match = document.cookie.match(new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]+)`))
-  return resolveLocale(match?.[1])
+  return match ? resolveLocale(match[1]) : fallbackLocale
 }
 
 function writeLocaleCookie(locale: InquiryLocale): void {
@@ -49,11 +49,17 @@ function subscribeToLocaleChange(onStoreChange: () => void): () => void {
   }
 }
 
-export function LocaleProvider({ children }: { children: ReactNode }) {
+export function LocaleProvider({
+  children,
+  initialLocale = DEFAULT_LOCALE,
+}: {
+  children: ReactNode
+  initialLocale?: InquiryLocale
+}) {
   const locale = useSyncExternalStore(
     subscribeToLocaleChange,
-    readLocaleCookie,
-    () => DEFAULT_LOCALE,
+    () => readLocaleCookie(initialLocale),
+    () => initialLocale,
   )
 
   useEffect(() => {
