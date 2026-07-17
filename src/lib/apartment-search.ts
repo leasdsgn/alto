@@ -7,6 +7,10 @@ interface ApartmentSearchParamsInput {
   } | null
 }
 
+interface ApartmentWithGuestCapacity {
+  guests: number
+}
+
 export function buildApartmentSearchParams({
   city,
   guests,
@@ -27,4 +31,12 @@ export function buildApartmentSearchParams({
 
 export function buildApartmentSearchHref(input: ApartmentSearchParamsInput): string {
   return `/appartements?${buildApartmentSearchParams(input)}`
+}
+
+export function filterApartmentsByGuestCapacity<T extends ApartmentWithGuestCapacity>(
+  apartments: T[],
+  guests?: number,
+): T[] {
+  if (!guests || !Number.isFinite(guests) || guests < 1) return apartments
+  return apartments.filter((apartment) => apartment.guests >= guests)
 }

@@ -10,6 +10,7 @@
 - [x] Exclure les appartements parisiens du filtre Lyon, avec repli sur l’adresse lorsque le champ ville est absent.
 - [x] Permettre une recherche par ville sans dates préremplies.
 - [x] Mettre à jour les résultats immédiatement lors du changement Paris ou Lyon, sans nouveau clic sur « Rechercher ».
+- [x] Filtrer et actualiser immédiatement les appartements selon le nombre de voyageurs demandé.
 - [x] Supprimer la note statique `4,9 (113)` des cartes, de la vue carte et des pages appartement.
 - [x] Préparer un bloc Storyblok traduisible pour la mention relative à la caution sur la page de réservation.
 - [x] Permettre la consultation de toutes les photos Guesty lorsqu’un appartement en contient plus de cinq.

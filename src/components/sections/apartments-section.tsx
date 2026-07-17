@@ -3,6 +3,7 @@ import { guestyClient } from '@/lib/guesty-client'
 import { getNeighborhoodBySlug } from '@/lib/apartment-neighborhoods'
 import { getApartmentCoordinates } from '@/lib/apartment-location-overrides'
 import { filterApartmentsByCity } from '@/lib/apartment-city'
+import { filterApartmentsByGuestCapacity } from '@/lib/apartment-search'
 import { getQuoteTotalCents } from '@/lib/guesty-pricing'
 import { type GuestyListing } from '@/types/guesty'
 import { type Apartment, type ApartmentCardData } from '@/types/apartment'
@@ -412,12 +413,13 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
       const { results } = await guestyClient.getAvailableListings(checkIn, checkOut, guests, {
         fields: LISTING_SEARCH_FIELDS,
       })
-      const apartments = city
+      const cityApartments = city
         ? filterApartmentsByCity(
             results.map((listing) => mapListingCard(listing)),
             city,
           )
         : results.map((listing) => mapListingCard(listing))
+      const apartments = filterApartmentsByGuestCapacity(cityApartments, guests)
       const hasTotalPrice = apartments.some((apartment) => apartment.priceSource === 'total')
 
       return {
@@ -446,7 +448,8 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
 
   try {
     const apartments = await getApartmentCards()
-    const filtered = city ? filterApartmentsByCity(apartments, city) : apartments
+    const cityApartments = city ? filterApartmentsByCity(apartments, city) : apartments
+    const filtered = filterApartmentsByGuestCapacity(cityApartments, guests)
 
     return {
       apartments: filtered,
@@ -455,9 +458,12 @@ async function getApartmentSearchResult(criteria: SearchCriteria) {
     }
   } catch {
     const fallbackApartments = getFallbackApartments().map(toApartmentCardData)
+    const cityApartments = city
+      ? filterApartmentsByCity(fallbackApartments, city)
+      : fallbackApartments
 
     return {
-      apartments: city ? filterApartmentsByCity(fallbackApartments, city) : fallbackApartments,
+      apartments: filterApartmentsByGuestCapacity(cityApartments, guests),
       hasDateSearch: false,
       status: 'fallback' as const,
     }

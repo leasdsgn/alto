@@ -78,10 +78,12 @@ export function SearchBar({
   calendarPlacement = 'bottom start',
   align = 'center',
   searchOnCityChange = false,
+  searchOnGuestsChange = false,
 }: {
   calendarPlacement?: 'bottom start' | 'top start'
   align?: 'center' | 'start'
   searchOnCityChange?: boolean
+  searchOnGuestsChange?: boolean
 } = {}) {
   const router = useRouter()
   const locale = useLocale()
@@ -147,10 +149,10 @@ export function SearchBar({
   )
   const effectiveEnd = selectingEnd && hoverDate ? hoverDate : dates.end
 
-  function getSearchHref(selectedCity = city) {
+  function getSearchHref(selectedCity = city, selectedGuests = guests) {
     return buildApartmentSearchHref({
       city: selectedCity,
-      guests,
+      guests: selectedGuests,
       dates: hasSelectedDates
         ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
         : null,
@@ -165,6 +167,13 @@ export function SearchBar({
 
     setCity(selectedCity)
     if (searchOnCityChange) router.replace(getSearchHref(selectedCity), { scroll: false })
+  }
+
+  function handleGuestsChange(selectedGuests: number) {
+    if (selectedGuests === guests) return
+
+    setGuests(selectedGuests)
+    if (searchOnGuestsChange) router.replace(getSearchHref(city, selectedGuests), { scroll: false })
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -308,7 +317,7 @@ export function SearchBar({
         {/* Voyageurs */}
         <Stepper
           value={guests}
-          onChange={setGuests}
+          onChange={handleGuestsChange}
           min={1}
           max={10}
           label={copy.guests}

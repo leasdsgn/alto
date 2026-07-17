@@ -43,9 +43,11 @@ const MOBILE_SEARCH_COPY = {
 export function SearchBarMobile({
   calendarPlacement = 'bottom start',
   searchOnCityChange = false,
+  searchOnGuestsChange = false,
 }: {
   calendarPlacement?: 'bottom start' | 'top start' | 'bottom' | 'top'
   searchOnCityChange?: boolean
+  searchOnGuestsChange?: boolean
 } = {}) {
   const router = useRouter()
   const locale = useLocale()
@@ -59,10 +61,10 @@ export function SearchBarMobile({
     if (value) setDates({ start: value.start, end: value.end })
   }
 
-  function getSearchHref(selectedCity = city) {
+  function getSearchHref(selectedCity = city, selectedGuests = guests) {
     return buildApartmentSearchHref({
       city: selectedCity,
-      guests,
+      guests: selectedGuests,
       dates: hasSelectedDates
         ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
         : null,
@@ -77,6 +79,13 @@ export function SearchBarMobile({
 
     setCity(selectedCity)
     if (searchOnCityChange) router.replace(getSearchHref(selectedCity), { scroll: false })
+  }
+
+  function handleGuestsChange(selectedGuests: number) {
+    if (selectedGuests === guests) return
+
+    setGuests(selectedGuests)
+    if (searchOnGuestsChange) router.replace(getSearchHref(city, selectedGuests), { scroll: false })
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -124,7 +133,7 @@ export function SearchBarMobile({
               type="button"
               className="text-taupe flex size-10 items-center justify-center disabled:opacity-30"
               disabled={guests <= 1}
-              onClick={() => setGuests(Math.max(1, guests - 1))}
+              onClick={() => handleGuestsChange(Math.max(1, guests - 1))}
               aria-label={copy.removeGuest}
             >
               <MinusIcon />
@@ -133,7 +142,7 @@ export function SearchBarMobile({
               type="button"
               className="text-taupe flex size-10 items-center justify-center disabled:opacity-30"
               disabled={guests >= 10}
-              onClick={() => setGuests(Math.min(10, guests + 1))}
+              onClick={() => handleGuestsChange(Math.min(10, guests + 1))}
               aria-label={copy.addGuest}
             >
               <PlusIcon />

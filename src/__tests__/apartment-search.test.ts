@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { buildApartmentSearchHref, buildApartmentSearchParams } from '@/lib/apartment-search'
+import {
+  buildApartmentSearchHref,
+  buildApartmentSearchParams,
+  filterApartmentsByGuestCapacity,
+} from '@/lib/apartment-search'
 
 describe('buildApartmentSearchParams', () => {
   it('permet une recherche par ville sans dates', () => {
@@ -25,5 +29,25 @@ describe('buildApartmentSearchParams', () => {
     const href = buildApartmentSearchHref({ city: 'Lyon', guests: 2 })
 
     expect(href).toBe('/appartements?city=lyon&guests=2')
+  })
+
+  it('conserve uniquement les appartements compatibles avec le nombre de voyageurs', () => {
+    const apartments = [
+      { id: 'studio', guests: 2 },
+      { id: 'family', guests: 4 },
+      { id: 'large', guests: 6 },
+    ]
+
+    expect(filterApartmentsByGuestCapacity(apartments, 4)).toEqual([
+      { id: 'family', guests: 4 },
+      { id: 'large', guests: 6 },
+    ])
+  })
+
+  it('ignore un nombre de voyageurs absent ou invalide', () => {
+    const apartments = [{ id: 'studio', guests: 2 }]
+
+    expect(filterApartmentsByGuestCapacity(apartments)).toBe(apartments)
+    expect(filterApartmentsByGuestCapacity(apartments, Number.NaN)).toBe(apartments)
   })
 })
