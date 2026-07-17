@@ -23,6 +23,7 @@ export interface GuestyListing {
   accommodates: number
   bedrooms: number
   bathrooms: number
+  areaSquareFeet?: number
   propertyType: string
   roomType: string
   amenities: string[]

@@ -5,6 +5,7 @@ import { getApartmentCoordinates } from '@/lib/apartment-location-overrides'
 import { filterApartmentsByCity } from '@/lib/apartment-city'
 import { filterApartmentsByGuestCapacity } from '@/lib/apartment-search'
 import { getQuoteTotalCents } from '@/lib/guesty-pricing'
+import { getSurfaceInSquareMeters } from '@/lib/guesty-area'
 import { type GuestyListing } from '@/types/guesty'
 import { type Apartment, type ApartmentCardData } from '@/types/apartment'
 import { ApartmentsCarousel } from '@/components/sections/apartments-carousel'
@@ -61,7 +62,7 @@ function mapListing(listing: GuestyListing): Apartment {
     price: getBasePrice(listing.prices?.basePrice),
     currency: listing.prices?.currency ?? 'EUR',
     guests: listing.accommodates,
-    surface: 0,
+    surface: getSurfaceInSquareMeters(listing.areaSquareFeet),
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
     slug,
@@ -104,7 +105,7 @@ function mapListingCard(listing: GuestyListing): ApartmentCardData {
     priceSource: totalPrice ? 'total' : 'starting',
     currency: listing.prices?.currency ?? 'EUR',
     guests: listing.accommodates ?? 0,
-    surface: 0,
+    surface: getSurfaceInSquareMeters(listing.areaSquareFeet),
     bedrooms: listing.bedrooms ?? 0,
     bathrooms: listing.bathrooms ?? 0,
     slug,
@@ -138,7 +139,7 @@ const getCachedSearchQuote = unstable_cache(
 
 const getCachedListings = unstable_cache(
   () => guestyClient.getListings({ fields: LISTING_DETAIL_FIELDS }),
-  ['guesty-visible-listings-v1'],
+  ['guesty-visible-listings-v2'],
   {
     revalidate: 300,
   },
@@ -146,13 +147,13 @@ const getCachedListings = unstable_cache(
 
 const getCachedListingCards = unstable_cache(
   () => guestyClient.getListings({ fields: LISTING_CARD_FIELDS }),
-  ['guesty-visible-listing-cards-v1'],
+  ['guesty-visible-listing-cards-v2'],
   { revalidate: 300 },
 )
 
 const getCachedApartmentCardSnapshot = unstable_cache(
   loadApartmentCardSnapshot,
-  ['guesty-visible-apartment-card-base-price-snapshot-v1'],
+  ['guesty-visible-apartment-card-base-price-snapshot-v2'],
   {
     revalidate: APARTMENT_CARD_REVALIDATE_SECONDS,
     tags: [APARTMENT_STARTING_PRICES_CACHE_TAG],

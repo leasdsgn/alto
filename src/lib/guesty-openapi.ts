@@ -1,21 +1,78 @@
 import type { GuestyCancellationReason } from '@/lib/instant-charge-payment'
 import type { GuestyCustomFields } from '@/types/guesty'
+import {
+  acquireOpenApiOAuthLock,
+  readOpenApiOAuthCache,
+  releaseOpenApiOAuthLock,
+  writeOpenApiOAuthCache,
+  writeOpenApiOAuthRateLimit,
+} from '@/lib/guesty-openapi-cache'
 
 const OPENAPI_BASE_URL = 'https://open-api.guesty.com'
 const TOKEN_URL = `${OPENAPI_BASE_URL}/oauth2/token`
+const TOKEN_SAFETY_MARGIN_MS = 30 * 60 * 1000
+const TOKEN_LOCK_TTL_MS = 10 * 1000
+const TOKEN_LOCK_WAIT_MS = 5 * 1000
+const TOKEN_LOCK_POLL_MS = 200
+const TOKEN_LOCK_ATTEMPTS = 3
+const TOKEN_RATE_LIMIT_FALLBACK_MS = 24 * 60 * 60 * 1000
 
 const tokenCache = globalThis as unknown as {
   __guestyOpenApiToken?: string
   __guestyOpenApiTokenExpiresAt?: number
+  __guestyOpenApiRateLimitedUntil?: number
 }
 
+let accessTokenRequest: Promise<string> | null = null
+
 async function getOpenApiToken(): Promise<string> {
-  if (
-    tokenCache.__guestyOpenApiToken &&
-    Date.now() < (tokenCache.__guestyOpenApiTokenExpiresAt ?? 0)
-  ) {
+  const now = Date.now()
+
+  if (tokenCache.__guestyOpenApiToken && now < (tokenCache.__guestyOpenApiTokenExpiresAt ?? 0)) {
     return tokenCache.__guestyOpenApiToken
   }
+
+  if (accessTokenRequest) return accessTokenRequest
+
+  accessTokenRequest = resolveOpenApiToken().finally(() => {
+    accessTokenRequest = null
+  })
+
+  return accessTokenRequest
+}
+
+async function resolveOpenApiToken(): Promise<string> {
+  const sharedToken = await readSharedOpenApiToken()
+  if (sharedToken) return sharedToken
+
+  for (let attempt = 0; attempt < TOKEN_LOCK_ATTEMPTS; attempt += 1) {
+    const lockOwner = crypto.randomUUID()
+    const lockAcquired = await acquireOpenApiOAuthLock(lockOwner, TOKEN_LOCK_TTL_MS)
+
+    if (lockAcquired === null && process.env.NODE_ENV === 'production') {
+      throw new Error('Guesty Open API OAuth cache unavailable')
+    }
+
+    if (lockAcquired === false) {
+      const waitedToken = await waitForSharedOpenApiToken()
+      if (waitedToken) return waitedToken
+      continue
+    }
+
+    try {
+      const refreshedToken = await readSharedOpenApiToken()
+      if (refreshedToken) return refreshedToken
+      return await requestNewOpenApiToken()
+    } finally {
+      if (lockAcquired) await releaseOpenApiOAuthLock(lockOwner)
+    }
+  }
+
+  throw new Error('Guesty Open API OAuth token lock timeout')
+}
+
+async function requestNewOpenApiToken(): Promise<string> {
+  const now = Date.now()
 
   const clientId = process.env.GUESTY_OPENAPI_CLIENT_ID
   const clientSecret = process.env.GUESTY_OPENAPI_CLIENT_SECRET
@@ -35,17 +92,108 @@ async function getOpenApiToken(): Promise<string> {
     }),
   })
 
+  if (response.status === 429) {
+    const refreshedToken = await readOpenApiOAuthCache()
+    if (refreshedToken?.accessToken && Date.now() < refreshedToken.expiresAt) {
+      cacheOpenApiToken(refreshedToken.accessToken, refreshedToken.expiresAt)
+      return refreshedToken.accessToken
+    }
+
+    const rateLimitedUntil = now + getOAuthRateLimitDelayMs(response)
+    tokenCache.__guestyOpenApiRateLimitedUntil = rateLimitedUntil
+    await writeOpenApiOAuthRateLimit(rateLimitedUntil)
+    throw new Error(
+      'Guesty Open API OAuth rate limited, retry apres ' +
+        new Date(rateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
+  }
+
   if (!response.ok) {
     const error = await response.text()
     throw new Error(`Guesty Open API OAuth failed (${response.status}): ${error}`)
   }
 
   const data = (await response.json()) as { access_token: string; expires_in: number }
+  const expiresInMs = data.expires_in * 1000
+  const safetyMarginMs = Math.min(TOKEN_SAFETY_MARGIN_MS, expiresInMs / 2)
+  const expiresAt = now + expiresInMs - safetyMarginMs
 
-  tokenCache.__guestyOpenApiToken = data.access_token
-  tokenCache.__guestyOpenApiTokenExpiresAt = Date.now() + (data.expires_in - 60) * 1000
+  cacheOpenApiToken(data.access_token, expiresAt)
+  await writeOpenApiOAuthCache({ accessToken: data.access_token, expiresAt })
 
   return data.access_token
+}
+
+async function readSharedOpenApiToken(): Promise<string | null> {
+  const now = Date.now()
+  const shared = await readOpenApiOAuthCache()
+
+  if (shared?.accessToken && now < shared.expiresAt) {
+    cacheOpenApiToken(shared.accessToken, shared.expiresAt)
+    return shared.accessToken
+  }
+
+  if (shared?.rateLimitedUntil && now < shared.rateLimitedUntil) {
+    tokenCache.__guestyOpenApiRateLimitedUntil = shared.rateLimitedUntil
+    throw new Error(
+      'Guesty Open API OAuth rate limited, retry apres ' +
+        new Date(shared.rateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
+  }
+
+  if (
+    tokenCache.__guestyOpenApiRateLimitedUntil &&
+    now < tokenCache.__guestyOpenApiRateLimitedUntil
+  ) {
+    throw new Error(
+      'Guesty Open API OAuth rate limited, retry apres ' +
+        new Date(tokenCache.__guestyOpenApiRateLimitedUntil).toLocaleTimeString('fr-FR'),
+    )
+  }
+
+  return null
+}
+
+async function waitForSharedOpenApiToken(): Promise<string | null> {
+  const deadline = Date.now() + TOKEN_LOCK_WAIT_MS
+
+  while (Date.now() < deadline) {
+    await wait(TOKEN_LOCK_POLL_MS)
+    const sharedToken = await readSharedOpenApiToken()
+    if (sharedToken) return sharedToken
+  }
+
+  return null
+}
+
+function cacheOpenApiToken(accessToken: string, expiresAt: number) {
+  tokenCache.__guestyOpenApiToken = accessToken
+  tokenCache.__guestyOpenApiTokenExpiresAt = expiresAt
+  tokenCache.__guestyOpenApiRateLimitedUntil = undefined
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function getOAuthRateLimitDelayMs(response: Response) {
+  const reset = parseDelayHeader(response.headers?.get('ratelimit-reset'))
+  if (reset) return reset
+
+  const retryAfter = parseDelayHeader(response.headers?.get('retry-after'))
+  return retryAfter ?? TOKEN_RATE_LIMIT_FALLBACK_MS
+}
+
+function parseDelayHeader(value: string | null) {
+  if (!value) return null
+
+  const seconds = Number(value)
+  if (Number.isFinite(seconds)) return Math.max(1000, seconds * 1000)
+
+  const date = Date.parse(value)
+  if (Number.isFinite(date)) return Math.max(1000, date - Date.now())
+
+  return null
 }
 
 async function openApiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -103,6 +251,7 @@ export interface GuestyOpenApiListingVisibility {
   _id?: string
   id?: string
   customFields?: GuestyCustomFields
+  areaSquareFeet?: number
 }
 
 interface GuestyOpenApiListingVisibilityPage {
@@ -115,7 +264,7 @@ interface GuestyOpenApiListingVisibilityPage {
 export const guestyOpenApi = {
   getListingVisibilityPage({ limit, skip }: { limit: number; skip: number }) {
     const params = new URLSearchParams({
-      fields: 'customFields',
+      fields: 'customFields areaSquareFeet',
       limit: String(limit),
       skip: String(skip),
     })
