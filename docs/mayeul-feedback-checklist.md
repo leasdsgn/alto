@@ -21,7 +21,7 @@
 - [x] Synchroniser la barre de recherche desktop et mobile avec la langue choisie par le serveur ou le visiteur.
 - [x] Ajouter le contact par e-mail vers `contact@alto-collection.com`.
 - [x] Afficher une disponibilité WhatsApp tous les jours de 8 h à 20 h dans le bloc de réservation et le contenu de repli du pied de page.
-- [x] Rendre le changement FR ou EN accessible depuis le menu.
+- [x] Afficher le sélecteur FR ou EN dans le header, directement à côté du bouton burger.
 - [x] Déployer le schéma Storyblok et publier la story `pages/booking` avec la mention caution.
 - [x] Mettre à jour dans Storyblok le pied de page vers « Disponible tous les jours de 8 h à 20 h ».
 - [x] Rendre le lien et le numéro WhatsApp éditables depuis le CTA du footer Storyblok.

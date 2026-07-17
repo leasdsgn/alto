@@ -8,7 +8,11 @@ import { useHeaderGlobals } from '@/components/providers/storyblok-globals-provi
 import { LocaleToggle } from '@/components/ui/locale-toggle'
 import { BookingNavPill } from '@/components/ui/booking-nav-pill'
 import { Button } from '@/components/ui/button'
-import { type StoryblokHeader, type HeaderNavItem, type HeaderQuickLink } from '@/lib/storyblok-globals'
+import {
+  type StoryblokHeader,
+  type HeaderNavItem,
+  type HeaderQuickLink,
+} from '@/lib/storyblok-globals'
 
 type Tone = 'light' | 'dark'
 type Mode = 'default' | 'apartment'
@@ -56,7 +60,7 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
   return (
     <>
       <header className={`${positionClass} py-5 lg:py-6`} style={apartmentBackgroundStyle}>
-        <div className="max-w-content px-gutter md:px-gutter-md mx-auto flex items-center justify-between gap-6">
+        <div className="max-w-content px-gutter md:px-gutter-md mx-auto flex items-center justify-between gap-3 sm:gap-6">
           <Link href="/" prefetch={false} className="shrink-0">
             <Image
               src={logoSrc}
@@ -74,13 +78,20 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
             </div>
           )}
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {!isApartment && (
               <Button variant="primary" size="small" href="/appartements" prefetch={false}>
                 {header.bookLabel}
               </Button>
             )}
             {isApartment && <MapButton label={header.mapLabel} />}
+            <LocaleToggle
+              className={`${textClass} text-overline flex size-8 items-center justify-center rounded-md border font-bold tracking-[0.12em] uppercase transition-colors disabled:opacity-50 ${
+                isLight
+                  ? 'border-cream/30 hover:bg-cream/10'
+                  : 'border-divider bg-cream hover:bg-sand'
+              }`}
+            />
             <BurgerButton
               open={open}
               header={header}
@@ -96,8 +107,6 @@ export function Header({ variant = 'light', mode = 'default' }: HeaderProps) {
         pathname={pathname}
         header={header}
       />
-
-      <span className={textClass} aria-hidden="true" hidden />
     </>
   )
 }
@@ -205,19 +214,23 @@ function BurgerOverlay({
               />
             </Link>
 
-            <div className="flex items-center gap-2">
-              <LocaleToggle className="text-taupe text-overline border-divider hover:bg-sand hover:text-coffee rounded-full border px-3 py-2 font-bold tracking-[0.24px] uppercase transition-colors" />
-              <button
-                type="button"
-                className="bg-coffee text-cream flex size-9 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-                aria-label={header.mobileCloseLabel}
-                onClick={onClose}
+            <button
+              type="button"
+              className="bg-coffee text-cream flex size-9 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+              aria-label={header.mobileCloseLabel}
+              onClick={onClose}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="M6 6l12 12M18 6 6 18" />
-                </svg>
-              </button>
-            </div>
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
           </div>
 
           <div className="flex flex-1 flex-col justify-between overflow-y-auto px-5 py-5">
@@ -334,9 +347,7 @@ function SecondaryLink({
       rel={link.opensInNewTab ? 'noopener noreferrer' : undefined}
       onClick={onClose}
       className={`text-overline rounded-full border px-4 py-2 font-bold uppercase transition-colors ${
-        active
-          ? 'border-coffee bg-coffee text-cream'
-          : 'border-divider text-coffee hover:bg-sand'
+        active ? 'border-coffee bg-coffee text-cream' : 'border-divider text-coffee hover:bg-sand'
       }`}
     >
       {link.label}
