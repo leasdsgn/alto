@@ -13,7 +13,7 @@
 - [x] Filtrer et actualiser immédiatement les appartements selon le nombre de voyageurs demandé.
 - [x] Supprimer la note statique `4,9 (113)` des cartes, de la vue carte et des pages appartement.
 - [x] Préparer un bloc Storyblok traduisible pour la mention relative à la caution sur la page de réservation.
-- [x] Permettre la consultation de toutes les photos Guesty lorsqu’un appartement en contient plus de cinq.
+- [x] Permettre la consultation de toutes les photos Guesty dans un carrousel lorsqu’un appartement en contient plus de cinq.
 - [x] Supprimer la page éditoriale Lyon, rediriger son ancienne URL et conserver l’accès aux appartements via le filtre Lyon.
 - [x] Supprimer la hauteur vide imposée sous la vue liste des appartements.
 - [x] Ramener automatiquement le nombre de voyageurs à la capacité du logement sélectionné.

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState, type TouchEvent } from 'react'
 import Image from 'next/image'
+import { useLocale } from '@/components/providers/locale-provider'
 import { getGalleryPhotos } from '@/lib/apartment-gallery'
 
 interface GalleryProps {
@@ -9,92 +10,128 @@ interface GalleryProps {
   images?: string[]
 }
 
+const SWIPE_THRESHOLD = 40
+
 export function ApartmentGallery({ name, images }: GalleryProps) {
+  const locale = useLocale()
   const [activeIndex, setActiveIndex] = useState(0)
+  const touchStartX = useRef<number | null>(null)
   const providedPhotos = (images ?? []).filter(Boolean)
   const photos = getGalleryPhotos(providedPhotos)
-  const orderedIndexes = [
-    activeIndex,
-    ...photos.map((_, index) => index).filter((index) => index !== activeIndex),
-  ]
-  const mainIndex = orderedIndexes[0] ?? 0
-  const thumbIndexes = orderedIndexes.slice(1, 5)
+  const photoCount = providedPhotos.length
+  const hasMultiplePhotos = photoCount > 1
+  const activePhoto = photos[activeIndex]
+  const copy = GALLERY_COPY[locale]
 
-  if (providedPhotos.length === 1) {
-    return (
-      <div className="relative aspect-[16/9] min-h-[320px] w-full overflow-hidden rounded-lg sm:min-h-[440px] lg:min-h-[560px]">
-        <Image
-          src={providedPhotos[0]!}
-          alt={name}
-          fill
-          sizes="(max-width: 1024px) 100vw, 1132px"
-          quality={85}
-          className="object-cover"
-          priority
-        />
-      </div>
-    )
+  function showPrevious() {
+    setActiveIndex((current) => (current === 0 ? photoCount - 1 : current - 1))
+  }
+
+  function showNext() {
+    setActiveIndex((current) => (current === photoCount - 1 ? 0 : current + 1))
+  }
+
+  function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
+    touchStartX.current = event.touches[0]?.clientX ?? null
+  }
+
+  function handleTouchEnd(event: TouchEvent<HTMLDivElement>) {
+    const startX = touchStartX.current
+    const endX = event.changedTouches[0]?.clientX
+    touchStartX.current = null
+
+    if (startX === null || endX === undefined) return
+
+    const distance = endX - startX
+    if (Math.abs(distance) < SWIPE_THRESHOLD) return
+
+    if (distance > 0) showPrevious()
+    else showNext()
   }
 
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,2.05fr)_minmax(0,1fr)]">
-      <div className="relative h-[320px] overflow-hidden rounded-lg sm:h-[420px] lg:h-[396px]">
-        {photos[mainIndex] ? (
+    <section
+      aria-label={`${copy.galleryLabel} ${name}`}
+      aria-roledescription="carousel"
+      className="relative"
+    >
+      <div
+        className="bg-sand relative aspect-[4/5] touch-pan-y overflow-hidden rounded-lg select-none sm:aspect-[16/10] lg:aspect-[16/9]"
+        onTouchStart={hasMultiplePhotos ? handleTouchStart : undefined}
+        onTouchEnd={hasMultiplePhotos ? handleTouchEnd : undefined}
+      >
+        {activePhoto ? (
           <Image
-            src={photos[mainIndex]!}
-            alt={`${name} - photo principale`}
+            key={activePhoto}
+            src={activePhoto}
+            alt={`${name} - ${copy.photo} ${activeIndex + 1}`}
             fill
-            sizes="(max-width: 1024px) 100vw, 600px"
+            sizes="(max-width: 768px) calc(100vw - 48px), (max-width: 1024px) calc(100vw - 96px), 1132px"
             quality={85}
-            className="object-cover transition-opacity duration-500"
-            priority
+            className="object-cover"
+            priority={activeIndex === 0}
           />
         ) : (
           <div className="bg-sand size-full" />
         )}
-      </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {thumbIndexes.map((index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={() => setActiveIndex(index)}
-            className={`relative h-[154px] overflow-hidden rounded-lg transition-all sm:h-[180px] lg:h-[191px] ${
-              activeIndex === index
-                ? 'ring-coffee ring-offset-cream ring-2 ring-offset-2'
-                : 'hover:opacity-90'
-            }`}
-          >
-            {photos[index] ? (
-              <Image
-                src={photos[index]!}
-                alt={`${name} - photo ${index + 1}`}
-                fill
-                sizes="(max-width: 1024px) 50vw, 294px"
-                quality={75}
-                className="object-cover"
-              />
-            ) : (
-              <div className="bg-sand size-full" />
-            )}
-          </button>
-        ))}
-      </div>
+        {hasMultiplePhotos && (
+          <>
+            <div className="absolute inset-x-3 top-1/2 flex -translate-y-1/2 items-center justify-between">
+              <GalleryButton label={copy.previous} direction="previous" onClick={showPrevious} />
+              <GalleryButton label={copy.next} direction="next" onClick={showNext} />
+            </div>
 
-      <div className="flex items-center justify-center gap-1.5 lg:col-span-2">
-        {photos.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setActiveIndex(i)}
-            className={`rounded-full transition-all ${
-              i === activeIndex ? 'bg-coffee size-2' : 'bg-silver size-1.5'
-            }`}
-            aria-label={`Photo ${i + 1}`}
-          />
-        ))}
+            <p
+              aria-live="polite"
+              className="bg-coffee/80 text-cream text-overline absolute right-3 bottom-3 rounded-full px-3 py-1.5 font-bold tracking-[0.12em] backdrop-blur-sm"
+            >
+              <span className="sr-only">{copy.position}</span>
+              {activeIndex + 1} / {photoCount}
+            </p>
+          </>
+        )}
       </div>
-    </div>
+    </section>
   )
 }
+
+function GalleryButton({
+  label,
+  direction,
+  onClick,
+}: {
+  label: string
+  direction: 'previous' | 'next'
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="bg-cream/90 text-coffee hover:bg-cream flex size-10 items-center justify-center rounded-full shadow-sm backdrop-blur-sm transition-colors"
+    >
+      <span aria-hidden="true" className="text-xl leading-none">
+        {direction === 'previous' ? '←' : '→'}
+      </span>
+    </button>
+  )
+}
+
+const GALLERY_COPY = {
+  fr: {
+    galleryLabel: 'Galerie photos de',
+    photo: 'photo',
+    previous: 'Photo précédente',
+    next: 'Photo suivante',
+    position: 'Photo affichée : ',
+  },
+  en: {
+    galleryLabel: 'Photo gallery for',
+    photo: 'photo',
+    previous: 'Previous photo',
+    next: 'Next photo',
+    position: 'Displayed photo: ',
+  },
+} as const
