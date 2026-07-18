@@ -712,7 +712,6 @@ function buildHomeDefaultBody() {
         'Nous transformons des espaces singuliers en lieux de vie élégants, bien pensés et confortables. Notre mission : permettre aux voyageurs de vivre des séjours sans frictions aux plus belles adresses.',
       locations_label: '13 locations',
       travelers_label: '4 500+ voyageurs',
-      rating_label: '4,9 de note moyenne',
     }),
     blok('apartments_grid_section', {
       paris_title: 'Nos appartements à Paris',
@@ -772,8 +771,9 @@ function buildHomeDefaultBody() {
         }),
         blok('service_card', {
           icon: '/images/icons/support.svg',
-          title: 'Support 24/24',
-          description: 'Un gestionnaire disponible à tout moment pour vous accompagner.',
+          title: 'Assistance de 8 h à 20 h',
+          description:
+            'Notre équipe est disponible tous les jours de 8 h à 20 h pour vous accompagner.',
         }),
         blok('service_card', {
           icon: '/images/icons/wallet.svg',

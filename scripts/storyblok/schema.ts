@@ -204,7 +204,7 @@ const ATOMS: ComponentDefinition[] = [
     is_root: false,
     is_nestable: true,
     schema: {
-      value: textField('Valeur (ex: 4,9)', 0, true),
+      value: textField('Valeur (ex: 13)', 0, true),
       label: textField('Libellé', 1, true),
       icon: imageField('Icône (optionnelle)', 2),
     },
@@ -411,7 +411,6 @@ const SECTIONS: ComponentDefinition[] = [
       quote: textareaField('Citation principale', 1, true),
       locations_label: textField('Libellé stat - Lieux', 2),
       travelers_label: textField('Libellé stat - Voyageurs', 3),
-      rating_label: textField('Libellé stat - Note', 4),
     },
   },
   {

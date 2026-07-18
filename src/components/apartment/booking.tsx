@@ -48,7 +48,7 @@ export function ApartmentBooking({
 }: BookingProps) {
   const locale = useLocale()
   const contact = useFooterGlobals().ctaButton
-  const { dates, guests, setDates, setGuests } = useSearchStore()
+  const { dates, guests, hasSelectedDates, setDates, setGuests } = useSearchStore()
   const checkIn = dates.start.toString()
   const checkOut = dates.end.toString()
   const reserveHref = `/book/${slug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}`
@@ -186,6 +186,7 @@ export function ApartmentBooking({
   }, [listingId, minDateKey, availabilityEnd])
 
   useEffect(() => {
+    if (!hasSelectedDates) return
     if (availabilityStatus !== 'ready') return
     if (!rangeHasUnavailableNight(dates.start, dates.end, unavailableDates)) return
 
@@ -199,6 +200,7 @@ export function ApartmentBooking({
     if (nextRange) setDates(nextRange)
   }, [
     availabilityStatus,
+    hasSelectedDates,
     dates.start,
     dates.end,
     maxNights,
@@ -314,7 +316,7 @@ export function ApartmentBooking({
         {isMobileSheet && <SwiklyNotice copy={copy} />}
 
         <DateRangePicker
-          value={dates}
+          value={hasSelectedDates ? dates : null}
           onChange={handleDateChange}
           minValue={minDate}
           startName="checkIn"
@@ -339,7 +341,7 @@ export function ApartmentBooking({
                   <p className="text-body">{copy.checkIn}</p>
                 </div>
                 <p className="text-coffee text-body-xl mt-[13px] font-semibold">
-                  {formatDateShort(dates.start, locale)}
+                  {hasSelectedDates ? formatDateShort(dates.start, locale) : copy.selectDate}
                 </p>
               </div>
 
@@ -351,7 +353,7 @@ export function ApartmentBooking({
                   <p className="text-body">{copy.checkOut}</p>
                 </div>
                 <p className="text-coffee text-body-xl mt-[13px] font-semibold">
-                  {formatDateShort(dates.end, locale)}
+                  {hasSelectedDates ? formatDateShort(dates.end, locale) : copy.selectDate}
                 </p>
               </div>
             </button>
@@ -508,6 +510,7 @@ const BOOKING_COPY = {
     stayDates: 'Dates du séjour',
     checkIn: 'Arrivée',
     checkOut: 'Départ',
+    selectDate: 'Sélectionner',
     guestsLabel: 'Voyageurs',
     guest: 'voyageur',
     guests: 'voyageurs',
@@ -530,6 +533,7 @@ const BOOKING_COPY = {
     stayDates: 'Stay dates',
     checkIn: 'Check-in',
     checkOut: 'Check-out',
+    selectDate: 'Select',
     guestsLabel: 'Guests',
     guest: 'guest',
     guests: 'guests',

@@ -12,8 +12,8 @@ const EDITORIAL_COPY = {
       ],
       ['Ménage', 'Des standards de ménage professionnels pour des appartements immaculés.'],
       [
-        'Support 24/24',
-        'Nous restons joignables 24h sur 24 pour vous assister en cas de problème.',
+        'Assistance de 8 h à 20 h',
+        'Notre équipe reste disponible tous les jours de 8 h à 20 h si vous avez besoin d’aide.',
       ],
       [
         'Pas de frais cachés',
@@ -29,7 +29,10 @@ const EDITORIAL_COPY = {
         'Arrive and leave when it suits you, with the freedom of a private apartment.',
       ],
       ['Cleaning', 'Professional housekeeping standards keep every apartment ready for your stay.'],
-      ['24/7 support', 'Our team remains available around the clock if you need assistance.'],
+      [
+        'Support from 8 am to 8 pm',
+        'Our team is available every day from 8 am to 8 pm if you need assistance.',
+      ],
       ['No hidden fees', 'No hidden booking or platform fees when booking on our website.'],
     ],
   },
@@ -42,26 +45,36 @@ const SERVICE_ICONS = [
   <WalletServiceIcon key="wallet" />,
 ]
 
-const DEFAULT_REVIEW = {
-  quote:
-    'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
-  name: 'Sofia & Léo',
-  stay: 'L’Opéra | Mars 2026',
-}
-
 interface Review {
   quote: string
   name: string
   stay: string
 }
 
+const DEFAULT_REVIEW: Record<InquiryLocale, Review> = {
+  fr: {
+    quote:
+      'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
+    name: 'Sofia & Léo',
+    stay: 'L’Opéra | Mars 2026',
+  },
+  en: {
+    quote:
+      'We felt at home from the very first minute. The apartment is exactly as shown in the photos, only better.',
+    name: 'Sofia & Leo',
+    stay: 'L’Opéra | March 2026',
+  },
+}
+
 export function ApartmentEditorialSections({
-  review = DEFAULT_REVIEW,
+  review,
   locale,
 }: {
   review?: Review
   locale: InquiryLocale
 }) {
+  const displayedReview = review ?? DEFAULT_REVIEW[locale]
+
   return (
     <section className="mt-section-md pb-section-md">
       <ExperienceSection
@@ -73,7 +86,7 @@ export function ApartmentEditorialSections({
         }}
       />
       <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
-        <ApartmentTrustSection review={review} locale={locale} />
+        <ApartmentTrustSection review={displayedReview} locale={locale} />
       </div>
     </section>
   )

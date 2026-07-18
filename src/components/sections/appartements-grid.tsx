@@ -323,7 +323,7 @@ const APARTMENTS_GRID_COPY = {
     all: 'Tous',
     filters: 'Filtres',
     list: 'Liste',
-    map: 'Map',
+    map: 'Carte',
     reset: 'Réinitialiser',
     emptyTitle: 'Aucun appartement disponible',
     emptyBody: 'Essayez d’élargir vos dates ou de changer de ville.',

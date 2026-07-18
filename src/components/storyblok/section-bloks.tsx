@@ -59,7 +59,6 @@ export function HomeAboutSectionBlok({ blok }: { blok: Blok }) {
           ),
           locations: textOr(blok.locations_label, '13 locations'),
           travelers: textOr(blok.travelers_label, '4 500+ voyageurs'),
-          rating: textOr(blok.rating_label, '4,9 de note moyenne'),
         }}
       />
     </div>

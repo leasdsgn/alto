@@ -382,7 +382,8 @@ async function uploadAssets(
 }
 
 async function updateArticleImage(slug: string, image: Record<string, unknown>) {
-  const story = (await getStoryByFullSlug(`blog/${slug}`)) ?? (await getStoryByFullSlug(`articles/${slug}`))
+  const story =
+    (await getStoryByFullSlug(`blog/${slug}`)) ?? (await getStoryByFullSlug(`articles/${slug}`))
   if (!story) {
     console.log(`  · article ${slug} introuvable, skip`)
     return
@@ -455,7 +456,7 @@ function updateServiceIcons(
     const items = ensureBloks(blok.items ?? blok.features, [
       { component: 'service_card', title: 'Self check-in' },
       { component: 'service_card', title: 'Ménage' },
-      { component: 'service_card', title: 'Support 24/24' },
+      { component: 'service_card', title: 'Assistance de 8 h à 20 h' },
       { component: 'service_card', title: 'Pas de frais cachés' },
     ])
     setByIndex(items, 0, 'icon', assets.serviceCheckin)
@@ -687,7 +688,9 @@ async function updateStory(story: StoryDetails) {
   })
 
   if (!response.ok) {
-    throw new Error(`Impossible de mettre à jour ${story.full_slug ?? story.slug}: ${await response.text()}`)
+    throw new Error(
+      `Impossible de mettre à jour ${story.full_slug ?? story.slug}: ${await response.text()}`,
+    )
   }
 }
 
@@ -760,7 +763,10 @@ function loadLocalEnv() {
     const index = trimmed.indexOf('=')
     if (index === -1) continue
     const key = trimmed.slice(0, index).trim()
-    const value = trimmed.slice(index + 1).trim().replace(/^["']|["']$/g, '')
+    const value = trimmed
+      .slice(index + 1)
+      .trim()
+      .replace(/^["']|["']$/g, '')
     if (!process.env[key]) process.env[key] = value
   }
 }

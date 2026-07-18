@@ -5,7 +5,7 @@ import type { InquiryLocale } from '@/types/inquiry'
 interface BlogHeroStat {
   label: string
   value: string
-  kind: 'avatars' | 'guest-badges' | 'review-badges'
+  kind: 'avatars' | 'guest-badges'
 }
 
 export interface BlogEditorialMeta {
@@ -64,7 +64,6 @@ export const BLOG_PAGE_COPY: Record<InquiryLocale, BlogPageCopy> = {
     stats: [
       { label: '13 locations', value: '13 locations', kind: 'avatars' },
       { label: '4500+ voyageurs', value: '4500+ voyageurs', kind: 'guest-badges' },
-      { label: '4,9 de note moyenne', value: '4,9 de note moyenne', kind: 'review-badges' },
     ],
     editorial: [
       {
@@ -117,7 +116,7 @@ export const BLOG_PAGE_COPY: Record<InquiryLocale, BlogPageCopy> = {
       },
       {
         eyebrow: 'Check-in',
-        title: 'Accès autonome et gestionnaire joignable 24h/24 et 7j/7.',
+        title: 'Accès autonome et équipe joignable tous les jours de 8 h à 20 h.',
         body: 'Des repères simples, une arrivée claire et un support disponible quand il faut.',
         image: '/images/blog-3.jpg',
       },
@@ -140,7 +139,6 @@ export const BLOG_PAGE_COPY: Record<InquiryLocale, BlogPageCopy> = {
     stats: [
       { label: '13 addresses', value: '13 addresses', kind: 'avatars' },
       { label: '4500+ guests', value: '4500+ guests', kind: 'guest-badges' },
-      { label: '4.9 average rating', value: '4.9 average rating', kind: 'review-badges' },
     ],
     editorial: [
       {
@@ -193,7 +191,7 @@ export const BLOG_PAGE_COPY: Record<InquiryLocale, BlogPageCopy> = {
       },
       {
         eyebrow: 'Check-in',
-        title: 'Autonomous access and a host reachable 24/7.',
+        title: 'Autonomous access and a team available every day from 8 am to 8 pm.',
         body: 'Clear guidance, a simple arrival sequence and responsive support whenever it is needed.',
         image: '/images/blog-3.jpg',
       },

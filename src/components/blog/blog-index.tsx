@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type ReactNode } from 'react'
+import { useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
@@ -276,7 +276,7 @@ function StatCard({
   locationAvatars,
   travelerAvatars,
 }: {
-  kind: 'avatars' | 'guest-badges' | 'review-badges'
+  kind: 'avatars' | 'guest-badges'
   label: string
   value: string
   locationAvatars: readonly string[]
@@ -300,26 +300,10 @@ function HeroStatVisual({
   locationAvatars,
   travelerAvatars,
 }: {
-  kind: 'avatars' | 'guest-badges' | 'review-badges'
+  kind: 'avatars' | 'guest-badges'
   locationAvatars: readonly string[]
   travelerAvatars: readonly string[]
 }) {
-  if (kind === 'review-badges') {
-    return (
-      <div className="flex items-center">
-        <PlatformBadge className="z-10">
-          <BookingMark />
-        </PlatformBadge>
-        <PlatformBadge className="z-20 -ml-2.5">
-          <TripadvisorMark />
-        </PlatformBadge>
-        <PlatformBadge className="z-30 -ml-2.5">
-          <AirbnbMark />
-        </PlatformBadge>
-      </div>
-    )
-  }
-
   const avatars = kind === 'avatars' ? locationAvatars : travelerAvatars
 
   return (
@@ -332,16 +316,6 @@ function HeroStatVisual({
           <Image src={src} alt="" fill sizes="36px" className="object-cover" />
         </div>
       ))}
-    </div>
-  )
-}
-
-function PlatformBadge({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <div
-      className={`bg-cream text-coffee border-cream flex size-9 items-center justify-center rounded-full border ${className ?? ''}`}
-    >
-      {children}
     </div>
   )
 }
@@ -393,57 +367,6 @@ function ArrowOutward() {
       strokeLinejoin="round"
     >
       <path d="M3 11 11 3M11 3H5M11 3v6" />
-    </svg>
-  )
-}
-
-function BookingMark() {
-  return (
-    <svg width="18" height="10" viewBox="0 0 18 10" fill="none" aria-hidden="true">
-      <path
-        d="M1 1h7.2a2.8 2.8 0 1 1 0 5.6H3.8A2.8 2.8 0 1 0 3.8 9H12"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M14 2.2h3M15.5 1v7.8"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function TripadvisorMark() {
-  return (
-    <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true">
-      <circle cx="5" cy="6" r="3.2" stroke="currentColor" strokeWidth="1.2" />
-      <circle cx="13" cy="6" r="3.2" stroke="currentColor" strokeWidth="1.2" />
-      <path
-        d="M2 3.6C3.1 2.6 4.4 2 5.9 2h6.2c1.5 0 2.8.6 3.9 1.6M8.2 6h1.6"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-      <circle cx="5" cy="6" r="1" fill="currentColor" />
-      <circle cx="13" cy="6" r="1" fill="currentColor" />
-    </svg>
-  )
-}
-
-function AirbnbMark() {
-  return (
-    <svg width="12" height="16" viewBox="0 0 12 16" fill="none" aria-hidden="true">
-      <path
-        d="M6 2.2c.7 0 1.2.4 1.6 1.1l3 6c.3.5.4 1 .4 1.5 0 1.6-1.2 2.9-2.7 2.9-1.1 0-1.9-.7-2.3-1.6-.4.9-1.2 1.6-2.3 1.6C2.2 13.7 1 12.4 1 10.8c0-.5.1-1 .4-1.5l3-6C4.8 2.6 5.3 2.2 6 2.2Z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-      <circle cx="6" cy="10.2" r="1.7" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   )
 }
