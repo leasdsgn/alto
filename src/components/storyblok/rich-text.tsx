@@ -13,7 +13,11 @@ interface RichTextNode {
   marks?: { type: string; attrs?: Record<string, unknown> }[]
 }
 
-export function renderRichText(value: unknown): ReactNode {
+interface RichTextOptions {
+  variant?: 'default' | 'article'
+}
+
+export function renderRichText(value: unknown, options: RichTextOptions = {}): ReactNode {
   if (!value) return null
   if (typeof value === 'string') return value
   if (typeof value !== 'object') return null
@@ -21,46 +25,82 @@ export function renderRichText(value: unknown): ReactNode {
   if (doc.type !== 'doc' || !Array.isArray(doc.content)) return null
 
   return doc.content.map((node, index) => (
-    <Fragment key={index}>{renderNode(node, index)}</Fragment>
+    <Fragment key={richTextNodeKey(node, index)}>{renderNode(node, index, options)}</Fragment>
   ))
 }
 
-function renderNode(node: RichTextNode, key: number): ReactNode {
+export function richTextToPlainText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (!value || typeof value !== 'object') return ''
+
+  const node = value as RichTextNode
+  const ownText = typeof node.text === 'string' ? node.text : ''
+  const childText = Array.isArray(node.content)
+    ? node.content.map((child) => richTextToPlainText(child)).join(' ')
+    : ''
+
+  return [ownText, childText].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+}
+
+function renderNode(node: RichTextNode, key: number, options: RichTextOptions): ReactNode {
+  const isArticle = options.variant === 'article'
+
   switch (node.type) {
     case 'paragraph':
       return (
-        <p key={key} className="text-coffee text-body mt-4 first:mt-0 leading-relaxed">
-          {renderChildren(node.content)}
+        <p
+          key={key}
+          className={
+            isArticle
+              ? 'text-coffee text-body-xl mt-6 font-semibold first:mt-0'
+              : 'text-coffee text-body mt-4 leading-relaxed first:mt-0'
+          }
+        >
+          {renderChildren(node.content, options)}
         </p>
       )
     case 'heading': {
       const level = typeof node.attrs?.level === 'number' ? node.attrs.level : 2
-      const Tag = (`h${Math.min(Math.max(level, 2), 4)}`) as 'h2' | 'h3' | 'h4'
+      const Tag = `h${Math.min(Math.max(level, 2), 4)}` as 'h2' | 'h3' | 'h4'
       const classByLevel: Record<number, string> = {
-        2: 'text-coffee text-h3 mt-10 first:mt-0',
-        3: 'text-coffee text-h4 mt-8 first:mt-0',
+        2: 'text-coffee text-h3 mt-10 font-bold first:mt-0',
+        3: 'text-coffee text-h4 mt-8 font-bold first:mt-0',
         4: 'text-coffee text-body-xl mt-6 font-semibold first:mt-0',
       }
       return (
         <Tag key={key} className={classByLevel[level] ?? classByLevel[3]}>
-          {renderChildren(node.content)}
+          {renderChildren(node.content, options)}
         </Tag>
       )
     }
     case 'bullet_list':
       return (
-        <ul key={key} className="text-coffee text-body mt-4 list-disc space-y-1 pl-6">
-          {renderChildren(node.content)}
+        <ul
+          key={key}
+          className={
+            isArticle
+              ? 'text-coffee text-body-xl mt-6 list-disc space-y-2 pl-6 font-semibold'
+              : 'text-coffee text-body mt-4 list-disc space-y-1 pl-6'
+          }
+        >
+          {renderChildren(node.content, options)}
         </ul>
       )
     case 'ordered_list':
       return (
-        <ol key={key} className="text-coffee text-body mt-4 list-decimal space-y-1 pl-6">
-          {renderChildren(node.content)}
+        <ol
+          key={key}
+          className={
+            isArticle
+              ? 'text-coffee text-body-xl mt-6 list-decimal space-y-2 pl-6 font-semibold'
+              : 'text-coffee text-body mt-4 list-decimal space-y-1 pl-6'
+          }
+        >
+          {renderChildren(node.content, options)}
         </ol>
       )
     case 'list_item':
-      return <li key={key}>{renderChildren(node.content)}</li>
+      return <li key={key}>{renderChildren(node.content, options)}</li>
     case 'horizontal_rule':
       return <hr key={key} className="border-divider my-8" />
     case 'hard_break':
@@ -68,15 +108,23 @@ function renderNode(node: RichTextNode, key: number): ReactNode {
     case 'text':
       return renderText(node, key)
     default:
-      return renderChildren(node.content)
+      return renderChildren(node.content, options)
   }
 }
 
-function renderChildren(children: RichTextNode[] | undefined): ReactNode {
+function renderChildren(children: RichTextNode[] | undefined, options: RichTextOptions): ReactNode {
   if (!Array.isArray(children)) return null
   return children.map((child, index) => (
-    <Fragment key={index}>{renderNode(child, index)}</Fragment>
+    <Fragment key={richTextNodeKey(child, index)}>{renderNode(child, index, options)}</Fragment>
   ))
+}
+
+function richTextNodeKey(node: RichTextNode, index: number) {
+  const identity =
+    typeof node.attrs?.id === 'string'
+      ? node.attrs.id
+      : (node.text ?? richTextToPlainText(node).slice(0, 80))
+  return `${node.type}-${identity}-${index}`
 }
 
 function renderText(node: RichTextNode, key: number): ReactNode {

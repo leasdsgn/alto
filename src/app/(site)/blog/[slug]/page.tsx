@@ -5,8 +5,8 @@ import { Footer } from '@/components/layout/footer'
 import { ApartmentsSection, getApartmentCards } from '@/components/sections/apartments-section'
 import { JsonLd } from '@/components/seo/json-ld'
 import { getBlogEditorialMeta } from '@/lib/blog-page'
-import { getStaticServerLocale } from '@/lib/i18n/server'
-import { getBlogArticles } from '@/lib/storyblok-blog'
+import { getServerLocale } from '@/lib/i18n/server'
+import { getBlogArticles, resolveRelatedArticles } from '@/lib/storyblok-blog'
 import { buildArticleJsonLd, buildBreadcrumbJsonLd, defineSeoMetadata } from '@/lib/seo'
 
 export async function generateMetadata({
@@ -14,8 +14,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const { slug } = await params
-  const locale = getStaticServerLocale()
+  const [{ slug }, locale] = await Promise.all([params, getServerLocale()])
   const articles = await getBlogArticles(locale)
   const article = articles.find((entry) => entry.slug === slug)
 
@@ -43,15 +42,13 @@ export async function generateMetadata({
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const locale = getStaticServerLocale()
-  const articles = await getBlogArticles(locale)
-  const apartments = await getApartmentCards()
+  const [{ slug }, locale] = await Promise.all([params, getServerLocale()])
+  const [articles, apartments] = await Promise.all([getBlogArticles(locale), getApartmentCards()])
   const article = articles.find((entry) => entry.slug === slug)
 
   if (!article) notFound()
 
-  const relatedArticles = pickRelatedArticles(article.slug, article.section, articles)
+  const relatedArticles = resolveRelatedArticles(article, articles)
   const cta = getBlogEditorialMeta(locale, article.section)
 
   return (
@@ -73,17 +70,4 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <Footer />
     </>
   )
-}
-
-function pickRelatedArticles(
-  slug: string,
-  section: string,
-  articles: Awaited<ReturnType<typeof getBlogArticles>>,
-) {
-  const related = articles.filter((article) => article.slug !== slug && article.section === section)
-  const fallback = articles.filter(
-    (article) => article.slug !== slug && article.section !== section,
-  )
-
-  return [...related, ...fallback].slice(0, 2)
 }

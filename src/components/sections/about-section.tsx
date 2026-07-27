@@ -9,12 +9,6 @@ import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const PLATFORM_LOGOS = [
-  { name: 'Booking', bg: 'bg-[#003580]', label: 'B.' },
-  { name: 'Tripadvisor', bg: 'bg-[#00af87]', label: 'TA' },
-  { name: 'Airbnb', bg: 'bg-[#ff5a5f]', label: 'A' },
-]
-
 interface AboutSectionProps {
   locationAvatars: readonly string[]
   travelerAvatars: readonly string[]
@@ -26,7 +20,6 @@ type AboutSectionCopy = {
   quote: string
   locations: string
   travelers: string
-  rating: string
 }
 
 export function AboutSection({
@@ -113,15 +106,6 @@ export function AboutSection({
             </ClusterAvatars>
             <StatLabel>{copy.travelers}</StatLabel>
           </StatCard>
-
-          <StatCard>
-            <ClusterAvatars>
-              {PLATFORM_LOGOS.map((p) => (
-                <AvatarCircle key={p.name} bg={p.bg} label={p.label} aria-label={p.name} />
-              ))}
-            </ClusterAvatars>
-            <StatLabel>{copy.rating}</StatLabel>
-          </StatCard>
         </div>
       </div>
     </section>
@@ -135,7 +119,6 @@ const ABOUT_COPY = {
       'Nous transformons des espaces singuliers en lieux de vie élégants, bien pensés et confortables. Notre mission : permettre aux voyageurs de vivre des séjours sans frictions aux plus belles adresses.',
     locations: '13 locations',
     travelers: '4 500+ voyageurs',
-    rating: '4,9 de note moyenne',
   },
   en: {
     kicker: 'Alto is a new way to think about hospitality.',
@@ -143,7 +126,6 @@ const ABOUT_COPY = {
       'We turn distinctive spaces into elegant, considered, and comfortable places to live. Our mission: helping travelers enjoy clear, easy stays at carefully selected addresses.',
     locations: '13 locations',
     travelers: '4,500+ guests',
-    rating: '4.9 average rating',
   },
 } as const
 
@@ -161,21 +143,6 @@ function StatLabel({ children }: { children: React.ReactNode }) {
 
 function ClusterAvatars({ children }: { children: React.ReactNode }) {
   return <div className="flex -space-x-[18px]">{children}</div>
-}
-
-function AvatarCircle({
-  bg,
-  label,
-  ...rest
-}: { bg: string; label: string } & React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      {...rest}
-      className={`${bg} text-cream flex size-[35px] items-center justify-center rounded-full text-[11px] font-bold uppercase`}
-    >
-      {label}
-    </div>
-  )
 }
 
 function AvatarImage({ src, alt }: { src: string; alt: string }) {

@@ -1,35 +1,49 @@
 import Image from 'next/image'
 import { ExperienceSection } from '@/components/sections/experience-section'
+import type { InquiryLocale } from '@/types/inquiry'
 
-const SERVICES = [
-  {
-    title: 'Self check-in',
-    description: 'Arrivez quand vous voulez, et repartez quand vous voulez, comme à la maison.',
-    icon: <CheckInServiceIcon />,
+const EDITORIAL_COPY = {
+  fr: {
+    testimonials: 'Témoignages',
+    services: [
+      [
+        'Self check-in',
+        'Arrivez quand vous voulez, et repartez quand vous voulez, comme à la maison.',
+      ],
+      ['Ménage', 'Des standards de ménage professionnels pour des appartements immaculés.'],
+      [
+        'Assistance de 8 h à 20 h',
+        'Notre équipe reste disponible tous les jours de 8 h à 20 h si vous avez besoin d’aide.',
+      ],
+      [
+        'Pas de frais cachés',
+        'Pas de frais de réservation cachés ni de frais de plateformes sur notre site.',
+      ],
+    ],
   },
-  {
-    title: 'Ménage',
-    description: 'Des standards de ménage professionnels pour des appartements immaculés.',
-    icon: <CleaningServiceIcon />,
+  en: {
+    testimonials: 'Testimonials',
+    services: [
+      [
+        'Self check-in',
+        'Arrive and leave when it suits you, with the freedom of a private apartment.',
+      ],
+      ['Cleaning', 'Professional housekeeping standards keep every apartment ready for your stay.'],
+      [
+        'Support from 8 am to 8 pm',
+        'Our team is available every day from 8 am to 8 pm if you need assistance.',
+      ],
+      ['No hidden fees', 'No hidden booking or platform fees when booking on our website.'],
+    ],
   },
-  {
-    title: 'Support 24/24',
-    description: 'Nous restons joignables 24h sur 24 pour vous assister en cas de problème.',
-    icon: <SupportServiceIcon />,
-  },
-  {
-    title: 'Pas de frais cachés',
-    description: 'Pas de frais de réservation cachés ni de frais de plateformes sur notre site.',
-    icon: <WalletServiceIcon />,
-  },
-] as const
+} as const
 
-const DEFAULT_REVIEW = {
-  quote:
-    'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
-  name: 'Sofia & Léo',
-  stay: 'L’Opéra | Mars 2026',
-}
+const SERVICE_ICONS = [
+  <CheckInServiceIcon key="check-in" />,
+  <CleaningServiceIcon key="cleaning" />,
+  <SupportServiceIcon key="support" />,
+  <WalletServiceIcon key="wallet" />,
+]
 
 interface Review {
   quote: string
@@ -37,7 +51,30 @@ interface Review {
   stay: string
 }
 
-export function ApartmentEditorialSections({ review = DEFAULT_REVIEW }: { review?: Review }) {
+const DEFAULT_REVIEW: Record<InquiryLocale, Review> = {
+  fr: {
+    quote:
+      'On s’est sentis chez nous dès la première minute. L’appartement est exactement comme sur les photos, en mieux.',
+    name: 'Sofia & Léo',
+    stay: 'L’Opéra | Mars 2026',
+  },
+  en: {
+    quote:
+      'We felt at home from the very first minute. The apartment is exactly as shown in the photos, only better.',
+    name: 'Sofia & Leo',
+    stay: 'L’Opéra | March 2026',
+  },
+}
+
+export function ApartmentEditorialSections({
+  review,
+  locale,
+}: {
+  review?: Review
+  locale: InquiryLocale
+}) {
+  const displayedReview = review ?? DEFAULT_REVIEW[locale]
+
   return (
     <section className="mt-section-md pb-section-md">
       <ExperienceSection
@@ -49,17 +86,19 @@ export function ApartmentEditorialSections({ review = DEFAULT_REVIEW }: { review
         }}
       />
       <div className="max-w-content px-gutter md:px-gutter-md mx-auto">
-        <ApartmentTrustSection review={review} />
+        <ApartmentTrustSection review={displayedReview} locale={locale} />
       </div>
     </section>
   )
 }
 
-function ApartmentTrustSection({ review }: { review: Review }) {
+function ApartmentTrustSection({ review, locale }: { review: Review; locale: InquiryLocale }) {
+  const copy = EDITORIAL_COPY[locale]
+
   return (
     <section className="pt-8">
       <div className="border-divider border-b pb-14">
-        <p className="text-silver text-overline font-bold uppercase">Témoignages</p>
+        <p className="text-silver text-overline font-bold uppercase">{copy.testimonials}</p>
 
         <blockquote className="text-coffee text-h4 md:text-h2 mt-10 max-w-[1192px] leading-[1.3] font-bold tracking-[-0.72px]">
           &ldquo;{review.quote}&rdquo;
@@ -80,14 +119,16 @@ function ApartmentTrustSection({ review }: { review: Review }) {
       </div>
 
       <div className="mt-8 grid gap-7 md:grid-cols-2 xl:grid-cols-4">
-        {SERVICES.map((item) => (
+        {copy.services.map(([title, description], index) => (
           <article
-            key={item.title}
+            key={title}
             className="bg-ash/10 flex min-h-[212px] flex-col items-center justify-center rounded-lg px-7 py-8 text-center md:min-h-[252px]"
           >
-            <span className="text-ash flex h-[58px] items-center justify-center">{item.icon}</span>
-            <h3 className="text-coffee text-body-xl mt-6 font-semibold">{item.title}</h3>
-            <p className="text-coffee text-body-sm mt-4 max-w-[211px]">{item.description}</p>
+            <span className="text-ash flex h-[58px] items-center justify-center">
+              {SERVICE_ICONS[index]}
+            </span>
+            <h3 className="text-coffee text-body-xl mt-6 font-semibold">{title}</h3>
+            <p className="text-coffee text-body-sm mt-4 max-w-[211px]">{description}</p>
           </article>
         ))}
       </div>

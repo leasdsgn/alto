@@ -39,6 +39,7 @@ import {
   TextSectionBlok,
 } from '@/components/storyblok/shared-bloks'
 import { BlogIndexSectionBlok } from '@/components/storyblok/blog-bloks'
+import { BookingDepositNoticeBlok } from '@/components/storyblok/booking-bloks'
 import {
   HomeAboutStory,
   HomeApartmentsStory,
@@ -95,6 +96,7 @@ export const getStoryblokApi = storyblokInit({
     blog_index_section: BlogIndexSectionBlok,
     rich_text_section: RichTextSectionBlok,
     divider_section: DividerSectionBlok,
+    booking_deposit_notice: BookingDepositNoticeBlok,
   },
   apiOptions: {
     region: 'eu',

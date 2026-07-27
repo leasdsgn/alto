@@ -9,6 +9,7 @@ export function SearchParamsSync() {
   const params = useSearchParams()
   const setCity = useSearchStore((s) => s.setCity)
   const setDates = useSearchStore((s) => s.setDates)
+  const clearDates = useSearchStore((s) => s.clearDates)
   const setGuests = useSearchStore((s) => s.setGuests)
 
   useEffect(() => {
@@ -23,15 +24,17 @@ export function SearchParamsSync() {
       try {
         setDates({ start: parseDate(checkIn), end: parseDate(checkOut) })
       } catch {
-        // ignore dates invalides
+        clearDates()
       }
+    } else {
+      clearDates()
     }
 
     if (guests) {
       const n = Number(guests)
       if (Number.isFinite(n) && n > 0) setGuests(n)
     }
-  }, [params, setCity, setDates, setGuests])
+  }, [clearDates, params, setCity, setDates, setGuests])
 
   return null
 }

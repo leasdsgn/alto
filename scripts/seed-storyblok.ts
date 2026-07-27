@@ -50,6 +50,7 @@ type StoryInput = {
   parentId: number
   path?: string | null
   isFolder?: boolean
+  defaultRoot?: string
   content?: Record<string, unknown>
 }
 
@@ -160,7 +161,7 @@ const COMPONENTS = [
     schema: {
       label: textField('Label', 0),
       heading: textField('Titre', 1, true),
-      body: textareaField('Texte', 2, true),
+      body: richtextField('Contenu', 2),
     },
   },
   {
@@ -268,7 +269,7 @@ const COMPONENTS = [
         'article_gallery',
         'section_cta',
       ]),
-      related_articles: textField('Articles liés', 8),
+      related_articles: storyReferencesField('Articles liés', 8),
       seo_title: textField('SEO - Titre', 9, true),
       seo_description: textareaField('SEO - Description', 10, true),
       og_image: imageField('SEO - Image de partage', 11),
@@ -363,6 +364,7 @@ async function upsertStory(stories: StoryblokStory[], input: StoryInput) {
     parent_id: input.parentId,
     path: input.path ?? null,
     is_folder: input.isFolder ?? false,
+    default_root: input.defaultRoot,
     content: input.content ?? {},
   }
 
@@ -408,6 +410,45 @@ function textField(displayName: string, pos: number, required = false) {
 
 function textareaField(displayName: string, pos: number, required = false) {
   return { type: 'textarea', pos, display_name: displayName, required, translatable: true }
+}
+
+function richtextField(displayName: string, pos: number) {
+  return {
+    type: 'richtext',
+    pos,
+    display_name: displayName,
+    translatable: true,
+    customize_toolbar: true,
+    toolbar: [
+      'bold',
+      'italic',
+      'underline',
+      'h3',
+      'h4',
+      'paragraph',
+      'unorderedlist',
+      'orderedlist',
+      'link',
+      'hrule',
+    ],
+    allow_target_blank: true,
+  }
+}
+
+function storyReferencesField(displayName: string, pos: number) {
+  return {
+    type: 'options',
+    pos,
+    display_name: displayName,
+    source: 'internal_stories',
+    is_reference_type: true,
+    use_uuid: true,
+    folder_slug: 'blog/',
+    filter_content_type: ['blog_article'],
+    entry_appearance: 'card',
+    allow_advanced_search: true,
+    max_options: '2',
+  }
 }
 
 function imageField(displayName: string, pos: number, required = false) {
@@ -461,6 +502,20 @@ function seoDescription(excerpt: string) {
   return excerpt.length > 155 ? `${excerpt.slice(0, 152).trim()}...` : excerpt
 }
 
+function richTextParagraph(value: string) {
+  return {
+    type: 'doc',
+    content: value
+      .split(/\n+/)
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean)
+      .map((paragraph) => ({
+        type: 'paragraph',
+        content: [{ type: 'text', text: paragraph }],
+      })),
+  }
+}
+
 async function main() {
   console.log('Mise à jour des composants Storyblok...')
   const existingComponents = await getComponents()
@@ -479,6 +534,7 @@ async function main() {
       slug: folder.slug,
       parentId: 0,
       isFolder: true,
+      defaultRoot: folder.slug === 'blog' ? 'blog_article' : undefined,
     })
     await sleep(200)
   }
@@ -537,8 +593,13 @@ async function main() {
         section: article.section,
         published_at: article.publishedAt,
         is_featured: article.slug === 'le-marais-a-hauteur-de-regard',
-        body: article.body.map((section) => blok(section.component, section)),
-        related_articles: '',
+        body: article.body.map((section) =>
+          blok(section.component, {
+            ...section,
+            body: richTextParagraph(section.body),
+          }),
+        ),
+        related_articles: [],
         seo_title: article.name,
         seo_description: seoDescription(article.excerpt),
         og_image: '',

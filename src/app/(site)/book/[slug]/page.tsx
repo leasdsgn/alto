@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache'
 import Link from 'next/link'
 import { getApartments } from '@/components/sections/apartments-section'
 import { BookingFlow } from '@/components/booking/booking-flow'
+import { BookingDepositNoticeBlok } from '@/components/storyblok/booking-bloks'
 import { guestyClient } from '@/lib/guesty-client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -12,6 +13,7 @@ import { t } from '@/lib/i18n/booking-dictionary'
 import { getServerLocale } from '@/lib/i18n/server'
 import { calculateNights } from '@/lib/reservation-validation'
 import { defineSeoMetadata } from '@/lib/seo'
+import { getStoryBySlug } from '@/lib/storyblok-page'
 import type { InquiryLocale } from '@/types/inquiry'
 import type { GuestyQuote } from '@/types/guesty'
 
@@ -50,11 +52,14 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
     redirect(`/appartements/${slug}`)
   }
 
-  const apartments = await getApartments()
+  const locale = await getServerLocale()
+  const [apartments, bookingStory] = await Promise.all([
+    getApartments(),
+    getStoryBySlug<{ body?: Record<string, unknown>[] }>('pages/booking', locale),
+  ])
   const apartment = apartments.find((a) => a.slug === slug)
   if (!apartment) notFound()
 
-  const locale = await getServerLocale()
   const guestsCount = Number(search.guests ?? 1)
   const validationError = validateBookingSearch({
     checkIn: search.check_in,
@@ -142,6 +147,8 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
           {locale === 'en' ? `Book ${apartment.name}` : `Réserver ${apartment.name}`}
         </h1>
 
+        <BookingDepositNoticeBlok blok={getDepositNoticeBlok(bookingStory, locale)} />
+
         <BookingFlow
           listingId={apartment.id}
           listingTitle={apartment.name}
@@ -158,6 +165,20 @@ export default async function ReserverPage({ params, searchParams }: PageProps) 
       <Footer />
     </>
   )
+}
+
+function getDepositNoticeBlok(
+  story: { content: { body?: Record<string, unknown>[] } } | null,
+  locale: InquiryLocale,
+): Record<string, unknown> {
+  const blok = story?.content.body?.find((item) => item.component === 'booking_deposit_notice')
+  if (blok) return blok
+
+  return {
+    component: 'booking_deposit_notice',
+    title: locale === 'en' ? 'Swikly security deposit' : 'Dépôt de garantie Swikly',
+    body: t(locale, 'depositNotice'),
+  }
 }
 
 function validateBookingSearch({

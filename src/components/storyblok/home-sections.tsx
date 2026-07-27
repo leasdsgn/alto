@@ -68,7 +68,6 @@ export function HomeAboutStory({ blok }: { blok: StoryblokBlok }) {
           ),
           locations: text(blok.locations_label, '13 locations'),
           travelers: text(blok.travelers_label, '4 500+ voyageurs'),
-          rating: text(blok.rating_label, '4,9 de note moyenne'),
         }}
       />
     </div>
@@ -271,8 +270,9 @@ function defaultServices(): StoryblokBlok[] {
       icon: '/images/icons/cleaning.svg',
     },
     {
-      title: 'Support 24/24',
-      description: 'Un gestionnaire disponible à tout moment pour vous accompagner.',
+      title: 'Assistance de 8 h à 20 h',
+      description:
+        'Notre équipe est disponible tous les jours de 8 h à 20 h pour vous accompagner.',
       icon: '/images/icons/support.svg',
     },
     {

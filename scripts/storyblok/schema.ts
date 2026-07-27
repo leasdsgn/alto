@@ -41,6 +41,7 @@ const richtextField = (displayName: string, pos: number) => ({
   pos,
   display_name: displayName,
   translatable: true,
+  customize_toolbar: true,
   toolbar: [
     'bold',
     'italic',
@@ -54,6 +55,43 @@ const richtextField = (displayName: string, pos: number) => ({
     'link',
     'hrule',
   ],
+  allow_target_blank: true,
+})
+
+const articleRichtextField = (displayName: string, pos: number) => ({
+  ...richtextField(displayName, pos),
+  toolbar: [
+    'bold',
+    'italic',
+    'underline',
+    'h3',
+    'h4',
+    'paragraph',
+    'unorderedlist',
+    'orderedlist',
+    'link',
+    'hrule',
+  ],
+})
+
+const storyReferencesField = (
+  displayName: string,
+  pos: number,
+  folderSlug: string,
+  contentTypes: string[],
+  maximum = 2,
+) => ({
+  type: 'options',
+  pos,
+  display_name: displayName,
+  source: 'internal_stories',
+  is_reference_type: true,
+  use_uuid: true,
+  folder_slug: folderSlug,
+  filter_content_type: contentTypes,
+  entry_appearance: 'card',
+  allow_advanced_search: true,
+  max_options: String(maximum),
 })
 
 const imageField = (displayName: string, pos: number, required = false) => ({
@@ -204,7 +242,7 @@ const ATOMS: ComponentDefinition[] = [
     is_root: false,
     is_nestable: true,
     schema: {
-      value: textField('Valeur (ex: 4,9)', 0, true),
+      value: textField('Valeur (ex: 13)', 0, true),
       label: textField('Libellé', 1, true),
       icon: imageField('Icône (optionnelle)', 2),
     },
@@ -310,6 +348,56 @@ const ATOMS: ComponentDefinition[] = [
   },
 ]
 
+export const BLOG_COMPONENTS: ComponentDefinition[] = [
+  {
+    name: 'article_rich_text',
+    display_name: 'Article - Section de texte',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      label: textField('Label', 0),
+      heading: textField('Titre H2', 1, true),
+      body: articleRichtextField('Contenu', 2),
+    },
+  },
+  {
+    name: 'blog_article',
+    display_name: 'Article blog',
+    is_root: true,
+    is_nestable: false,
+    schema: {
+      title: textField('Titre', 0, true),
+      excerpt: textareaField('Résumé', 1, true),
+      cover_image: imageField('Image de couverture', 2),
+      category: textField('Catégorie', 3, true),
+      section: selectField(
+        'Section éditoriale',
+        4,
+        [
+          { name: 'Paris', value: 'paris' },
+          { name: 'Lyon', value: 'lyon' },
+          { name: 'Voyage', value: 'voyage' },
+        ],
+        'paris',
+      ),
+      published_at: {
+        type: 'datetime',
+        pos: 5,
+        display_name: 'Date de publication',
+        required: true,
+      },
+      is_featured: boolField('Mis en avant', 6),
+      body: bloksField('Contenu', 7, ['article_rich_text']),
+      related_articles: storyReferencesField('Articles liés', 8, 'blog/', ['blog_article'], 2),
+      seo_title: textField('SEO - Titre', 9, true),
+      seo_description: textareaField('SEO - Description', 10, true),
+      og_image: imageField('SEO - Image de partage', 11),
+      no_index: boolField('SEO - Ne pas indexer', 12),
+      hero_image: imageField('Image du header article', 13),
+    },
+  },
+]
+
 // ---------------------------------------------------------------------------
 // Bloks de section (composables dans page.body[])
 // ---------------------------------------------------------------------------
@@ -392,6 +480,16 @@ const SECTIONS: ComponentDefinition[] = [
     },
   },
   {
+    name: 'booking_deposit_notice',
+    display_name: 'Réservation - Mention caution',
+    is_root: false,
+    is_nestable: true,
+    schema: {
+      title: textField('Titre', 0, true),
+      body: textareaField('Mention relative à la caution', 1, true),
+    },
+  },
+  {
     name: 'home_about_section',
     display_name: 'Accueil - À propos (kicker + citation + stats)',
     is_root: false,
@@ -401,7 +499,6 @@ const SECTIONS: ComponentDefinition[] = [
       quote: textareaField('Citation principale', 1, true),
       locations_label: textField('Libellé stat - Lieux', 2),
       travelers_label: textField('Libellé stat - Voyageurs', 3),
-      rating_label: textField('Libellé stat - Note', 4),
     },
   },
   {
@@ -990,4 +1087,9 @@ const ROOTS: ComponentDefinition[] = [
   },
 ]
 
-export const ALL_COMPONENTS: ComponentDefinition[] = [...ATOMS, ...SECTIONS, ...ROOTS]
+export const ALL_COMPONENTS: ComponentDefinition[] = [
+  ...ATOMS,
+  ...BLOG_COMPONENTS,
+  ...SECTIONS,
+  ...ROOTS,
+]

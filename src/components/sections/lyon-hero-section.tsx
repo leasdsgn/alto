@@ -7,6 +7,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SearchBar } from '@/components/ui/search-bar'
 import { SearchBarMobile } from '@/components/ui/search-bar-mobile'
+import { useLocale } from '@/components/providers/locale-provider'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -15,6 +16,8 @@ interface LyonHeroSectionProps {
 }
 
 export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
+  const locale = useLocale()
+  const copy = LYON_HERO_COPY[locale]
   const sectionRef = useRef<HTMLElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
 
@@ -51,7 +54,7 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
       <div ref={bgRef} className="absolute inset-0 -top-[10%] bottom-0 h-[120%]">
         <Image
           src={backgroundImage}
-          alt="Vue de Lyon"
+          alt={copy.imageAlt}
           fill
           sizes="100vw"
           quality={85}
@@ -64,10 +67,18 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
       {/* Header */}
       <header className="relative z-20 flex items-center justify-between px-6 pt-6 md:px-12">
         <nav className="flex items-center gap-6">
-          <Link href="/appartements?city=paris" prefetch={false} className="text-cream text-xs font-bold">
+          <Link
+            href="/appartements?city=paris"
+            prefetch={false}
+            className="text-cream text-xs font-bold"
+          >
             Paris
           </Link>
-          <Link href="/lyon" prefetch={false} className="text-cream text-xs font-bold">
+          <Link
+            href="/appartements?city=lyon"
+            prefetch={false}
+            className="text-cream text-xs font-bold"
+          >
             Lyon
           </Link>
         </nav>
@@ -84,14 +95,18 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
         </Link>
 
         <div className="flex items-center gap-4">
-          <Link href="/notre-histoire" prefetch={false} className="text-cream hidden text-xs font-bold md:block">
-            Notre histoire
+          <Link
+            href="/notre-histoire"
+            prefetch={false}
+            className="text-cream hidden text-xs font-bold md:block"
+          >
+            {copy.story}
           </Link>
           <Link
             href="#disponibilites"
             className="bg-coffee text-cream rounded-sm px-5 py-2.5 text-xs font-bold"
           >
-            Réserver
+            {copy.book}
           </Link>
         </div>
       </header>
@@ -100,10 +115,8 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
       <div className="relative flex h-full w-full flex-col items-center justify-center px-6">
         <div className="w-full max-w-[500px] text-center">
           <p className="text-cream text-xs font-bold tracking-[0.24px] uppercase">Lyon</p>
-          <h1 className="text-cream mt-2 text-lg font-bold md:text-xl">Vivre Lyon autrement.</h1>
-          <p className="text-cream/80 mt-3 text-xs leading-relaxed md:text-sm">
-            Des appartements soignés, dans les quartiers qui comptent.
-          </p>
+          <h1 className="text-cream mt-2 text-lg font-bold md:text-xl">{copy.title}</h1>
+          <p className="text-cream/80 mt-3 text-xs leading-relaxed md:text-sm">{copy.subtitle}</p>
         </div>
 
         {/* Search bar desktop */}
@@ -119,3 +132,20 @@ export function LyonHeroSection({ backgroundImage }: LyonHeroSectionProps) {
     </section>
   )
 }
+
+const LYON_HERO_COPY = {
+  fr: {
+    imageAlt: 'Vue de Lyon',
+    story: 'Notre histoire',
+    book: 'Réserver',
+    title: 'Vivre Lyon autrement.',
+    subtitle: 'Des appartements soignés, dans les quartiers qui comptent.',
+  },
+  en: {
+    imageAlt: 'View of Lyon',
+    story: 'Our story',
+    book: 'Book',
+    title: 'Experience Lyon differently.',
+    subtitle: 'Carefully designed apartments in the neighborhoods that matter.',
+  },
+} as const

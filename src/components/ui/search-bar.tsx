@@ -7,12 +7,15 @@ import { ListBox, ListBoxItem } from 'react-aria-components'
 import { today, getLocalTimeZone, CalendarDate } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import { useLocale } from '@/components/providers/locale-provider'
+import { buildApartmentSearchHref } from '@/lib/apartment-search'
 import { useSearchStore } from '@/lib/stores/search'
 
 const CITIES = ['Paris', 'Lyon']
 const DATE_COPY = {
   fr: {
     city: 'Ville',
+    checkIn: 'Arrivée',
+    checkOut: 'Départ',
     guests: 'Voyageurs',
     search: 'Rechercher',
     removeGuest: 'Retirer un voyageur',
@@ -35,6 +38,8 @@ const DATE_COPY = {
   },
   en: {
     city: 'City',
+    checkIn: 'Check-in',
+    checkOut: 'Check-out',
     guests: 'Guests',
     search: 'Search',
     removeGuest: 'Remove one guest',
@@ -72,14 +77,18 @@ function firstDayOfWeek(year: number, month: number): number {
 export function SearchBar({
   calendarPlacement = 'bottom start',
   align = 'center',
+  searchOnCityChange = false,
+  searchOnGuestsChange = false,
 }: {
   calendarPlacement?: 'bottom start' | 'top start'
   align?: 'center' | 'start'
+  searchOnCityChange?: boolean
+  searchOnGuestsChange?: boolean
 } = {}) {
   const router = useRouter()
   const locale = useLocale()
   const copy = DATE_COPY[locale]
-  const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
+  const { city, dates, hasSelectedDates, guests, setCity, setDates, setGuests } = useSearchStore()
   const minDate = today(getLocalTimeZone())
   const [dateOpen, setDateOpen] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
@@ -140,14 +149,36 @@ export function SearchBar({
   )
   const effectiveEnd = selectingEnd && hoverDate ? hoverDate : dates.end
 
+  function getSearchHref(selectedCity = city, selectedGuests = guests) {
+    return buildApartmentSearchHref({
+      city: selectedCity,
+      guests: selectedGuests,
+      dates: hasSelectedDates
+        ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
+        : null,
+    })
+  }
+
+  function handleCityChange(key: React.Key | null) {
+    if (key === null) return
+
+    const selectedCity = String(key)
+    if (selectedCity === city) return
+
+    setCity(selectedCity)
+    if (searchOnCityChange) router.replace(getSearchHref(selectedCity), { scroll: false })
+  }
+
+  function handleGuestsChange(selectedGuests: number) {
+    if (selectedGuests === guests) return
+
+    setGuests(selectedGuests)
+    if (searchOnGuestsChange) router.replace(getSearchHref(city, selectedGuests), { scroll: false })
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const params = new URLSearchParams()
-    params.set('city', city.toLowerCase())
-    params.set('checkIn', dates.start.toString())
-    params.set('checkOut', dates.end.toString())
-    params.set('guests', String(guests))
-    router.push(`/appartements?${params}`)
+    router.push(getSearchHref())
   }
 
   return (
@@ -161,7 +192,7 @@ export function SearchBar({
         <HeroUISelect
           aria-label={copy.city}
           selectedKey={city}
-          onSelectionChange={(key) => setCity(key as string)}
+          onSelectionChange={handleCityChange}
           isOpen={cityOpen}
           onOpenChange={setCityOpen}
           className="shrink-0"
@@ -195,14 +226,14 @@ export function SearchBar({
             <div className="flex items-center gap-1.5 px-[15px]">
               <CalendarIcon />
               <span className="text-taupe text-[12px] leading-[1.55] font-bold tracking-[0.24px]">
-                {formatDate(dates.start)}
+                {hasSelectedDates ? formatDate(dates.start) : copy.checkIn}
               </span>
             </div>
             <Separator />
             <div className="flex items-center gap-1.5 px-[15px]">
               <CalendarIcon />
               <span className="text-taupe text-[12px] leading-[1.55] font-bold tracking-[0.24px]">
-                {formatDate(dates.end)}
+                {hasSelectedDates ? formatDate(dates.end) : copy.checkOut}
               </span>
             </div>
           </div>
@@ -247,9 +278,12 @@ export function SearchBar({
                   <div key={`e${i}`} className="size-8" />
                 ))}
                 {days.map((date) => {
-                  const isStart = date.compare(dates.start) === 0
-                  const isEnd = date.compare(effectiveEnd) === 0
-                  const inRange = date.compare(dates.start) > 0 && date.compare(effectiveEnd) < 0
+                  const isStart = hasSelectedDates && date.compare(dates.start) === 0
+                  const isEnd = hasSelectedDates && date.compare(effectiveEnd) === 0
+                  const inRange =
+                    hasSelectedDates &&
+                    date.compare(dates.start) > 0 &&
+                    date.compare(effectiveEnd) < 0
                   const disabled = date.compare(minDate) < 0
                   return (
                     <button
@@ -283,7 +317,7 @@ export function SearchBar({
         {/* Voyageurs */}
         <Stepper
           value={guests}
-          onChange={setGuests}
+          onChange={handleGuestsChange}
           min={1}
           max={10}
           label={copy.guests}

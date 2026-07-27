@@ -11,7 +11,7 @@ import { SearchParamsSync } from '@/components/booking/search-params-sync'
 import { JsonLd } from '@/components/seo/json-ld'
 import { InternalLinkSection } from '@/components/seo/internal-link-section'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { buildBreadcrumbJsonLd, defineSeoMetadata } from '@/lib/seo'
 
@@ -39,7 +39,7 @@ const APARTMENTS_METADATA: Record<'fr' | 'en', { title: string; description: str
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   return defineSeoMetadata({
     ...APARTMENTS_METADATA[locale],
     path: '/appartements',
@@ -48,7 +48,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AppartementsPage({ searchParams }: PageProps) {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
+  const copy = APARTMENTS_LINKS_COPY[locale]
   const sp = await searchParams
   const guestsCount = sp.guests ? Number(sp.guests) : undefined
   const gridKey = [
@@ -71,6 +72,7 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
   const heroImage = APARTMENTS_HERO_IMAGE
 
   const hasStoryBody =
+    locale === 'fr' &&
     story &&
     Array.isArray((story.content as { body?: unknown }).body) &&
     (story.content as { body: unknown[] }).body.length > 0
@@ -79,8 +81,8 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
     <>
       <JsonLd
         data={buildBreadcrumbJsonLd([
-          { name: 'Accueil', path: '/' },
-          { name: 'Appartements', path: '/appartements' },
+          { name: copy.home, path: '/' },
+          { name: copy.apartments, path: '/appartements' },
         ])}
       />
       <Suspense fallback={null}>
@@ -103,34 +105,65 @@ export default async function AppartementsPage({ searchParams }: PageProps) {
 
         <InternalLinkSection
           eyebrow="Alto"
-          title="Explorer par intention"
+          title={copy.explore}
           className="mt-12"
-          items={[
-            {
-              label: 'Séjourner à Lyon',
-              href: '/lyon',
-              description: 'Voir les appartements Alto et les quartiers à privilégier à Lyon.',
-            },
-            {
-              label: 'Conseils de séjour',
-              href: '/blog',
-              description: 'Lire les guides de quartiers, adresses et conseils pratiques Alto.',
-            },
-            {
-              label: 'Notre histoire',
-              href: '/notre-histoire',
-              description: 'Découvrir la vision Alto et les standards appliqués à chaque adresse.',
-            },
-          ]}
+          items={[...copy.links]}
         />
       </main>
 
-      <ApartmentEditorialSections />
+      <ApartmentEditorialSections locale={locale} />
 
       <Footer />
     </>
   )
 }
+
+const APARTMENTS_LINKS_COPY = {
+  fr: {
+    home: 'Accueil',
+    apartments: 'Appartements',
+    explore: 'Explorer par intention',
+    links: [
+      {
+        label: 'Séjourner à Lyon',
+        href: '/appartements?city=lyon',
+        description: 'Voir les appartements Alto disponibles à Lyon.',
+      },
+      {
+        label: 'Conseils de séjour',
+        href: '/blog',
+        description: 'Lire les guides de quartiers, adresses et conseils pratiques Alto.',
+      },
+      {
+        label: 'Notre histoire',
+        href: '/notre-histoire',
+        description: 'Découvrir la vision Alto et les standards appliqués à chaque adresse.',
+      },
+    ],
+  },
+  en: {
+    home: 'Home',
+    apartments: 'Apartments',
+    explore: 'Explore by intention',
+    links: [
+      {
+        label: 'Stay in Lyon',
+        href: '/appartements?city=lyon',
+        description: 'Browse Alto apartments available in Lyon.',
+      },
+      {
+        label: 'Travel advice',
+        href: '/blog',
+        description: 'Read Alto neighborhood guides, addresses, and practical advice.',
+      },
+      {
+        label: 'Our story',
+        href: '/notre-histoire',
+        description: 'Discover the Alto vision and the standards applied to every address.',
+      },
+    ],
+  },
+} as const
 
 function withApartmentsHeroFallback<T extends { content: Record<string, unknown> }>(
   story: T,

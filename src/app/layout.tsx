@@ -9,7 +9,7 @@ import { StoryblokGlobalsProvider } from '@/components/providers/storyblok-globa
 import { JsonLd } from '@/components/seo/json-ld'
 import { CustomCursor } from '@/components/ui/custom-cursor'
 import { LenisProvider } from '@/components/providers/lenis-provider'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
 import {
   DEFAULT_OG_IMAGE,
@@ -64,7 +64,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   const globals = await getStoryblokGlobals(locale)
 
   return (
@@ -81,7 +81,7 @@ export default async function RootLayout({
           suppressHydrationWarning
         >
           <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd()]} />
-          <LocaleProvider>
+          <LocaleProvider initialLocale={locale}>
             <LenisProvider>
               <I18nProvider>
                 <StoryblokGlobalsProvider value={globals}>{children}</StoryblokGlobalsProvider>

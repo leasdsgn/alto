@@ -18,10 +18,12 @@ interface MobileBookingBarProps {
 
 export function MobileBookingBar(props: MobileBookingBarProps) {
   const locale = useLocale()
-  const { dates, guests } = useSearchStore()
+  const { dates, guests, hasSelectedDates } = useSearchStore()
   const [isOpen, setIsOpen] = useState(false)
   const copy = MOBILE_BOOKING_COPY[locale]
-  const dateLabel = `${formatDateShort(dates.start)} - ${formatDateShort(dates.end)}`
+  const dateLabel = hasSelectedDates
+    ? `${formatDateShort(dates.start, locale)} - ${formatDateShort(dates.end, locale)}`
+    : copy.title
 
   useEffect(() => {
     if (!isOpen) return
@@ -83,7 +85,7 @@ export function MobileBookingBar(props: MobileBookingBarProps) {
             </div>
 
             <div className="mx-auto max-w-[498px]">
-              <ApartmentBooking {...props} initialShouldVerifyQuote variant="mobileSheet" />
+              <ApartmentBooking {...props} variant="mobileSheet" />
             </div>
           </div>
         </div>

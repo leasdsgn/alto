@@ -17,8 +17,12 @@
     "storyblok:sync-cms-assets": "bun run scripts/storyblok/sync-cms-assets.ts",
     "storyblok:seed-all": "bun run scripts/storyblok/seed-all.ts",
     "storyblok:seed-schema": "bun run scripts/storyblok/seed-all.ts --schema-only",
+    "storyblok:fix-blog-model": "bun run scripts/storyblok/fix-blog-content-model.ts",
     "storyblok:apply-testimonials": "bun run scripts/storyblok/apply-shared-testimonials.ts",
     "storyblok:apply-legal-defaults": "bun run scripts/storyblok/apply-legal-defaults.ts",
+    "storyblok:update-footer-contact": "bun run scripts/storyblok/update-footer-contact.ts",
+    "doctor": "bunx react-doctor@latest --verbose --scope changed",
+    "doctor:full": "bunx react-doctor@latest --verbose --scope all",
     "test": "vitest run",
     "test:watch": "vitest"
   },

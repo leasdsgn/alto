@@ -5,7 +5,7 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { FaqSection } from '@/components/sections/faq-section'
 import { Button } from '@/components/ui/button'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { WHATSAPP_LINK } from '@/lib/whatsapp'
 import { defineSeoMetadata } from '@/lib/seo'
@@ -24,7 +24,7 @@ const INVESTIR_METADATA: Record<'fr' | 'en', { title: string; description: strin
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   return defineSeoMetadata({
     ...INVESTIR_METADATA[locale],
     path: '/investir',
@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function InvestirPage() {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   const story = await getStoryBySlug('pages/investir', locale)
 
   if (

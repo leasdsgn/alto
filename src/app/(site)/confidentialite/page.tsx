@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { StoryblokStory } from '@storyblok/react/rsc'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { getStoryBySlug } from '@/lib/storyblok-page'
 import { defineSeoMetadata } from '@/lib/seo'
 
@@ -18,7 +18,7 @@ const PRIVACY_METADATA: Record<'fr' | 'en', { title: string; description: string
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   return defineSeoMetadata({
     ...PRIVACY_METADATA[locale],
     path: '/confidentialite',
@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ConfidentialitePage() {
-  const locale = getStaticServerLocale()
+  const locale = await getServerLocale()
   const story = await getStoryBySlug('pages/confidentialite', locale)
 
   if (

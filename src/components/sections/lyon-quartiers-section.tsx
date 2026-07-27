@@ -5,13 +5,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useLocale } from '@/components/providers/locale-provider'
 
 gsap.registerPlugin(ScrollTrigger)
-
-const TESTIMONIAL = {
-  quote: '"Le Terreaux est vibrant et raffiné à la fois. Tout se fait à pied, entre culture, gastronomie et lumière dorée en fin de journée."',
-  author: 'Camille & Arthur - Bruxelles',
-}
 
 interface LyonQuartiersSectionProps {
   images: {
@@ -22,6 +18,8 @@ interface LyonQuartiersSectionProps {
 }
 
 export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
+  const locale = useLocale()
+  const copy = LYON_NEIGHBORHOODS_COPY[locale]
   const sectionRef = useRef<HTMLElement>(null)
   const [activeIndex, setActiveIndex] = useState(1)
 
@@ -84,9 +82,12 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
   }
 
   return (
-    <section ref={sectionRef} className="mx-auto max-w-content px-gutter py-section md:px-gutter-md md:py-section-md">
-      <p className="text-silver text-xs font-bold uppercase tracking-[0.24px]">Les quartiers</p>
-      <h2 className="text-coffee mt-1 text-base font-medium">Choisir son quartier</h2>
+    <section
+      ref={sectionRef}
+      className="max-w-content px-gutter py-section md:px-gutter-md md:py-section-md mx-auto"
+    >
+      <p className="text-silver text-xs font-bold tracking-[0.24px] uppercase">{copy.eyebrow}</p>
+      <h2 className="text-coffee mt-1 text-base font-medium">{copy.title}</h2>
 
       {/* Desktop: 3 cards */}
       <div className="mt-10 hidden gap-4 md:flex">
@@ -106,8 +107,8 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
               sizes="(max-width: 768px) 100vw, 33vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-coffee/80 to-transparent" />
-            <div className="absolute bottom-4 left-4 text-cream">
+            <div className="from-coffee/80 absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t to-transparent" />
+            <div className="text-cream absolute bottom-4 left-4">
               <h3 className="text-base font-bold">{quartier.name}</h3>
               <p className="text-xs font-medium">{quartier.arrondissement}</p>
             </div>
@@ -116,9 +117,15 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
               height="8"
               viewBox="0 0 8 8"
               fill="none"
-              className="text-cream absolute bottom-5 right-4 rotate-90"
+              className="text-cream absolute right-4 bottom-5 rotate-90"
             >
-              <path d="M1 7L7 1M7 1H2M7 1V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M1 7L7 1M7 1H2M7 1V6"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </Link>
         ))}
@@ -134,7 +141,7 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
             sizes="100vw"
             className="object-cover"
           />
-          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-coffee/80 to-transparent" />
+          <div className="from-coffee/80 absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t to-transparent" />
           <div className="text-cream absolute bottom-4 left-4">
             <h3 className="text-base font-bold">{lyonQuartiers[activeIndex].name}</h3>
             <p className="text-xs font-medium">{lyonQuartiers[activeIndex].arrondissement}</p>
@@ -147,10 +154,16 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
             type="button"
             onClick={goToPrev}
             className="text-ash flex size-8 items-center justify-center rounded-full border border-current"
-            aria-label="Quartier précédent"
+            aria-label={copy.previous}
           >
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
-              <path d="M7 1L1 7L7 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M7 1L1 7L7 13"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
 
@@ -164,7 +177,7 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
                 className={`size-2 rounded-full transition-colors ${
                   i === activeIndex ? 'bg-coffee' : 'bg-silver'
                 }`}
-                aria-label={`Aller au quartier ${i + 1}`}
+                aria-label={`${copy.goTo} ${i + 1}`}
               />
             ))}
           </div>
@@ -173,10 +186,16 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
             type="button"
             onClick={goToNext}
             className="text-ash flex size-8 items-center justify-center rounded-full border border-current"
-            aria-label="Quartier suivant"
+            aria-label={copy.next}
           >
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
-              <path d="M1 1L7 7L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M1 1L7 7L1 13"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         </div>
@@ -184,11 +203,34 @@ export function LyonQuartiersSection({ images }: LyonQuartiersSectionProps) {
 
       {/* Testimonial */}
       <div className="bg-coffee mt-10 rounded-lg px-6 py-10 text-center md:mt-16 md:py-14">
-        <p className="text-cream mx-auto max-w-[600px] text-base font-bold leading-relaxed">
-          {TESTIMONIAL.quote}
+        <p className="text-cream mx-auto max-w-[600px] text-base leading-relaxed font-bold">
+          {copy.quote}
         </p>
-        <p className="text-cream/60 mt-4 text-xs">{TESTIMONIAL.author}</p>
+        <p className="text-cream/60 mt-4 text-xs">{copy.author}</p>
       </div>
     </section>
   )
 }
+
+const LYON_NEIGHBORHOODS_COPY = {
+  fr: {
+    eyebrow: 'Les quartiers',
+    title: 'Choisir son quartier',
+    previous: 'Quartier précédent',
+    next: 'Quartier suivant',
+    goTo: 'Aller au quartier',
+    quote:
+      '« Les Terreaux sont vibrants et raffinés à la fois. Tout se fait à pied, entre culture, gastronomie et lumière dorée en fin de journée. »',
+    author: 'Camille & Arthur - Bruxelles',
+  },
+  en: {
+    eyebrow: 'Neighborhoods',
+    title: 'Choose your neighborhood',
+    previous: 'Previous neighborhood',
+    next: 'Next neighborhood',
+    goTo: 'Go to neighborhood',
+    quote:
+      '“Les Terreaux feels both lively and refined. Everything is within walking distance, from culture and food to the golden light at the end of the day.”',
+    author: 'Camille & Arthur - Brussels',
+  },
+} as const

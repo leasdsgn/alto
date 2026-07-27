@@ -58,8 +58,24 @@ export interface ComponentDefinition {
   component_group_uuid?: string
 }
 
+export async function storyblokFetch(url: string, init?: RequestInit): Promise<Response> {
+  const maxAttempts = 5
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const response = await fetch(url, init)
+    if (response.status !== 429 || attempt === maxAttempts) return response
+
+    const retryAfter = Number(response.headers.get('retry-after'))
+    const delayMs =
+      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : attempt * 1100
+    await sleep(delayMs)
+  }
+
+  throw new Error('Storyblok request retry exhausted')
+}
+
 export async function listComponents(): Promise<StoryblokComponent[]> {
-  const res = await fetch(`${API}/components`, { headers })
+  const res = await storyblokFetch(`${API}/components`, { headers })
   if (!res.ok) throw new Error(`listComponents: ${await res.text()}`)
   const data = (await res.json()) as ComponentListResponse
   return data.components ?? []
@@ -73,7 +89,7 @@ export async function upsertComponent(
   const payload = { component }
 
   if (!current) {
-    const res = await fetch(`${API}/components`, {
+    const res = await storyblokFetch(`${API}/components`, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
@@ -83,7 +99,7 @@ export async function upsertComponent(
     return
   }
 
-  const res = await fetch(`${API}/components/${current.id}`, {
+  const res = await storyblokFetch(`${API}/components/${current.id}`, {
     method: 'PUT',
     headers,
     body: JSON.stringify(payload),
@@ -94,12 +110,12 @@ export async function upsertComponent(
 
 export async function findStoryByFullSlug(fullSlug: string): Promise<StoryblokStory | null> {
   const params = new URLSearchParams({ by_slugs: fullSlug, per_page: '1' })
-  const res = await fetch(`${API}/stories?${params}`, { headers })
+  const res = await storyblokFetch(`${API}/stories?${params}`, { headers })
   if (!res.ok) throw new Error(`findStoryByFullSlug ${fullSlug}: ${await res.text()}`)
   const data = (await res.json()) as StoryListResponse
   const story = data.stories?.find((entry) => entry.full_slug === fullSlug)
   if (!story) return null
-  const detail = await fetch(`${API}/stories/${story.id}`, { headers })
+  const detail = await storyblokFetch(`${API}/stories/${story.id}`, { headers })
   if (!detail.ok) throw new Error(`GET story ${story.id}: ${await detail.text()}`)
   const data2 = (await detail.json()) as StoryResponse
   return data2.story ?? story
@@ -110,7 +126,7 @@ export async function ensureFolder(slug: string, name: string): Promise<number> 
   const existing = await findStoryByFullSlug(fullSlug)
   if (existing) return existing.id
 
-  const res = await fetch(`${API}/stories`, {
+  const res = await storyblokFetch(`${API}/stories`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -147,7 +163,7 @@ export async function createStoryIfAbsent(input: SeedStoryInput): Promise<'creat
 
   const segments = input.fullSlug.split('/')
   const slug = segments.pop() ?? input.fullSlug
-  const res = await fetch(`${API}/stories`, {
+  const res = await storyblokFetch(`${API}/stories`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -164,6 +180,23 @@ export async function createStoryIfAbsent(input: SeedStoryInput): Promise<'creat
   if (!res.ok) throw new Error(`createStory ${input.fullSlug}: ${await res.text()}`)
   console.log(`  ✓ created story ${input.fullSlug}`)
   return 'created'
+}
+
+export async function updateStoryContent(
+  storyId: number,
+  content: Record<string, unknown>,
+): Promise<void> {
+  const response = await storyblokFetch(`${API}/stories/${storyId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({
+      story: { content },
+      publish: 1,
+      force_update: 1,
+    }),
+  })
+
+  if (!response.ok) throw new Error(`updateStoryContent ${storyId}: ${await response.text()}`)
 }
 
 export function sleep(ms: number) {

@@ -89,6 +89,7 @@ export function BookingFlow(props: BookingFlowProps) {
     mode: 'payment',
     amount: props.amountCents,
     currency: props.currency,
+    locale,
     paymentMethodTypes: ['card'],
     setupFutureUsage: 'off_session',
   }
@@ -463,10 +464,6 @@ function PaymentSection(props: PaymentSectionProps) {
           <p className="mt-1 leading-relaxed">{formError.description}</p>
         </div>
       ) : null}
-
-      <p className="border-divider bg-cream text-coffee rounded-lg border p-4 text-sm leading-relaxed">
-        {t(props.locale, 'depositNotice')}
-      </p>
 
       <PolicyCheckboxes
         locale={props.locale}

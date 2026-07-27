@@ -14,6 +14,7 @@ import { today, getLocalTimeZone } from '@internationalized/date'
 import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
 import { useLocale } from '@/components/providers/locale-provider'
+import { buildApartmentSearchHref } from '@/lib/apartment-search'
 import { useSearchStore } from '@/lib/stores/search'
 import { Button } from '@/components/ui/button'
 
@@ -41,13 +42,17 @@ const MOBILE_SEARCH_COPY = {
 
 export function SearchBarMobile({
   calendarPlacement = 'bottom start',
+  searchOnCityChange = false,
+  searchOnGuestsChange = false,
 }: {
   calendarPlacement?: 'bottom start' | 'top start' | 'bottom' | 'top'
+  searchOnCityChange?: boolean
+  searchOnGuestsChange?: boolean
 } = {}) {
   const router = useRouter()
   const locale = useLocale()
   const copy = MOBILE_SEARCH_COPY[locale]
-  const { city, dates, guests, setCity, setDates, setGuests } = useSearchStore()
+  const { city, dates, hasSelectedDates, guests, setCity, setDates, setGuests } = useSearchStore()
   const [dateOpen, setDateOpen] = useState(false)
 
   const minDate = today(getLocalTimeZone())
@@ -56,14 +61,36 @@ export function SearchBarMobile({
     if (value) setDates({ start: value.start, end: value.end })
   }
 
+  function getSearchHref(selectedCity = city, selectedGuests = guests) {
+    return buildApartmentSearchHref({
+      city: selectedCity,
+      guests: selectedGuests,
+      dates: hasSelectedDates
+        ? { checkIn: dates.start.toString(), checkOut: dates.end.toString() }
+        : null,
+    })
+  }
+
+  function handleCityChange(key: React.Key | null) {
+    if (key === null) return
+
+    const selectedCity = String(key)
+    if (selectedCity === city) return
+
+    setCity(selectedCity)
+    if (searchOnCityChange) router.replace(getSearchHref(selectedCity), { scroll: false })
+  }
+
+  function handleGuestsChange(selectedGuests: number) {
+    if (selectedGuests === guests) return
+
+    setGuests(selectedGuests)
+    if (searchOnGuestsChange) router.replace(getSearchHref(city, selectedGuests), { scroll: false })
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const params = new URLSearchParams()
-    params.set('city', city.toLowerCase())
-    params.set('checkIn', dates.start.toString())
-    params.set('checkOut', dates.end.toString())
-    params.set('guests', String(guests))
-    router.push(`/appartements?${params}`)
+    router.push(getSearchHref())
   }
 
   return (
@@ -73,7 +100,7 @@ export function SearchBarMobile({
           <HeroUISelect
             aria-label={copy.city}
             selectedKey={city}
-            onSelectionChange={(key) => setCity(key as string)}
+            onSelectionChange={handleCityChange}
             className="w-auto"
           >
             <Label className="sr-only">{copy.city}</Label>
@@ -106,7 +133,7 @@ export function SearchBarMobile({
               type="button"
               className="text-taupe flex size-10 items-center justify-center disabled:opacity-30"
               disabled={guests <= 1}
-              onClick={() => setGuests(Math.max(1, guests - 1))}
+              onClick={() => handleGuestsChange(Math.max(1, guests - 1))}
               aria-label={copy.removeGuest}
             >
               <MinusIcon />
@@ -115,7 +142,7 @@ export function SearchBarMobile({
               type="button"
               className="text-taupe flex size-10 items-center justify-center disabled:opacity-30"
               disabled={guests >= 10}
-              onClick={() => setGuests(Math.min(10, guests + 1))}
+              onClick={() => handleGuestsChange(Math.min(10, guests + 1))}
               aria-label={copy.addGuest}
             >
               <PlusIcon />
@@ -124,7 +151,7 @@ export function SearchBarMobile({
         </div>
 
         <DateRangePicker
-          value={dates}
+          value={hasSelectedDates ? dates : null}
           onChange={handleDateChange}
           minValue={minDate}
           startName="checkIn"
@@ -167,14 +194,8 @@ export function SearchBarMobile({
             className="bg-cream border-divider w-[calc(100vw-2rem)] max-w-sm rounded-lg border p-5 shadow-none"
             placement={calendarPlacement}
           >
-            <div
-              className="relative mx-auto flex w-full justify-center"
-            >
-              <RangeCalendar
-                aria-label={copy.stayDates}
-                minValue={minDate}
-                className="mx-auto"
-              >
+            <div className="relative mx-auto flex w-full justify-center">
+              <RangeCalendar aria-label={copy.stayDates} minValue={minDate} className="mx-auto">
                 <RangeCalendar.Header>
                   <RangeCalendar.Heading className="text-coffee text-sm font-bold" />
                   <RangeCalendar.NavButton slot="previous" />

@@ -34,7 +34,7 @@ export function ApartmentCard({
   const locale = useLocale()
   const copy = CARD_COPY[locale]
   const specs = [
-    { icon: 'guests' as const, value: `${guests} p.` },
+    { icon: 'guests' as const, value: copy.guests(guests) },
     ...(surface > 0 ? [{ icon: 'surface' as const, value: `${surface} m`, sup: '2' }] : []),
     ...(bedrooms > 0 ? [{ icon: 'bedrooms' as const, value: String(bedrooms) }] : []),
   ]
@@ -64,15 +64,9 @@ export function ApartmentCard({
         </div>
 
         <div className="flex flex-col gap-[9px] pt-1">
-          <div className="flex items-start justify-between gap-4">
-            <h3 className="text-coffee text-body-xl min-w-0 flex-1 leading-[1.55] font-semibold md:w-[170px] md:truncate">
-              {name}
-            </h3>
-            <div className="flex shrink-0 items-center gap-1">
-              <StarIcon />
-              <span className="text-coffee text-body-sm leading-[1.5]">4,9 (113)</span>
-            </div>
-          </div>
+          <h3 className="text-coffee text-body-xl min-w-0 leading-[1.55] font-semibold md:truncate">
+            {name}
+          </h3>
 
           <div className="flex flex-wrap items-center gap-3">
             {specs.map((spec) => (
@@ -98,12 +92,14 @@ export function ApartmentCard({
 
 const CARD_COPY = {
   fr: {
+    guests: (count: number) => `${count} p.`,
     from: 'Dès',
     perNight: '/nuit',
     total: 'au total',
     checkAvailability: 'Voir disponibilités',
   },
   en: {
+    guests: (count: number) => `${count} guest${count > 1 ? 's' : ''}`,
     from: 'From',
     perNight: '/night',
     total: 'total',
@@ -230,14 +226,6 @@ function SpecIcon({ kind }: { kind: 'guests' | 'surface' | 'bedrooms' }) {
       <path d="M2.5 13V6.5M16.5 13V9.5a2 2 0 0 0-2-2H7" />
       <path d="M2.5 11h14" />
       <circle cx="5.5" cy="9" r="1.2" />
-    </svg>
-  )
-}
-
-function StarIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="#301A0A">
-      <path d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.44L7 8.885l-3.09 1.625.59-3.44L2 4.635l3.455-.505L7 1z" />
     </svg>
   )
 }

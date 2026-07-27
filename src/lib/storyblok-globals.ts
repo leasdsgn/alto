@@ -14,7 +14,9 @@ import { DEFAULT_LOCALE } from '@/lib/i18n/locale'
 import { type InquiryLocale } from '@/types/inquiry'
 import {
   FOOTER_DEFAULTS,
+  FOOTER_DEFAULTS_EN,
   HEADER_DEFAULTS,
+  HEADER_DEFAULTS_EN,
   SHARED_ASSETS_DEFAULTS,
   STICKY_CTA_DEFAULTS,
   type StoryblokFaq,
@@ -119,87 +121,86 @@ export const getStoryblokGlobals = cache(
 )
 
 async function getHeader(locale: InquiryLocale): Promise<StoryblokHeader> {
+  const defaults = locale === 'en' ? HEADER_DEFAULTS_EN : HEADER_DEFAULTS
   const story = await getStoryBySlug('globals/header', locale)
-  const content = story?.content ?? {}
+  const content = locale === 'en' ? {} : (story?.content ?? {})
   const descriptions = parseDescriptions(content.nav_primary_descriptions)
   const navPrimary = bloksOf<{ label?: unknown; link?: unknown; opens_in_new_tab?: unknown }>(
     content.nav_primary,
   ).map((item, index) => ({
-    label: textOr(item.label, HEADER_DEFAULTS.navPrimary[index]?.label ?? ''),
-    href: linkHref(item.link, HEADER_DEFAULTS.navPrimary[index]?.href ?? '/'),
-    description: descriptions[index] ?? HEADER_DEFAULTS.navPrimary[index]?.description ?? '',
+    label: textOr(item.label, defaults.navPrimary[index]?.label ?? ''),
+    href: linkHref(item.link, defaults.navPrimary[index]?.href ?? '/'),
+    description: descriptions[index] ?? defaults.navPrimary[index]?.description ?? '',
     opensInNewTab: boolOr(item.opens_in_new_tab, false),
   }))
 
   const navSecondary = bloksOf<{ label?: unknown; link?: unknown; opens_in_new_tab?: unknown }>(
     content.nav_secondary,
   ).map((item, index) => ({
-    label: textOr(item.label, HEADER_DEFAULTS.navSecondary[index]?.label ?? ''),
-    href: linkHref(item.link, HEADER_DEFAULTS.navSecondary[index]?.href ?? '/'),
+    label: textOr(item.label, defaults.navSecondary[index]?.label ?? ''),
+    href: linkHref(item.link, defaults.navSecondary[index]?.href ?? '/'),
     opensInNewTab: boolOr(item.opens_in_new_tab, false),
   }))
 
   return {
-    logoLight: assetUrl(content.logo_light, HEADER_DEFAULTS.logoLight),
-    logoDark: assetUrl(content.logo_dark, HEADER_DEFAULTS.logoDark),
-    bookLabel: textOr(content.book_label, HEADER_DEFAULTS.bookLabel),
-    mapLabel: textOr(content.map_label, HEADER_DEFAULTS.mapLabel),
-    navPrimary: navPrimary.length > 0 ? navPrimary : HEADER_DEFAULTS.navPrimary,
-    navSecondary: navSecondary.length > 0 ? navSecondary : HEADER_DEFAULTS.navSecondary,
-    mobileOpenLabel: textOr(content.mobile_open_label, HEADER_DEFAULTS.mobileOpenLabel),
-    mobileCloseLabel: textOr(content.mobile_close_label, HEADER_DEFAULTS.mobileCloseLabel),
-    mobileNavigationLabel: textOr(
-      content.mobile_navigation_label,
-      HEADER_DEFAULTS.mobileNavigationLabel,
-    ),
+    logoLight: assetUrl(content.logo_light, defaults.logoLight),
+    logoDark: assetUrl(content.logo_dark, defaults.logoDark),
+    bookLabel: textOr(content.book_label, defaults.bookLabel),
+    mapLabel: textOr(content.map_label, defaults.mapLabel),
+    navPrimary: navPrimary.length > 0 ? navPrimary : defaults.navPrimary,
+    navSecondary: navSecondary.length > 0 ? navSecondary : defaults.navSecondary,
+    mobileOpenLabel: textOr(content.mobile_open_label, defaults.mobileOpenLabel),
+    mobileCloseLabel: textOr(content.mobile_close_label, defaults.mobileCloseLabel),
+    mobileNavigationLabel: textOr(content.mobile_navigation_label, defaults.mobileNavigationLabel),
     mobileQuickAccessLabel: textOr(
       content.mobile_quick_access_label,
-      HEADER_DEFAULTS.mobileQuickAccessLabel,
+      defaults.mobileQuickAccessLabel,
     ),
-    mobileFooterText: textOr(content.mobile_footer_text, HEADER_DEFAULTS.mobileFooterText),
+    mobileFooterText: textOr(content.mobile_footer_text, defaults.mobileFooterText),
     mobileFooterButtonLabel: textOr(
       content.mobile_footer_button_label,
-      HEADER_DEFAULTS.mobileFooterButtonLabel,
+      defaults.mobileFooterButtonLabel,
     ),
     mobileFooterButtonHref: linkHref(
       content.mobile_footer_button_link as StoryblokLinkField,
-      HEADER_DEFAULTS.mobileFooterButtonHref,
+      defaults.mobileFooterButtonHref,
     ),
   }
 }
 
 async function getFooter(locale: InquiryLocale): Promise<StoryblokFooter> {
+  const defaults = locale === 'en' ? FOOTER_DEFAULTS_EN : FOOTER_DEFAULTS
   const story = await getStoryBySlug('globals/footer', locale)
-  const content = story?.content ?? {}
+  const content = locale === 'en' ? {} : (story?.content ?? {})
 
   const ctaButtonBlok = bloksOf<{ label?: unknown; link?: unknown; opens_in_new_tab?: unknown }>(
     content.cta_button,
   )[0]
   const ctaButton = ctaButtonBlok
     ? {
-        label: textOr(ctaButtonBlok.label, FOOTER_DEFAULTS.ctaButton?.label ?? ''),
-        href: linkHref(ctaButtonBlok.link, FOOTER_DEFAULTS.ctaButton?.href ?? '/'),
+        label: textOr(ctaButtonBlok.label, defaults.ctaButton?.label ?? ''),
+        href: linkHref(ctaButtonBlok.link, defaults.ctaButton?.href ?? '/'),
         opensInNewTab: boolOr(ctaButtonBlok.opens_in_new_tab, false),
       }
-    : FOOTER_DEFAULTS.ctaButton
+    : defaults.ctaButton
 
   const navLinks = bloksOf<{ label?: unknown; link?: unknown; opens_in_new_tab?: unknown }>(
     content.nav_links,
   ).map((item, index) => ({
-    label: textOr(item.label, FOOTER_DEFAULTS.navLinks[index]?.label ?? ''),
-    href: linkHref(item.link, FOOTER_DEFAULTS.navLinks[index]?.href ?? '/'),
+    label: textOr(item.label, defaults.navLinks[index]?.label ?? ''),
+    href: linkHref(item.link, defaults.navLinks[index]?.href ?? '/'),
     opensInNewTab: boolOr(item.opens_in_new_tab, false),
   }))
 
   return {
-    logo: assetUrl(content.logo, FOOTER_DEFAULTS.logo),
-    logoAriaLabel: textOr(content.logo_aria_label, FOOTER_DEFAULTS.logoAriaLabel),
-    ctaTitle: textOr(content.cta_title, FOOTER_DEFAULTS.ctaTitle),
-    ctaBody: textOr(content.cta_body, FOOTER_DEFAULTS.ctaBody),
+    logo: assetUrl(content.logo, defaults.logo),
+    logoAriaLabel: textOr(content.logo_aria_label, defaults.logoAriaLabel),
+    ctaTitle: textOr(content.cta_title, defaults.ctaTitle),
+    ctaBody: textOr(content.cta_body, defaults.ctaBody),
     ctaButton,
-    navLinks: navLinks.length > 0 ? navLinks : FOOTER_DEFAULTS.navLinks,
-    copyright: textOr(content.copyright, FOOTER_DEFAULTS.copyright),
-    navAriaLabel: textOr(content.nav_aria_label, FOOTER_DEFAULTS.navAriaLabel),
+    navLinks: navLinks.length > 0 ? navLinks : defaults.navLinks,
+    copyright: textOr(content.copyright, defaults.copyright),
+    navAriaLabel: textOr(content.nav_aria_label, defaults.navAriaLabel),
   }
 }
 
@@ -246,6 +247,7 @@ async function getSharedAssets(locale: InquiryLocale): Promise<StoryblokSharedAs
 }
 
 async function getSharedTestimonials(locale: InquiryLocale): Promise<StoryblokTestimonial[]> {
+  if (locale === 'en') return []
   const story = await getStoryBySlug('globals/shared-testimonials', locale)
   return mapTestimonials(story?.content?.items)
 }
@@ -262,6 +264,7 @@ export function mapTestimonials(value: unknown): StoryblokTestimonial[] {
 }
 
 async function getApartmentFaq(locale: InquiryLocale): Promise<StoryblokFaq> {
+  if (locale === 'en') return APARTMENT_FAQ_DEFAULTS.en
   const story = await getStoryBySlug('globals/apartment-faq', locale)
   const content = story?.content
   const defaults = APARTMENT_FAQ_DEFAULTS[locale]

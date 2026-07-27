@@ -39,7 +39,6 @@ export function AboutView({ siteImages }: AboutViewProps) {
   const heroStats = [
     {
       label: copy.stats.locations,
-      type: 'avatars' as const,
       items: [
         { src: siteImages.shared.locationAvatars[0], alt: copy.stats.locationAlts[0] },
         { src: siteImages.shared.locationAvatars[1], alt: copy.stats.locationAlts[1] },
@@ -48,20 +47,10 @@ export function AboutView({ siteImages }: AboutViewProps) {
     },
     {
       label: copy.stats.travelers,
-      type: 'avatars' as const,
       items: [
         { src: siteImages.shared.travelerAvatars[0], alt: copy.stats.travelerAlts[0] },
         { src: siteImages.shared.travelerAvatars[1], alt: copy.stats.travelerAlts[1] },
         { src: siteImages.shared.travelerAvatars[2], alt: copy.stats.travelerAlts[2] },
-      ],
-    },
-    {
-      label: copy.stats.rating,
-      type: 'platforms' as const,
-      items: [
-        { label: 'B', className: 'bg-[#003580] text-cream' },
-        { label: 'TA', className: 'bg-[#00AF87] text-cream' },
-        { label: 'A', className: 'bg-[#FF5A5F] text-cream' },
       ],
     },
   ]
@@ -115,36 +104,27 @@ export function AboutView({ siteImages }: AboutViewProps) {
               <h1 className="text-cream text-h3 md:text-h2 mt-6">{copy.hero.title}</h1>
               <p className="text-cream/90 text-body mt-8 max-w-[477px]">{copy.hero.body}</p>
 
-              <div className="mt-12 grid gap-3 md:max-w-[567px] md:grid-cols-3">
+              <div className="mt-12 grid gap-3 md:max-w-[374px] md:grid-cols-2">
                 {heroStats.map((stat) => (
                   <div
                     key={stat.label}
                     className="bg-taupe flex min-h-20 flex-col items-center justify-center gap-2 rounded-lg px-4 py-4 text-center"
                   >
                     <div className="flex -space-x-2">
-                      {stat.type === 'avatars'
-                        ? stat.items.map((item) => (
-                            <div
-                              key={item.alt}
-                              className="border-cream relative size-6 overflow-hidden rounded-full border"
-                            >
-                              <Image
-                                src={item.src}
-                                alt={item.alt}
-                                fill
-                                sizes="24px"
-                                className="object-cover"
-                              />
-                            </div>
-                          ))
-                        : stat.items.map((item) => (
-                            <div
-                              key={item.label}
-                              className={`${item.className} border-cream flex size-6 items-center justify-center rounded-full border text-[9px] font-bold uppercase`}
-                            >
-                              {item.label}
-                            </div>
-                          ))}
+                      {stat.items.map((item) => (
+                        <div
+                          key={item.alt}
+                          className="border-cream relative size-6 overflow-hidden rounded-full border"
+                        >
+                          <Image
+                            src={item.src}
+                            alt={item.alt}
+                            fill
+                            sizes="24px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
                     </div>
 
                     <p className="text-cream text-body whitespace-nowrap">{stat.label}</p>
@@ -269,7 +249,6 @@ const ABOUT_VIEW_COPY = {
     stats: {
       locations: '13 locations',
       travelers: '4 500+ voyageurs',
-      rating: '4,9 de note moyenne',
       locationAlts: ['Appartement Alto à Paris', 'Appartement Alto à Lyon', 'Séjour Alto'],
       travelerAlts: ['Voyageuse Alto', 'Voyageur Alto', 'Cliente Alto'],
     },
@@ -296,8 +275,9 @@ const ABOUT_VIEW_COPY = {
           icon: '/images/icons/cleaning.svg',
         },
         {
-          title: 'Support 24/24',
-          description: 'Nous restons joignables 24h sur 24 pour vous assister en cas de problème.',
+          title: 'Assistance de 8 h à 20 h',
+          description:
+            'Notre équipe reste disponible tous les jours de 8 h à 20 h si vous avez besoin d’aide.',
           icon: '/images/icons/support.svg',
         },
         {
@@ -355,7 +335,6 @@ const ABOUT_VIEW_COPY = {
     stats: {
       locations: '13 locations',
       travelers: '4,500+ guests',
-      rating: '4.9 average rating',
       locationAlts: ['Alto apartment in Paris', 'Alto apartment in Lyon', 'Alto stay'],
       travelerAlts: ['Alto guest', 'Alto traveler', 'Alto customer'],
     },
@@ -381,8 +360,8 @@ const ABOUT_VIEW_COPY = {
           icon: '/images/icons/cleaning.svg',
         },
         {
-          title: '24/7 support',
-          description: 'We remain reachable around the clock if you need help.',
+          title: 'Support from 8 am to 8 pm',
+          description: 'Our team is available every day from 8 am to 8 pm if you need assistance.',
           icon: '/images/icons/support.svg',
         },
         {

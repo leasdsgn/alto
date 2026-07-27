@@ -86,8 +86,9 @@ const SERVICES_COPY = {
       icon: '/images/icons/cleaning.svg',
     },
     {
-      title: 'Support 24/24',
-      description: 'Un gestionnaire disponible à tout moment pour vous accompagner.',
+      title: 'Assistance de 8 h à 20 h',
+      description:
+        'Notre équipe est disponible tous les jours de 8 h à 20 h pour vous accompagner.',
       icon: '/images/icons/support.svg',
     },
     {
@@ -108,8 +109,8 @@ const SERVICES_COPY = {
       icon: '/images/icons/cleaning.svg',
     },
     {
-      title: '24/7 support',
-      description: 'A manager available whenever you need assistance.',
+      title: 'Support from 8 am to 8 pm',
+      description: 'Our team is available every day from 8 am to 8 pm if you need assistance.',
       icon: '/images/icons/support.svg',
     },
     {

@@ -6,7 +6,7 @@ import { ApartmentView } from '@/components/apartment/apartment-view'
 import { SearchParamsSync } from '@/components/booking/search-params-sync'
 import { JsonLd } from '@/components/seo/json-ld'
 import { getStoryblokGlobals } from '@/lib/storyblok-globals'
-import { getStaticServerLocale } from '@/lib/i18n/server'
+import { getServerLocale } from '@/lib/i18n/server'
 import { buildApartmentJsonLd, buildBreadcrumbJsonLd, defineSeoMetadata } from '@/lib/seo'
 
 export async function generateMetadata({
@@ -14,25 +14,34 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const { slug } = await params
-  const apartments = await getApartments()
+  const [{ slug }, locale, apartments] = await Promise.all([
+    params,
+    getServerLocale(),
+    getApartments(),
+  ])
   const apartment = apartments.find((item) => item.slug === slug)
 
   if (!apartment) {
     return defineSeoMetadata({
-      title: 'Appartement introuvable | Alto',
-      description: 'Cet appartement n’est pas disponible.',
+      title: locale === 'en' ? 'Apartment not found | Alto' : 'Appartement introuvable | Alto',
+      description:
+        locale === 'en'
+          ? 'This apartment is not available.'
+          : 'Cet appartement n’est pas disponible.',
       path: `/appartements/${slug}`,
       noIndex: true,
     })
   }
 
   const city = apartment.city ?? 'Paris'
-  const description = getApartmentSeoDescription(apartment, city)
+  const description = getApartmentSeoDescription(apartment, city, locale)
   const image = apartment.images[0] ?? apartment.image
 
   return defineSeoMetadata({
-    title: `${apartment.name} - Appartement à ${city} | Alto`,
+    title:
+      locale === 'en'
+        ? `${apartment.name} - Apartment in ${city} | Alto`
+        : `${apartment.name} - Appartement à ${city} | Alto`,
     description,
     path: `/appartements/${apartment.slug}`,
     image,
@@ -51,10 +60,12 @@ export default async function ApartmentPage({
     check_out?: string
   }>
 }) {
-  const { slug } = await params
-  const search = await searchParams
-  const locale = getStaticServerLocale()
-  const apartments = await getApartments()
+  const [{ slug }, search, locale, apartments] = await Promise.all([
+    params,
+    searchParams,
+    getServerLocale(),
+    getApartments(),
+  ])
   const apartment = apartments.find((a) => a.slug === slug)
   const hasDatedSearch = Boolean(
     (search.checkIn || search.check_in) && (search.checkOut || search.check_out),
@@ -70,8 +81,8 @@ export default async function ApartmentPage({
       <JsonLd
         data={[
           buildBreadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: 'Appartements', path: '/appartements' },
+            { name: locale === 'en' ? 'Home' : 'Accueil', path: '/' },
+            { name: locale === 'en' ? 'Apartments' : 'Appartements', path: '/appartements' },
             { name: apartment.name, path: `/appartements/${apartment.slug}` },
           ]),
           buildApartmentJsonLd(apartment),
@@ -95,7 +106,11 @@ export default async function ApartmentPage({
 function getApartmentSeoDescription(
   apartment: Awaited<ReturnType<typeof getApartments>>[number],
   city: string,
+  locale: 'fr' | 'en',
 ) {
+  if (locale === 'en') {
+    return `Discover ${apartment.name}, an Alto apartment in ${city} for short-term stays.`
+  }
   const fallback = `Découvrez ${apartment.name}, un appartement Alto à ${city} pour vos séjours courte durée.`
   const source = apartment.description || apartment.space || fallback
   return truncateDescription(source)

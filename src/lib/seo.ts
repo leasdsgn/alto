@@ -3,9 +3,8 @@ import type { Apartment } from '@/types/apartment'
 import type { BlogArticle } from '@/lib/blog-data'
 
 export const SITE_NAME = 'Alto'
-export const SITE_URL = normalizeSiteUrl(
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.alto-collection.com',
-)
+export const PRODUCTION_SITE_URL = 'https://www.alto-collection.com'
+export const SITE_URL = resolveSiteUrl()
 export const DEFAULT_OG_IMAGE = '/images/hero-room.webp'
 
 type JsonLd = Record<string, unknown>
@@ -173,6 +172,31 @@ export function buildArticleJsonLd(article: BlogArticle): JsonLd {
   }
 }
 
-function normalizeSiteUrl(value: string) {
-  return value.replace(/\/+$/, '')
+export function resolveSiteUrl(
+  value = process.env.NEXT_PUBLIC_SITE_URL,
+  environment = process.env.NODE_ENV,
+) {
+  const normalized = normalizeSiteUrl(value)
+
+  if (!normalized) return PRODUCTION_SITE_URL
+  if (environment === 'production' && isLocalUrl(normalized)) return PRODUCTION_SITE_URL
+
+  return normalized
+}
+
+function normalizeSiteUrl(value: string | undefined) {
+  if (!value) return null
+
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    return url.toString().replace(/\/+$/, '')
+  } catch {
+    return null
+  }
+}
+
+function isLocalUrl(value: string) {
+  const hostname = new URL(value).hostname
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
 }

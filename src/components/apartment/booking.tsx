@@ -7,10 +7,12 @@ import type { DateValue } from '@internationalized/date'
 import type { RangeValue } from 'react-aria-components'
 import { Button } from '@/components/ui/button'
 import { useLocale } from '@/components/providers/locale-provider'
-import { useSearchStore } from '@/lib/stores/search'
+import { useFooterGlobals } from '@/components/providers/storyblok-globals-provider'
+import { clampGuestsToCapacity, useSearchStore } from '@/lib/stores/search'
 import { formatDateShort } from '@/lib/format-date'
 import { formatCurrency } from '@/lib/formatters'
 import { getQuoteAccommodationCents, getQuoteTotalCents } from '@/lib/guesty-pricing'
+import { getEffectiveMinimumNights } from '@/lib/booking-minimum-stay'
 import { WHATSAPP_LINK } from '@/lib/whatsapp'
 import type { GuestyCalendarDay, GuestyQuote } from '@/types/guesty'
 
@@ -45,12 +47,14 @@ export function ApartmentBooking({
   variant = 'card',
 }: BookingProps) {
   const locale = useLocale()
-  const { dates, guests, setDates, setGuests } = useSearchStore()
+  const contact = useFooterGlobals().ctaButton
+  const { dates, guests, hasSelectedDates, setDates, setGuests } = useSearchStore()
   const checkIn = dates.start.toString()
   const checkOut = dates.end.toString()
   const reserveHref = `/book/${slug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}`
   const [dateOpen, setDateOpen] = useState(false)
   const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set())
+  const [minimumNightsByDate, setMinimumNightsByDate] = useState<Map<string, number>>(new Map())
   const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityStatus>(
     listingId ? 'loading' : 'idle',
   )
@@ -59,6 +63,11 @@ export function ApartmentBooking({
   const [verifiedQuoteKey, setVerifiedQuoteKey] = useState<string | null>(null)
   const [shouldVerifyQuote, setShouldVerifyQuote] = useState(initialShouldVerifyQuote)
   const nights = dates.end.compare(dates.start)
+  const effectiveMinNights = getEffectiveMinimumNights(
+    minNights,
+    dates.start.toString(),
+    minimumNightsByDate,
+  )
   const fallbackTotal = useMemo(() => {
     if (!isDisplayablePrice(price)) return null
     return price * Math.max(nights, 0)
@@ -72,13 +81,15 @@ export function ApartmentBooking({
   const hasKnownUnavailableSelection =
     availabilityStatus === 'ready' &&
     rangeHasUnavailableNight(dates.start, dates.end, unavailableDates)
-  const isBelowMinNights = Boolean(minNights && nights < minNights)
+  const isBelowMinNights = nights < effectiveMinNights
   const isAboveMaxNights = Boolean(maxNights && nights > maxNights)
   const isAboveCapacity = Boolean(capacity && guests > capacity)
+  const hasLoadedAvailability = !listingId || availabilityStatus === 'ready'
   const hasVerifiedQuote =
     !listingId || (quoteStatus === 'ready' && verifiedQuoteKey === quoteRequestKey)
   const canReserve =
     shouldVerifyQuote &&
+    hasLoadedAvailability &&
     hasVerifiedQuote &&
     nights > 0 &&
     !hasKnownUnavailableSelection &&
@@ -91,11 +102,12 @@ export function ApartmentBooking({
     isBelowMinNights,
     isAboveMaxNights,
     isAboveCapacity,
-    minNights,
+    minNights: effectiveMinNights,
     maxNights,
     capacity,
     quoteStatus,
     shouldVerifyQuote,
+    locale,
   })
   const priceLabel = getPriceLabel({
     fallbackPrice: price,
@@ -117,6 +129,11 @@ export function ApartmentBooking({
   })
   const isMobileSheet = variant === 'mobileSheet'
   const copy = BOOKING_COPY[locale]
+
+  useEffect(() => {
+    const nextGuests = clampGuestsToCapacity(guests, capacity)
+    if (nextGuests !== guests) setGuests(nextGuests)
+  }, [capacity, guests, setGuests])
 
   useEffect(() => {
     if (!listingId) {
@@ -145,13 +162,19 @@ export function ApartmentBooking({
         const unavailable = new Set(
           days.filter((day) => day.status !== 'available').map((day) => day.date.slice(0, 10)),
         )
+        const minimumStays = new Map<string, number>()
+        for (const day of days) {
+          if (day.minNights > 0) minimumStays.set(day.date.slice(0, 10), day.minNights)
+        }
 
         setUnavailableDates(unavailable)
+        setMinimumNightsByDate(minimumStays)
         setAvailabilityStatus('ready')
       } catch (error) {
         if (!controller.signal.aborted) {
           console.warn('[apartment booking] availability failed', error)
           setUnavailableDates(new Set())
+          setMinimumNightsByDate(new Map())
           setAvailabilityStatus('error')
         }
       }
@@ -163,24 +186,26 @@ export function ApartmentBooking({
   }, [listingId, minDateKey, availabilityEnd])
 
   useEffect(() => {
+    if (!hasSelectedDates) return
     if (availabilityStatus !== 'ready') return
     if (!rangeHasUnavailableNight(dates.start, dates.end, unavailableDates)) return
 
     const nextRange = findNextAvailableRange({
       minDate,
       unavailableDates,
-      nights: Math.max(minNights ?? 1, 1),
+      nights: effectiveMinNights,
       maxNights,
     })
 
     if (nextRange) setDates(nextRange)
   }, [
     availabilityStatus,
+    hasSelectedDates,
     dates.start,
     dates.end,
     maxNights,
     minDate,
-    minNights,
+    effectiveMinNights,
     setDates,
     unavailableDates,
   ])
@@ -197,6 +222,7 @@ export function ApartmentBooking({
     if (
       !listingId ||
       !shouldVerifyQuote ||
+      !hasLoadedAvailability ||
       nights <= 0 ||
       hasKnownUnavailableSelection ||
       isBelowMinNights ||
@@ -255,6 +281,7 @@ export function ApartmentBooking({
   }, [
     listingId,
     shouldVerifyQuote,
+    hasLoadedAvailability,
     nights,
     hasKnownUnavailableSelection,
     isBelowMinNights,
@@ -289,7 +316,7 @@ export function ApartmentBooking({
         {isMobileSheet && <SwiklyNotice copy={copy} />}
 
         <DateRangePicker
-          value={dates}
+          value={hasSelectedDates ? dates : null}
           onChange={handleDateChange}
           minValue={minDate}
           startName="checkIn"
@@ -300,7 +327,7 @@ export function ApartmentBooking({
           className="date-picker w-full"
           style={{ width: '100%' }}
         >
-          <Label className="sr-only">Dates du séjour</Label>
+          <Label className="sr-only">{copy.stayDates}</Label>
 
           <div className={`border-silver mx-[17px] border-t ${isMobileSheet ? 'mt-5' : 'mt-8'}`}>
             <button
@@ -311,10 +338,10 @@ export function ApartmentBooking({
               <div className="px-4 py-[15px] pr-5">
                 <div className="text-taupe flex items-center gap-2">
                   <CalendarIcon />
-                  <p className="text-body">Check-in</p>
+                  <p className="text-body">{copy.checkIn}</p>
                 </div>
                 <p className="text-coffee text-body-xl mt-[13px] font-semibold">
-                  {formatDateShort(dates.start)}
+                  {hasSelectedDates ? formatDateShort(dates.start, locale) : copy.selectDate}
                 </p>
               </div>
 
@@ -323,10 +350,10 @@ export function ApartmentBooking({
               <div className="px-4 py-[15px] pl-5">
                 <div className="text-taupe flex items-center gap-2">
                   <CalendarIcon />
-                  <p className="text-body">Check-out</p>
+                  <p className="text-body">{copy.checkOut}</p>
                 </div>
                 <p className="text-coffee text-body-xl mt-[13px] font-semibold">
-                  {formatDateShort(dates.end)}
+                  {hasSelectedDates ? formatDateShort(dates.end, locale) : copy.selectDate}
                 </p>
               </div>
             </button>
@@ -340,11 +367,12 @@ export function ApartmentBooking({
           </DateField.Group>
 
           <DateRangePicker.Popover
+            isNonModal
             className="bg-cream border-divider rounded-lg border p-5 shadow-[0_8px_24px_rgba(48,26,10,0.1)]"
             placement="bottom start"
           >
             <RangeCalendar
-              aria-label="Dates du séjour"
+              aria-label={copy.stayDates}
               minValue={minDate}
               isDateUnavailable={(date) => unavailableDates.has(date.toString())}
             >
@@ -383,11 +411,11 @@ export function ApartmentBooking({
         <div className="border-silver mx-[17px] border-t px-4 py-[15px]">
           <div className="text-taupe flex items-center gap-2">
             <GuestsIcon />
-            <p className="text-body">Voyageurs</p>
+            <p className="text-body">{copy.guestsLabel}</p>
           </div>
           <div className="mt-[13px] flex items-center justify-between gap-4">
             <span className="text-coffee text-body-xl font-semibold">
-              {guests} voyageur{guests > 1 ? 's' : ''}
+              {guests} {guests > 1 ? copy.guests : copy.guest}
             </span>
             <div className="flex items-center gap-1.5">
               <button
@@ -395,7 +423,7 @@ export function ApartmentBooking({
                 className="text-taupe hover:bg-sand flex size-6 items-center justify-center rounded-full transition-colors disabled:opacity-30"
                 disabled={guests <= 1}
                 onClick={() => setGuests(Math.max(1, guests - 1))}
-                aria-label="Retirer un voyageur"
+                aria-label={copy.removeGuest}
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1" />
@@ -407,7 +435,7 @@ export function ApartmentBooking({
                 className="text-taupe hover:bg-sand flex size-6 items-center justify-center rounded-full transition-colors disabled:opacity-30"
                 disabled={guests >= (capacity ?? 10)}
                 onClick={() => setGuests(Math.min(capacity ?? 10, guests + 1))}
-                aria-label="Ajouter un voyageur"
+                aria-label={copy.addGuest}
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1" />
@@ -429,13 +457,13 @@ export function ApartmentBooking({
                 {priceLabel}
               </p>
               <p className="text-silver text-body mt-[7px]">
-                {nights} nuit{nights > 1 ? 's' : ''}
+                {nights} {nights > 1 ? copy.nights : copy.night}
               </p>
               {nightlyLabel && <p className="text-taupe text-body-sm mt-1">{nightlyLabel}</p>}
             </div>
 
             <Button href={reserveHref} isDisabled={!canReserve} className="min-w-[122px]">
-              Réserver
+              {copy.reserve}
             </Button>
           </div>
         </div>
@@ -444,15 +472,24 @@ export function ApartmentBooking({
       {!isMobileSheet && (
         <div className="rounded-[8px] bg-[#f9f9f2] px-10 pt-[31px] pb-8">
           <p className="text-coffee text-body">{copy.helpTitle}</p>
-          <Button
-            href={WHATSAPP_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 min-w-[208px]"
-            iconRight={<ArrowOutwardIcon />}
-          >
-            {copy.helpCta}
-          </Button>
+          <p className="text-taupe text-body-sm mt-2">{copy.helpAvailability}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button
+              href={contact?.href ?? WHATSAPP_LINK}
+              target={contact?.opensInNewTab ? '_blank' : undefined}
+              rel={contact?.opensInNewTab ? 'noopener noreferrer' : undefined}
+              iconRight={<ArrowOutwardIcon />}
+            >
+              {copy.helpWhatsapp}
+            </Button>
+            <Button
+              href="mailto:contact@alto-collection.com"
+              variant="secondary"
+              iconRight={<ArrowOutwardIcon />}
+            >
+              {copy.helpEmail}
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -467,7 +504,21 @@ const BOOKING_COPY = {
     swiklyBody:
       'Une caution sécurisée peut être demandée avant l’arrivée. Elle n’est pas débitée, sauf incident.',
     helpTitle: 'Besoin d’aide avec votre réservation ?',
-    helpCta: 'Contacter l’équipe',
+    helpAvailability: 'Disponible tous les jours de 8 h à 20 h.',
+    helpWhatsapp: 'WhatsApp',
+    helpEmail: 'E-mail',
+    stayDates: 'Dates du séjour',
+    checkIn: 'Arrivée',
+    checkOut: 'Départ',
+    selectDate: 'Sélectionner',
+    guestsLabel: 'Voyageurs',
+    guest: 'voyageur',
+    guests: 'voyageurs',
+    removeGuest: 'Retirer un voyageur',
+    addGuest: 'Ajouter un voyageur',
+    night: 'nuit',
+    nights: 'nuits',
+    reserve: 'Réserver',
   },
   en: {
     title: 'Your booking',
@@ -476,7 +527,21 @@ const BOOKING_COPY = {
     swiklyBody:
       'A secure deposit may be requested before arrival. It is not charged unless an incident occurs.',
     helpTitle: 'Need help with your booking?',
-    helpCta: 'Contact the team',
+    helpAvailability: 'Available every day from 8 am to 8 pm.',
+    helpWhatsapp: 'WhatsApp',
+    helpEmail: 'Email',
+    stayDates: 'Stay dates',
+    checkIn: 'Check-in',
+    checkOut: 'Check-out',
+    selectDate: 'Select',
+    guestsLabel: 'Guests',
+    guest: 'guest',
+    guests: 'guests',
+    removeGuest: 'Remove one guest',
+    addGuest: 'Add one guest',
+    night: 'night',
+    nights: 'nights',
+    reserve: 'Book',
   },
 } as const
 
@@ -641,6 +706,7 @@ function getAvailabilityMessage({
   capacity,
   quoteStatus,
   shouldVerifyQuote,
+  locale,
 }: {
   status: AvailabilityStatus
   hasUnavailableSelection: boolean
@@ -652,29 +718,54 @@ function getAvailabilityMessage({
   capacity?: number
   quoteStatus: QuoteStatus
   shouldVerifyQuote: boolean
+  locale: 'fr' | 'en'
 }) {
-  if (!shouldVerifyQuote) return 'Choisissez vos dates pour vérifier le tarif exact.'
-  if (quoteStatus === 'loading') return 'Vérification du tarif et des disponibilités.'
+  const isEnglish = locale === 'en'
+
+  if (!shouldVerifyQuote) {
+    return isEnglish
+      ? 'Choose your dates to check the exact price.'
+      : 'Choisissez vos dates pour vérifier le tarif exact.'
+  }
+  if (quoteStatus === 'loading') {
+    return isEnglish
+      ? 'Checking the price and availability.'
+      : 'Vérification du tarif et des disponibilités.'
+  }
   if (quoteStatus === 'error') {
-    return 'Ces dates ne sont pas disponibles pour cet appartement. Choisissez une autre période.'
+    return isEnglish
+      ? 'These dates are not available for this apartment. Choose another period.'
+      : 'Ces dates ne sont pas disponibles pour cet appartement. Choisissez une autre période.'
   }
   if (hasUnavailableSelection) {
-    return 'Ces dates ne sont pas disponibles. Choisissez une autre période.'
+    return isEnglish
+      ? 'These dates are not available. Choose another period.'
+      : 'Ces dates ne sont pas disponibles. Choisissez une autre période.'
   }
   if (isBelowMinNights && minNights) {
-    return `Le séjour minimum est de ${minNights} nuit${minNights > 1 ? 's' : ''}.`
+    return isEnglish
+      ? `The minimum stay is ${minNights} night${minNights > 1 ? 's' : ''}.`
+      : `Le séjour minimum est de ${minNights} nuit${minNights > 1 ? 's' : ''}.`
   }
   if (isAboveMaxNights && maxNights) {
-    return `Le séjour maximum est de ${maxNights} nuit${maxNights > 1 ? 's' : ''}.`
+    return isEnglish
+      ? `The maximum stay is ${maxNights} night${maxNights > 1 ? 's' : ''}.`
+      : `Le séjour maximum est de ${maxNights} nuit${maxNights > 1 ? 's' : ''}.`
   }
   if (isAboveCapacity && capacity) {
-    return `Cet appartement accueille jusqu’à ${capacity} voyageur${capacity > 1 ? 's' : ''}.`
+    return isEnglish
+      ? `This apartment accommodates up to ${capacity} guest${capacity > 1 ? 's' : ''}.`
+      : `Cet appartement accueille jusqu’à ${capacity} voyageur${capacity > 1 ? 's' : ''}.`
   }
   if (status === 'loading') {
-    return 'Chargement du calendrier de disponibilités.'
+    return isEnglish
+      ? 'Loading the availability calendar.'
+      : 'Chargement du calendrier de disponibilités.'
   }
   if (status === 'error') {
-    return 'Le calendrier de disponibilités ne peut pas être vérifié pour le moment.'
+    return isEnglish
+      ? 'The availability calendar cannot be checked right now.'
+      : 'Le calendrier de disponibilités ne peut pas être vérifié pour le moment.'
   }
 
   return null
