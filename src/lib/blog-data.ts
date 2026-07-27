@@ -1,6 +1,12 @@
 export type BlogSectionKey = 'paris' | 'lyon' | 'voyage'
 
+export interface BlogRichTextDocument {
+  type: 'doc'
+  content?: Array<Record<string, unknown>>
+}
+
 export interface BlogArticle {
+  uuid?: string
   slug: string
   title: string
   subtitle: string
@@ -12,11 +18,12 @@ export interface BlogArticle {
   seoDescription?: string
   ogImage?: string
   noIndex?: boolean
+  relatedArticleUuids?: string[]
   section: BlogSectionKey
   sections: Array<{
     label?: string
     heading: string
-    body: string
+    body: string | BlogRichTextDocument
   }>
 }
 

@@ -1,8 +1,14 @@
-import { getFallbackBlogArticles, inferBlogSection, type BlogArticle } from '@/lib/blog-data'
+import {
+  getFallbackBlogArticles,
+  inferBlogSection,
+  type BlogArticle,
+  type BlogRichTextDocument,
+} from '@/lib/blog-data'
 import { getStoryblokToken, getStoryblokVersion } from '@/lib/storyblok-preview'
 import type { InquiryLocale } from '@/types/inquiry'
 
 interface StoryblokStory {
+  uuid?: string
   name: string
   slug: string
   full_slug: string
@@ -79,13 +85,17 @@ async function fetchStoryblokArticles(
     .filter(Boolean) as BlogArticle[]
 }
 
-function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): BlogArticle | null {
+export function mapStoryblokArticle(
+  story: StoryblokStory,
+  locale: InquiryLocale,
+): BlogArticle | null {
   const content = story.content ?? {}
   const title = asString(content.title) ?? story.name
   const slug = story.slug || story.full_slug.split('/').at(-1)
   if (!slug || !title) return null
 
   return {
+    uuid: story.uuid,
     slug,
     title,
     subtitle: asString(content.excerpt) ?? asString(content.subtitle) ?? '',
@@ -110,6 +120,7 @@ function mapStoryblokArticle(story: StoryblokStory, locale: InquiryLocale): Blog
     seoDescription: asString(content.seo_description) ?? undefined,
     ogImage: assetUrl(content.og_image) ?? undefined,
     noIndex: content.no_index === true,
+    relatedArticleUuids: storyReferences(content.related_articles),
     section: inferBlogSection({
       section: asString(content.section) ?? asString(content.group),
       city: asString(content.city),
@@ -128,29 +139,65 @@ function mapSections(content: Record<string, unknown>): BlogArticle['sections'] 
     : Array.isArray(content.sections)
       ? content.sections
       : []
-  const mapped = sections
-    .map((section) => {
-      if (!isRecord(section)) return null
-      const heading = asString(section.heading) ?? asString(section.title)
-      const body = asString(section.body) ?? asString(section.text) ?? asString(section.quote)
-      if (!heading || !body) return null
-      return {
+  const mapped = sections.flatMap((section) => {
+    if (!isRecord(section)) return []
+    const heading = asString(section.heading) ?? asString(section.title)
+    const body =
+      asRichText(section.body) ??
+      asString(section.body) ??
+      asString(section.text) ??
+      asString(section.quote)
+    if (!heading || !body) return []
+    return [
+      {
         label: asString(section.label),
         heading,
         body,
-      }
-    })
-    .filter(Boolean) as BlogArticle['sections']
+      },
+    ]
+  }) as BlogArticle['sections']
 
   if (mapped.length > 0) return mapped
 
-  const body = asString(content.body) ?? asString(content.text) ?? asString(content.content)
+  const body =
+    asRichText(content.body) ??
+    asString(content.body) ??
+    asString(content.text) ??
+    asString(content.content)
   return [
     {
       heading: asString(content.heading) ?? asString(content.title) ?? '',
       body: body ?? '',
     },
   ].filter((section) => section.heading || section.body)
+}
+
+export function resolveRelatedArticles(article: BlogArticle, articles: BlogArticle[], limit = 2) {
+  const byUuid = new Map(
+    articles
+      .filter((candidate): candidate is BlogArticle & { uuid: string } => Boolean(candidate.uuid))
+      .map((candidate) => [candidate.uuid, candidate]),
+  )
+  const selected = (article.relatedArticleUuids ?? [])
+    .map((uuid) => byUuid.get(uuid))
+    .filter((candidate): candidate is BlogArticle & { uuid: string } =>
+      Boolean(candidate && candidate.slug !== article.slug),
+    )
+  const selectedSlugs = new Set(selected.map((candidate) => candidate.slug))
+  const sameSection = articles.filter(
+    (candidate) =>
+      candidate.slug !== article.slug &&
+      !selectedSlugs.has(candidate.slug) &&
+      candidate.section === article.section,
+  )
+  const fallback = articles.filter(
+    (candidate) =>
+      candidate.slug !== article.slug &&
+      !selectedSlugs.has(candidate.slug) &&
+      candidate.section !== article.section,
+  )
+
+  return [...selected, ...sameSection, ...fallback].slice(0, limit)
 }
 
 function categoryLabel(value: unknown): string | null {
@@ -185,6 +232,23 @@ function normalizeAssetUrl(value: string | null): string | null {
 
 function asString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value : null
+}
+
+function asRichText(value: unknown): BlogRichTextDocument | null {
+  if (!isRecord(value) || value.type !== 'doc' || !Array.isArray(value.content)) return null
+  return value as unknown as BlogRichTextDocument
+}
+
+function storyReferences(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .map((reference) => {
+      if (typeof reference === 'string') return reference
+      if (!isRecord(reference)) return null
+      return asString(reference.uuid)
+    })
+    .filter((reference): reference is string => Boolean(reference))
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

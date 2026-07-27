@@ -2,9 +2,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Breadcrumbs } from '@/components/seo/breadcrumbs'
+import { renderRichText, richTextToPlainText } from '@/components/storyblok/rich-text'
 import { BrandKickerText } from '@/components/ui/brand-kicker-text'
 import { Button } from '@/components/ui/button'
-import type { BlogArticle } from '@/lib/blog-data'
+import type { BlogArticle, BlogRichTextDocument } from '@/lib/blog-data'
 import type { BlogEditorialMeta } from '@/lib/blog-page'
 import type { InquiryLocale } from '@/types/inquiry'
 
@@ -264,14 +265,17 @@ function ArticleSection({
   index,
   emphasizeBody = false,
 }: {
-  section: { heading: string; body: string; label?: string }
+  section: { heading: string; body: string | BlogRichTextDocument; label?: string }
   index: number
   emphasizeBody?: boolean
 }) {
-  const paragraphs = section.body
-    .split(/\n+/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean)
+  const paragraphs =
+    typeof section.body === 'string'
+      ? section.body
+          .split(/\n+/)
+          .map((paragraph) => paragraph.trim())
+          .filter(Boolean)
+      : []
 
   return (
     <section id={toAnchorId(section.heading, index)}>
@@ -282,18 +286,13 @@ function ArticleSection({
       )}
 
       <div className={emphasizeBody ? 'mt-10 space-y-6' : 'mt-8 space-y-6'}>
-        {paragraphs.map((paragraph) => (
-          <p
-            key={paragraph}
-            className={
-              emphasizeBody
-                ? 'text-coffee text-body-xl font-semibold'
-                : 'text-coffee text-body-xl font-semibold'
-            }
-          >
-            {paragraph}
-          </p>
-        ))}
+        {typeof section.body === 'string'
+          ? paragraphs.map((paragraph) => (
+              <p key={paragraph} className="text-coffee text-body-xl font-semibold">
+                {paragraph}
+              </p>
+            ))
+          : renderRichText(section.body, { variant: 'article' })}
       </div>
     </section>
   )
@@ -301,7 +300,7 @@ function ArticleSection({
 
 function getReadingTimeLabel(article: BlogArticle) {
   const words = article.sections
-    .flatMap((section) => [section.heading, section.body])
+    .flatMap((section) => [section.heading, richTextToPlainText(section.body)])
     .join(' ')
     .split(/\s+/)
     .filter(Boolean).length

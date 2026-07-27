@@ -6,7 +6,7 @@ import { ApartmentsSection, getApartmentCards } from '@/components/sections/apar
 import { JsonLd } from '@/components/seo/json-ld'
 import { getBlogEditorialMeta } from '@/lib/blog-page'
 import { getServerLocale } from '@/lib/i18n/server'
-import { getBlogArticles } from '@/lib/storyblok-blog'
+import { getBlogArticles, resolveRelatedArticles } from '@/lib/storyblok-blog'
 import { buildArticleJsonLd, buildBreadcrumbJsonLd, defineSeoMetadata } from '@/lib/seo'
 
 export async function generateMetadata({
@@ -48,7 +48,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   if (!article) notFound()
 
-  const relatedArticles = pickRelatedArticles(article.slug, article.section, articles)
+  const relatedArticles = resolveRelatedArticles(article, articles)
   const cta = getBlogEditorialMeta(locale, article.section)
 
   return (
@@ -70,17 +70,4 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <Footer />
     </>
   )
-}
-
-function pickRelatedArticles(
-  slug: string,
-  section: string,
-  articles: Awaited<ReturnType<typeof getBlogArticles>>,
-) {
-  const related = articles.filter((article) => article.slug !== slug && article.section === section)
-  const fallback = articles.filter(
-    (article) => article.slug !== slug && article.section !== section,
-  )
-
-  return [...related, ...fallback].slice(0, 2)
 }

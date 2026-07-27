@@ -58,7 +58,7 @@ export interface ComponentDefinition {
   component_group_uuid?: string
 }
 
-async function storyblokFetch(url: string, init?: RequestInit): Promise<Response> {
+export async function storyblokFetch(url: string, init?: RequestInit): Promise<Response> {
   const maxAttempts = 5
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
