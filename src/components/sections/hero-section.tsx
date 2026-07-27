@@ -95,11 +95,11 @@ export function HeroSection({
           />
         </div>
 
-        <div className="absolute inset-x-6 bottom-8 z-50 mx-auto hidden max-w-[800px] md:bottom-12 md:block">
+        <div className="absolute inset-x-6 bottom-8 z-20 mx-auto hidden max-w-[800px] md:bottom-12 md:block">
           <SearchBar calendarPlacement="top start" />
         </div>
 
-        <div className="absolute inset-x-6 bottom-8 z-50 md:hidden">
+        <div className="absolute inset-x-6 bottom-8 z-20 md:hidden">
           <SearchBarMobile />
         </div>
       </div>

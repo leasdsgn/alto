@@ -184,7 +184,7 @@ function BurgerOverlay({
     <div
       inert={!open}
       aria-hidden={!open}
-      className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 transition-opacity duration-300 ${
         open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
